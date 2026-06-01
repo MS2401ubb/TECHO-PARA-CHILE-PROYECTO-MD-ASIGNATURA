@@ -1,0 +1,27 @@
+{
+  "name": "proyecto-md",
+  "version": "1.0.0",
+  "description": "Proyecto module express, implementación soluciones \"techo para chile\" ",
+  "homepage": "https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA#readme",
+  "bugs": {
+    "url": "https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "typeorm": "^1.0.0",
+    "joi": "^18.2.1",
+    "pg": "^8.21.0",
+    "reflect-metadata": "^0.2.2"
+  }
+} 
