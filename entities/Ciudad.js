@@ -6,8 +6,8 @@ module.exports = new EntitySchema({
   columns: {
     codigo: {
       primary: true,
-      type: 'varchar',
-      length: 50,
+      type: 'int',
+      generated: true,
     },
     nombre: {
       type: 'varchar',

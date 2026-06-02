@@ -1,17 +1,16 @@
 const { EntitySchema } = require('typeorm');
 
 module.exports = new EntitySchema({
-  name: 'Region',
-  tableName: 'regiones',
+  name: 'Cuadrilla',
+  tableName: 'cuadrillas',
   columns: {
     codigo: {
       primary: true,
-      type: 'int',
-      generated: true,
-    },
-    nombre: {
       type: 'varchar',
-      length: 100,
+      length: 50,
+    },
+    descripcion: {
+      type: 'text',
     },
   },
 });
