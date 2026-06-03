@@ -4,6 +4,6 @@ const router = express.Router();
 //import usuarioController from '../controllers/Usuario.controller.js';
 
 router.get('/',usuarioController.mostrarUsuario);
-router.get('/modificar',usuarioController.mostrarUsuario);
-router.patch('/modificar',usuarioController.actualizarUsuario);
+router.patch('/Modificar',usuarioController.actualizarUsuario);
+router.post('/Acceso',usuarioController.iniciarSesion);
 

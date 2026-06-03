@@ -8,4 +8,5 @@ router.get('/ListaVoluntarios',encargadoVoluntariosController.obtenerListaVolunt
 router.get('/ListaPostulantes/:id',encargadoVoluntariosController.obtenerPostulante);
 router.get('/ListaVoluntarios/:id',encargadoVoluntariosController.obtenerVoluntario);
 
-
+router.post('/ListaPostulantes/:id/aprobar',encargadoVoluntariosController.aprobarPostulante);
+router.post('/ListaVoluntarios/asignarCuadrilla',encargadoVoluntariosController.asignarCuadrilla);
