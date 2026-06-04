@@ -1,9 +1,9 @@
 const express = require('express');
-const { AppDataSource } = require('./config/db'); // Ajusta la ruta si index.js está dentro de src/
+const { AppDataSource } = require('./config/db');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT
 
 // Middlewares globales
 app.use(express.json());
