@@ -5,7 +5,7 @@ import express from 'express';
 //import db
 import usuarioRoutes from './routes/Usuario.routes.js';
 import encargadoVoluntariosRoutes from './routes/EncargadoVoluntarios.routes.js';
-import cuadrillaRoutes from './routes/Cuadrilla.routes.js';
+import cuadrillaRoutes from './routes/Cuadrilla/Cuadrilla.routes.js';
 
 const app = express();
 
