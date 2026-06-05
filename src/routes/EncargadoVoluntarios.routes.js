@@ -5,8 +5,12 @@ const router = express.Router();
 
 router.get('/ListaPostulantes',encargadoVoluntariosController.obtenerListaPostulantes);
 router.get('/ListaVoluntarios',encargadoVoluntariosController.obtenerListaVoluntarios);
-router.get('/ListaPostulantes/:id',encargadoVoluntariosController.obtenerPostulante);
-router.get('/ListaVoluntarios/:id',encargadoVoluntariosController.obtenerVoluntario);
+// En EncargadoVoluntarios.routes.js -> Uso macro / exclusivo
+// Genera propuesta regional preliminar para validación de la Central.
+router.get('/ListaVoluntarios/:idRegion/Cercania',encargadoVoluntariosController.obtenerVoluntariosPorZonaRiesgo); //ordenados por PRIORIDAD. Se decide por cercanía a zona de riesgo.
+//DEBE PERMITIR COPIAR/DESCARGAR LOS QUE SELECCIONE, PARA QUE LUEGO EN /CUADRILLA PUEDA ASIGNARLOS TODOS DE UNA AL CREAR UNA CUADRILLA, O PARA FACILITAR SEPARACIÓN DE VOLUNTARIOS EN CADA CUADRILLA.
+router.get('/ListaPostulantes/:idPostulante',encargadoVoluntariosController.obtenerPostulante);
+router.get('/ListaVoluntarios/:idVoluntario',encargadoVoluntariosController.obtenerVoluntario);
 
 router.post('/ListaPostulantes/:id/aprobar',encargadoVoluntariosController.aprobarPostulante);
 router.post('/ListaVoluntarios/asignar-cuadrilla',encargadoVoluntariosController.asignarCuadrilla);
