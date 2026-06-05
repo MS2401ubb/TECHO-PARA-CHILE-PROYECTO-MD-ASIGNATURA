@@ -9,7 +9,7 @@ module.exports = new EntitySchema({
       type: 'varchar',
       length: 50,
     },
-    descripcion: {
+    direccion: {
       type: 'text',
     },
     tipoObra: {
