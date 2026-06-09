@@ -180,7 +180,7 @@ const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) 
     const diasEstancia = calcularDiasEstancia(vivienda.fechaInicioEstimada, fechaFinLogistica);
 
     //Determinar el volumen total de porciones necesarias (desayuno,almuerzo,cena) al dia
-    const totalRaciones = totalVoluntariosActivos * diasEstancia * 3; 
+    const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3; 
 
     //Retornamos la estructura del documento para el pedido de insumos
     return {
