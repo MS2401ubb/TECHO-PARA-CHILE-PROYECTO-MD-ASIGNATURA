@@ -1,4 +1,4 @@
-const transporteAlimentoService = require('../services/transporte_alimento.service');
+const transporteAlimentoService = require('../services/transporte_alimentacion.service');
 const { crearPdfManifiestoCarga } = require('../utils/transporte_alimento.report');
 
 const generarTransporte = async (req, res) => {
