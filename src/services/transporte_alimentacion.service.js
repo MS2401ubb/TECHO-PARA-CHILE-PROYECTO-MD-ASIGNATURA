@@ -4,10 +4,10 @@ const viviendas = require('../entities/Vivienda.entity');
 const viviendasRepository = db.getRepository(viviendas);
 
 const cuadrillaTrabaja = require('../entities/CuadrillaTrabajaEnVivienda.entity');
-const cuadrillaTrabajaRepository = db.getRepository(cuadrilla_trabaja_en_vivienda);
+const cuadrillaTrabajaRepository = db.getRepository('CuadrillaTrabajaEnVivienda');
 
 const voluntarios = require('../entities/Voluntario.entity');
-const voluntariosRepository = db.getRepository(voluntarios);
+const voluntariosRepository = db.getRepository('voluntario');    
 
 
 const obtenerListaVoluntariosTransporte = (viviendasEnCiudad) => {
