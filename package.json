@@ -14,14 +14,21 @@
   "author": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "setup": "node src/config/initialSetup.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "joi": "^18.2.1",
+    "pdfkit": "^0.18.0",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
