@@ -7,6 +7,8 @@ const PORT = process.env.PORT
 
 // Middlewares globales
 app.use(express.json());
+const jornadaRoutes = require('./routes/jornada.routes');
+app.use('/api', jornadaRoutes);
 
 // Inicializar la base de datos y luego levantar el servidor
 AppDataSource.initialize()
