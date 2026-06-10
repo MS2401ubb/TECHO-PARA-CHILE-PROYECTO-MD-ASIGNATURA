@@ -9,11 +9,10 @@ router.get('/ListaVoluntarios',encargadoVoluntariosController.obtenerListaVolunt
 // Genera propuesta regional preliminar para validación de la Central.
 router.get('/ListaVoluntarios/:idRegion/Cercania',encargadoVoluntariosController.obtenerVoluntariosPorZonaRiesgo); //ordenados por PRIORIDAD. Se decide por cercanía a zona de riesgo.
 //DEBE PERMITIR COPIAR/DESCARGAR LOS QUE SELECCIONE, PARA QUE LUEGO EN /CUADRILLA PUEDA ASIGNARLOS TODOS DE UNA AL CREAR UNA CUADRILLA, O PARA FACILITAR SEPARACIÓN DE VOLUNTARIOS EN CADA CUADRILLA.
-router.get('/ListaPostulantes/:idPostulante',encargadoVoluntariosController.obtenerPostulante);
-router.get('/ListaVoluntarios/:idVoluntario',encargadoVoluntariosController.obtenerVoluntario);
+router.get('/ListaPostulantes/:rut', encargadoVoluntariosController.obtenerPostulante);
+router.get('/ListaVoluntarios/:rut', encargadoVoluntariosController.obtenerVoluntario);
 
-router.post('/ListaPostulantes/:id/aprobar',encargadoVoluntariosController.aprobarPostulante);
+router.patch('/ListaPostulantes/:rut/aprobar', encargadoVoluntariosController.aprobarIngresoPostulante);
+
 router.post('/ListaVoluntarios/asignar-cuadrilla',encargadoVoluntariosController.asignarCuadrilla);
-
-module.exports = router;
 

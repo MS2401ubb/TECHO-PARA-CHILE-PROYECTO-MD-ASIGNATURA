@@ -11,7 +11,7 @@ const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [
-    // Entidades
+    //Entidades
     require('../entities/Vivienda.entity'),
     require('../entities/CuadrillaTrabajaEnVivienda.entity'),
     require('../entities/Ciudad.entity'),
@@ -22,8 +22,12 @@ const AppDataSource = new DataSource({
     require('../entities/Region.entity'),
     require('../entities/Usuario.entity'),
     require('../entities/Voluntario.entity'),
-    require('../entities/VoluntarioParticipaEnCuadrilla.entity')
+    require('../entities/VoluntarioParticipaEnCuadrilla.entity'),
+    require('../entities/Material'),
+    require('../entities/Jornada'),
+    require('../entities/InventarioJornada')
   ],
 });
 
 module.exports = AppDataSource;
+module.exports.AppDataSource = AppDataSource;
