@@ -15,3 +15,5 @@ router.get('/ListaVoluntarios/:idVoluntario',encargadoVoluntariosController.obte
 router.post('/ListaPostulantes/:id/aprobar',encargadoVoluntariosController.aprobarPostulante);
 router.post('/ListaVoluntarios/asignar-cuadrilla',encargadoVoluntariosController.asignarCuadrilla);
 
+module.exports = router;
+

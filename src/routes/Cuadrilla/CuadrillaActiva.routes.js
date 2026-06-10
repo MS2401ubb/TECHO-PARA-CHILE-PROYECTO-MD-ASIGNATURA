@@ -23,3 +23,5 @@ router.get('/id:/fecha_inicio/detalles-zona'); //lo mismo que region, pero para 
 router.get('/:id/:fecha_inicio/ubicacion',cuadrillaController.obtenerDetallesUbicacion); //requiere JOIN de las 3 entities = {CuadrillaTrabajaEnVivienda, Vivienda, Ciudad, Region} relacionadas con Vivienda para desplegar toda la info relacionada.
 
 router.get('/:id/:fecha_inicio',cuadrillaController.obtenerInformacionCuadrilla);
+
+module.exports = router;

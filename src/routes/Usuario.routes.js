@@ -7,3 +7,4 @@ router.get('/',usuarioController.mostrarUsuario); //lo manda a '/Acceso' si no t
 router.patch('/Modificar-perfil',usuarioController.actualizarUsuario);
 router.post('/Acceso',usuarioController.iniciarSesion);
 
+module.exports = router;
