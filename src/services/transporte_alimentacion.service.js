@@ -4,10 +4,10 @@ const viviendas = require('../entities/Vivienda.entity');
 const viviendasRepository = db.getRepository(viviendas);
 
 const cuadrillaTrabaja = require('../entities/CuadrillaTrabajaEnVivienda.entity');
-const cuadrillaTrabajaRepository = db.getRepository(cuadrilla_trabaja_en_vivienda);
+const cuadrillaTrabajaRepository = db.getRepository('CuadrillaTrabajaEnVivienda');
 
 const voluntarios = require('../entities/Voluntario.entity');
-const voluntariosRepository = db.getRepository(voluntarios);
+const voluntariosRepository = db.getRepository('voluntario');    
 
 
 const obtenerListaVoluntariosTransporte = (viviendasEnCiudad) => {
@@ -180,7 +180,7 @@ const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) 
     const diasEstancia = calcularDiasEstancia(vivienda.fechaInicioEstimada, fechaFinLogistica);
 
     //Determinar el volumen total de porciones necesarias (desayuno,almuerzo,cena) al dia
-    const totalRaciones = totalVoluntariosActivos * diasEstancia * 3; 
+    const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3; 
 
     //Retornamos la estructura del documento para el pedido de insumos
     return {
