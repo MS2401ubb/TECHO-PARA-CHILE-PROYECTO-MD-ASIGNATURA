@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 
 //import encargadoVoluntariosController from '../controllers/EncargadoVoluntarios.controller.js';
+import encargadoVoluntariosController from '../controllers/EncargadoVoluntarios.controller.js';
 
 router.get('/ListaPostulantes',encargadoVoluntariosController.obtenerListaPostulantes);
 router.get('/ListaVoluntarios',encargadoVoluntariosController.obtenerListaVoluntarios);
@@ -16,3 +17,4 @@ router.patch('/ListaPostulantes/:rut/aprobar', encargadoVoluntariosController.ap
 
 router.post('/ListaVoluntarios/asignar-cuadrilla',encargadoVoluntariosController.asignarCuadrilla);
 
+export default router;
