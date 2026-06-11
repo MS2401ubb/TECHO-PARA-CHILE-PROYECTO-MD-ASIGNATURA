@@ -188,6 +188,53 @@ async function aprobarPostulante(rut, datosAprobacion) {
   });
 }
 
+async function obtenerVoluntariosPorZonaRiesgo(idRegionZonaRiesgo,idCiudadTransporte = null){
+  /*manager = AppDataSource.manager
+  const usuariosRepository = manager.getRepository('Usuario');*/
+  const { voluntarioRepository } = obtenerRepositorios();
+
+  
+  //jerarquia de proximidad
+
+  const voluntariosDeRegion = await voluntarioRepository.find({
+    where:{
+      estado: ESTADO_VOLUNTARIO_ACTIVO,
+      usuario:{
+        ciudad:{
+          codigoRegion: idRegionZonaRiesgo
+        }
+      }
+    },
+    relations:{
+      usuario:{
+        ciudad: true
+      }
+    }
+  });
+  //depende utilidad de esta variable segun como funciona organización de transporte de voluntarios?
+  //depende tambien si se organiza solo por cuadrilla, requiere un numero muucho mas pequeño que si fuera movilización masiva de todos los voluntarios que ayudaran en la zona de riesgo.
+  /*let condicionesWhere={
+    usuario:{
+      ciudad:{
+        codigoRegion: idRegionZonaRiesgo     
+      }
+    }
+  }
+  if(idCiudadTransporte){
+    condicionesWhere ={
+      usuario:{
+        ciudad:{
+          codigoRegion: idRegionZonaRiesgo,
+          codigo: idCiudadTransporte
+        }
+      }
+    };
+  }*/
+  //CONSIDERA DESPUES SI USO ESTA U OTRA MANERA DE REALIZAR FUNCION/BUSQUEDA.
+  return voluntariosDeRegion;
+  //por ahora este array es suficiente para usar funcion en EncargadoVoluntarios.controller
+}
+
 module.exports = {
   obtenerListaPostulantes,
   obtenerListaVoluntarios,

@@ -7,7 +7,7 @@ const db = require('./config/db');
 
 // Importación de rutas
 const routerApi = require('./routes/index.routes');
-const jornadaRoutes = require('./routes/jornada.routes');
+
 
 const app = express();
 
