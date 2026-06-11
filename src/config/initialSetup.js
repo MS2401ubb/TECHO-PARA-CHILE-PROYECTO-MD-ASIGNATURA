@@ -5,6 +5,7 @@ const Ciudad = require('../entities/Ciudad.entity.js');
 const Region = require('../entities/Region.entity.js');
 
 const Usuario = require('../entities/Usuario.entity.js');
+const Vivienda = require('../entities/Vivienda.entity.js');
 
 const initialSetup = async () => {
   try {
@@ -428,6 +429,70 @@ const initialSetup = async () => {
         return ciudadRepository.create({ ...rest, region: { codigo: codigoRegion } });
       });
       await ciudadRepository.save(ciudadesEntities);
+    }
+    const viviendasRepository = AppDataSource.getRepository(Vivienda);
+    const countViviendas = await viviendasRepository.count();
+    
+    if (countViviendas === 0) {
+      console.log('Insertando viviendas de prueba asignadas a comunas...');
+
+      // Buscamos las entidades completas de las comunas insertadas arriba para la relación ManyToOne
+      const comunaSantiago = await ciudadRepository.findOneBy({ nombre: 'Santiago' });
+      const comunaConcepcion = await ciudadRepository.findOneBy({ nombre: 'Concepción' });
+      const comunaValparaiso = await ciudadRepository.findOneBy({ nombre: 'Valparaíso' });
+
+      const datosViviendas = [
+        {
+          codigo: "VIV-001",
+          direccion: "Av. Las Condes 12300, Santiago",
+          tipoObra: "Construcción de Vivienda de Emergencia Habitacional",
+          estado: "planificacion",
+          porcentajeAvance: 0,
+          fechaInicioEstimada: "2026-06-15",
+          fechaFinEstimada: "2026-06-25",
+          fechaFinReal: null,
+          montajeEstructural: true,
+          habilidadTecnica: false,
+          conexionesBasicas: true,
+          observacionesValidacion: "Zona despejada y lista para la llegada de las cuadrillas.",
+          ciudad: comunaSantiago // Asignación de la relación completa
+        },
+        {
+          codigo: "VIV-002",
+          direccion: "Calle Balmaceda 455, Concepción",
+          tipoObra: "Reparación Estructural Post-Siniestro",
+          estado: "planificacion",
+          porcentajeAvance: 10,
+          fechaInicioEstimada: "2026-07-01",
+          fechaFinEstimada: "2026-07-08",
+          fechaFinReal: null,
+          montajeEstructural: true,
+          habilidadTecnica: true,
+          conexionesBasicas: false,
+          observacionesValidacion: "Requiere apoyo adicional en herramientas eléctricas.",
+          ciudad: comunaConcepcion
+        },
+        {
+          codigo: "VIV-003",
+          direccion: "Pasaje El Sol 89, Valparaíso",
+          tipoObra: "Módulo Habitacional Comunitario",
+          estado: "en_progreso",
+          porcentajeAvance: 45,
+          fechaInicioEstimada: "2026-05-10",
+          fechaFinEstimada: "2026-05-20",
+          fechaFinReal: null,
+          montajeEstructural: true,
+          habilidadTecnica: false,
+          conexionesBasicas: false,
+          observacionesValidacion: "Terreno con pendiente pronunciada, se requiere precaución.",
+          ciudad: comunaValparaiso
+        }
+      ];
+
+      await viviendasRepository.save(datosViviendas);
+      console.log('✅ Viviendas de prueba insertadas con éxito.');
+    } else {
+      console.log('Las viviendas de prueba ya se encuentran cargadas.');
     }
     process.exit(0);
   } catch (error) {

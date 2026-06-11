@@ -188,7 +188,7 @@ const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) 
         fechaGeneracion: new Date(), //generar una fecha para el documento
         detalleZona: {
             codigoVivienda: vivienda.codigo,
-            descripcion: vivienda.descripcion,
+            descripcion: vivienda.direccion,
             diasEstancia: diasEstancia
         },
         calculoLogistico: {

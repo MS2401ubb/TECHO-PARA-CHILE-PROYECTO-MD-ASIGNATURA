@@ -33,14 +33,14 @@ const generarDocumentoProvisionAlimentos = async (req, res) => {
             return res.status(400).json({ error: 'Falta campo obligatorio: RUT del encargado que gestiona el pedido '})
         }
 
-        const provisionAlimentos = await transporteAlimentoService.generarProvisionAlimentos(
+        const provisionAlimentos = await transporteAlimentoService.generarDocumentoProvisionAlimentos(
             codigoVivienda,
             rutEncargado
         );
-
+        return res.status(200).json(provisionAlimentos);
         //crearPdfProvisionAlimento(provisionAlimentos,res);
     } catch (error){
-        console.error('Error al generar documento:',error,message);
+        console.error('Error al generar documento de alimentos:',error.message);
         return res.status(500).json({error: error.message});
     }
 };

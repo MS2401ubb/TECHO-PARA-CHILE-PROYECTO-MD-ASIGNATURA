@@ -8,6 +8,7 @@ const db = require('./config/db');
 // Importación de rutas
 const routerApi = require('./routes/index.routes');
 const jornadaRoutes = require('./routes/jornada.routes');
+const alimentosRoutes = require('./routes/encargadoCentral.routes');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // Uso de rutas
 app.use('/api', jornadaRoutes);
 app.use(routerApi);
+app.use('/api',alimentosRoutes);
 
 // Configuración del puerto
 const PORT = config.PORT || process.env.PORT || 3000;
