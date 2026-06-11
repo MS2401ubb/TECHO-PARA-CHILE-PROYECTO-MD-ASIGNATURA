@@ -43,5 +43,10 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'rutUsuario' },
       onDelete: 'CASCADE',
     },
+    voluntariosParticipando: {
+      target: 'VoluntarioParticipaEnCuadrilla',
+      type: 'one-to-many',
+      inverseSide: 'voluntario'
+    }
   },
 });

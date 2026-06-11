@@ -60,13 +60,17 @@ const generarDocumentoTransporte = async (codigoCiudad, puntoOrigen) => {
             ciudad: { codigo: codigoCiudad }, 
             estado: 'planificacion' 
         },
-        relations: [
-            'cuadrillasTrabajando',
-            'cuadrillasTrabajando.cuadrilla',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando.voluntario',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando.voluntario.usuario'
-        ]
+        relations: {
+        cuadrillasTrabajando: {
+            cuadrilla: {
+            voluntariosParticipando: {
+                voluntario: {
+                usuario: true
+                }
+            }
+            }
+        }
+        }
     });
 
     if (!viviendasEnCiudad) {
@@ -84,6 +88,12 @@ const generarDocumentoTransporte = async (codigoCiudad, puntoOrigen) => {
         informacionLogistica: {
             origen: puntoOrigen,
             totalPasajeros: totalPasajeros,
+            // fechaSalida que sea una fecha mínima entre todas las viviendas en planificación, para sugerir la fecha de salida al chofer. Formato YYYY-MM-DD
+            fechaSalida:  
+                viviendasEnCiudad.reduce((fechaMin, vivienda) => {
+                    const fechaInicio = new Date(vivienda.fechaInicioEstimada);
+                    return fechaInicio < fechaMin ? fechaInicio : fechaMin;
+                }, new Date(viviendasEnCiudad[0].fechaInicioEstimada)).toISOString().split('T')[0] // Formato YYYY-MM-DD
         },
         destinos: destinos, // Lista de paradas/casas
         voluntarios: listaVoluntarios // Lista detallada para el chofer

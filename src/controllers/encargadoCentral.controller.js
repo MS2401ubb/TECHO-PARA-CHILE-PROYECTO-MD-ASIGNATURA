@@ -1,5 +1,5 @@
 const transporteAlimentoService = require('../services/transporte_alimentacion.service');
-const { crearPdfManifiestoCarga } = require('../utils/transporte_alimento.report');
+const { crearPdfManifiestoCarga } = require('../utils/documentoTransporte.report');
 
 const generarTransporte = async (req, res) => {
     try {
@@ -7,7 +7,7 @@ const generarTransporte = async (req, res) => {
         const { trasladoPuntoOrigen } = req.body;
 
         if (!trasladoPuntoOrigen) {
-            return res.status(400).json({ error: 'Falta campo obligatorio: Punto de origen o capacidad del bus.' });
+            return res.status(400).json({ error: 'Falta campo obligatorio: Punto de origen.' });
         }
     
         const datosLogística = await transporteAlimentoService.generarDocumentoTransporte(

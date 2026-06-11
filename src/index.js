@@ -7,7 +7,6 @@ const db = require('./config/db');
 
 // Importación de rutas
 const routerApi = require('./routes/index.routes');
-const jornadaRoutes = require('./routes/jornada.routes');
 
 const app = express();
 
@@ -15,7 +14,6 @@ const app = express();
 app.use(express.json());
 
 // Uso de rutas
-app.use('/api', jornadaRoutes);
 app.use(routerApi);
 
 // Configuración del puerto
