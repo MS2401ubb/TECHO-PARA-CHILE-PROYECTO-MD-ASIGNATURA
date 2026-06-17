@@ -2,6 +2,56 @@ const { AppDataSource } = require('../config/db');
 const { IsNull } = require('typeorm');
 const Material = require('../entities/Material');
 const InventarioJornada = require('../entities/InventarioJornada');
+const CuadrillaTrabajaEnViviendaEntity = require('../entities/CuadrillaTrabajaEnVivienda.entity');
+
+const obtenerNumeroVoluntariosCuadrilla = async (codigoCuadrilla) => {
+  const participacionRepository = AppDataSource.getRepository('VoluntarioParticipaEnCuadrilla');
+  
+  const voluntariosEnCuadrilla = await participacionRepository.count({
+    where:{
+      fechaFin: null,
+      cuadrilla:{
+        codigo: codigoCuadrilla
+      },
+    },
+  })
+
+
+  return voluntariosEnCuadrilla;
+}
+
+const obtenerNumeroVoluntariosCuadrilla = async (codigoCuadrilla,fechaActual) => {
+  const participacionRepository = AppDataSource.getRepository('VoluntarioParticipaEnCuadrilla');
+  const jornadaRepository = AppDataSource.getRepository('Jornada');
+  const cuadrillaTrabajaViviendaRepository = AppDataSource.getRepository('CuadrillaTrabajaEnVivienda');
+
+  const res = await participacionRepository.find({
+    join:{
+      alias: 'participacion',
+      innerJoin:{
+        trabajo:'CuadrillaTrabajaEnVivienda',
+        vivienda: 'Vivienda',
+        jornada: 'Jornada'
+      }
+    },
+
+    relations: ['voluntario'],
+
+    where: (qb) =>{
+      qb.where('participacion.codigoCuadrilla = trabajo.codigoCuadrilla')
+      .andWhere('trabajo.codigoCuadrilla = :codigoCuadrilla',{codigoCuadrilla})
+
+      .andWhere('vivienda.codigo = trabajo.codigoVivienda')
+      
+      .andWhere('jornada.id_vivienda = vivienda.codigo')
+
+      .andWhere('participacion.fechaFin IS NULL')
+      .andWhere('jornada.fecha = :fechaActual',{fechaActual})
+    }
+  });
+
+  return res.map(registro => registro.voluntario);
+}
 
 const finalizarJornadaService = async (idJornada, materialesContados) => {
 
