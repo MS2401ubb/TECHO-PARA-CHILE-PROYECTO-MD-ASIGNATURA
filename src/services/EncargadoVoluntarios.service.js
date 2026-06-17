@@ -211,6 +211,9 @@ async function obtenerVoluntariosPorZonaRiesgo(idRegionZonaRiesgo,idCiudadTransp
       }
     }
   });
+  //en esta parte iría fórmula de Haversine, entre vivienda y aproximación general de ciudad usuario/voluntario.
+
+  return voluntariosDeRegion;
   //depende utilidad de esta variable segun como funciona organización de transporte de voluntarios?
   //depende tambien si se organiza solo por cuadrilla, requiere un numero muucho mas pequeño que si fuera movilización masiva de todos los voluntarios que ayudaran en la zona de riesgo.
   /*let condicionesWhere={
@@ -231,9 +234,11 @@ async function obtenerVoluntariosPorZonaRiesgo(idRegionZonaRiesgo,idCiudadTransp
     };
   }*/
   //CONSIDERA DESPUES SI USO ESTA U OTRA MANERA DE REALIZAR FUNCION/BUSQUEDA.
-  return voluntariosDeRegion;
+
   //por ahora este array es suficiente para usar funcion en EncargadoVoluntarios.controller
 }
+
+
 
 module.exports = {
   obtenerListaPostulantes,
