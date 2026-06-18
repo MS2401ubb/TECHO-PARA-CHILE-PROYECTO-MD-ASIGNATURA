@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router();
 
 import usuarioRoutes from './Usuario.routes.js';
-const encargadoVoluntariosRoutes = require('./EncargadoVoluntarios.routes');
-const encargadoCentralRoutes = require('./encargadoCentral.routes');
+const encargadoVoluntariosRoutes = require('./EncargadoVoluntarios.routes.js');
+const encargadoCentralRoutes = require('./encargadoCentral.routes.js');
 import cuadrillaRoutes from './Cuadrilla/Cuadrilla.routes.js';
 import voluntarioRoutes from './Voluntario.routes.js';
 import jornadaRoutes from './jornada.routes.js';
