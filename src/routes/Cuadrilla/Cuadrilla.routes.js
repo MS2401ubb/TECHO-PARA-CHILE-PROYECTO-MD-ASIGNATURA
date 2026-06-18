@@ -1,7 +1,8 @@
 import express from 'express';
 const router = express.Router();
 
-import activa from '.CuadrillaActiva.routes.js';
+//import activa from '.CuadrillaActiva.routes.js';
+import activa from './CuadrillaActiva.routes.js';
  
 //import cuadrillaController from '../controllers/Cuadrilla.controller.js';
 
