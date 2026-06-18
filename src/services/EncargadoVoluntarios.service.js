@@ -1,21 +1,16 @@
+const { AppDataSource } = require('../config/db');
+const { IsNull } = require('typeorm');
+
 const ESTADO_POSTULANTE = 'Postulante';
 const ESTADO_VOLUNTARIO_ACTIVO = 'Voluntario Activo';
 
-function obtenerRepositorios(manager) {
+function obtenerRepositorios(manager = AppDataSource.manager) {
   return {
     voluntarioRepository: manager.getRepository('Voluntario'),
     cuadrillaRepository: manager.getRepository('Cuadrilla'),
     participacionRepository: manager.getRepository('VoluntarioParticipaEnCuadrilla'),
     trabajoViviendaRepository: manager.getRepository('CuadrillaTrabajaEnVivienda'),
   };
-}
-
-function asegurarDataSource(dataSource) {
-  if (!dataSource) {
-    const error = new Error('No existe una conexion a la base de datos configurada en app.locals.dataSource.');
-    error.statusCode = 500;
-    throw error;
-  }
 }
 
 function validarCamposObligatorios(voluntario) {
@@ -42,7 +37,9 @@ async function buscarVoluntarioPorRut(voluntarioRepository, rut) {
 }
 
 async function obtenerCuadrillaManual(cuadrillaRepository, codigoCuadrilla) {
-  const cuadrilla = await cuadrillaRepository.findOne({ where: { codigo: codigoCuadrilla } });
+  const cuadrilla = await cuadrillaRepository.findOne({
+    where: { codigo: codigoCuadrilla },
+  });
 
   if (!cuadrilla) {
     const error = new Error('La cuadrilla indicada no existe.');
@@ -66,7 +63,7 @@ function prioridadVivienda(trabajo) {
 
 async function obtenerCuadrillaAutomatica(cuadrillaRepository, trabajoViviendaRepository) {
   const trabajosActivos = await trabajoViviendaRepository.find({
-    where: { fechaFin: null },
+    where: { fechaFin: IsNull() },
     relations: ['cuadrilla', 'vivienda'],
   });
 
@@ -89,9 +86,8 @@ async function obtenerCuadrillaAutomatica(cuadrillaRepository, trabajoViviendaRe
   return cuadrilla;
 }
 
-async function listarPorEstado(dataSource, estado) {
-  asegurarDataSource(dataSource);
-  const voluntarioRepository = dataSource.getRepository('Voluntario');
+async function listarPorEstado(estado) {
+  const { voluntarioRepository } = obtenerRepositorios();
 
   return voluntarioRepository.find({
     where: { estado },
@@ -99,17 +95,17 @@ async function listarPorEstado(dataSource, estado) {
   });
 }
 
-export async function obtenerListaPostulantes(dataSource) {
-  return listarPorEstado(dataSource, ESTADO_POSTULANTE);
+async function obtenerListaPostulantes() {
+  return listarPorEstado(ESTADO_POSTULANTE);
 }
 
-export async function obtenerListaVoluntarios(dataSource) {
-  return listarPorEstado(dataSource, ESTADO_VOLUNTARIO_ACTIVO);
+async function obtenerListaVoluntarios() {
+  return listarPorEstado(ESTADO_VOLUNTARIO_ACTIVO);
 }
 
-export async function obtenerPostulante(dataSource, rut) {
-  asegurarDataSource(dataSource);
-  const voluntario = await buscarVoluntarioPorRut(dataSource.getRepository('Voluntario'), rut);
+async function obtenerPostulante(rut) {
+  const { voluntarioRepository } = obtenerRepositorios();
+  const voluntario = await buscarVoluntarioPorRut(voluntarioRepository, rut);
 
   if (!voluntario || voluntario.estado !== ESTADO_POSTULANTE) {
     const error = new Error('No se encontro un postulante con el RUT indicado.');
@@ -120,9 +116,9 @@ export async function obtenerPostulante(dataSource, rut) {
   return voluntario;
 }
 
-export async function obtenerVoluntario(dataSource, rut) {
-  asegurarDataSource(dataSource);
-  const voluntario = await buscarVoluntarioPorRut(dataSource.getRepository('Voluntario'), rut);
+async function obtenerVoluntario(rut) {
+  const { voluntarioRepository } = obtenerRepositorios();
+  const voluntario = await buscarVoluntarioPorRut(voluntarioRepository, rut);
 
   if (!voluntario || voluntario.estado !== ESTADO_VOLUNTARIO_ACTIVO) {
     const error = new Error('No se encontro un voluntario activo con el RUT indicado.');
@@ -133,10 +129,8 @@ export async function obtenerVoluntario(dataSource, rut) {
   return voluntario;
 }
 
-export async function aprobarPostulante(dataSource, rut, datosAprobacion) {
-  asegurarDataSource(dataSource);
-
-  return dataSource.transaction(async (manager) => {
+async function aprobarPostulante(rut, datosAprobacion) {
+  return AppDataSource.transaction(async (manager) => {
     const {
       voluntarioRepository,
       cuadrillaRepository,
@@ -171,7 +165,7 @@ export async function aprobarPostulante(dataSource, rut, datosAprobacion) {
       ? await obtenerCuadrillaAutomatica(cuadrillaRepository, trabajoViviendaRepository)
       : await obtenerCuadrillaManual(cuadrillaRepository, datosAprobacion.codigoCuadrilla);
 
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = new Date();
 
     voluntario.estado = ESTADO_VOLUNTARIO_ACTIVO;
     voluntario.solicitudActiva = true;
@@ -193,3 +187,58 @@ export async function aprobarPostulante(dataSource, rut, datosAprobacion) {
     };
   });
 }
+
+async function obtenerVoluntariosPorZonaRiesgo(idRegionZonaRiesgo,idCiudadTransporte = null){
+  /*manager = AppDataSource.manager
+  const usuariosRepository = manager.getRepository('Usuario');*/
+  const { voluntarioRepository } = obtenerRepositorios();
+
+  
+  //jerarquia de proximidad
+
+  const voluntariosDeRegion = await voluntarioRepository.find({
+    where:{
+      estado: ESTADO_VOLUNTARIO_ACTIVO,
+      usuario:{
+        ciudad:{
+          codigoRegion: idRegionZonaRiesgo
+        }
+      }
+    },
+    relations:{
+      usuario:{
+        ciudad: true
+      }
+    }
+  });
+  //depende utilidad de esta variable segun como funciona organización de transporte de voluntarios?
+  //depende tambien si se organiza solo por cuadrilla, requiere un numero muucho mas pequeño que si fuera movilización masiva de todos los voluntarios que ayudaran en la zona de riesgo.
+  /*let condicionesWhere={
+    usuario:{
+      ciudad:{
+        codigoRegion: idRegionZonaRiesgo     
+      }
+    }
+  }
+  if(idCiudadTransporte){
+    condicionesWhere ={
+      usuario:{
+        ciudad:{
+          codigoRegion: idRegionZonaRiesgo,
+          codigo: idCiudadTransporte
+        }
+      }
+    };
+  }*/
+  //CONSIDERA DESPUES SI USO ESTA U OTRA MANERA DE REALIZAR FUNCION/BUSQUEDA.
+  return voluntariosDeRegion;
+  //por ahora este array es suficiente para usar funcion en EncargadoVoluntarios.controller
+}
+
+module.exports = {
+  obtenerListaPostulantes,
+  obtenerListaVoluntarios,
+  obtenerPostulante,
+  obtenerVoluntario,
+  aprobarPostulante,
+};
