@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router();
-const encargadoCentralRoutes = require('./encargadoCentral.routes');
 
 import usuarioRoutes from './Usuario.routes.js';
 const encargadoVoluntariosRoutes = require('./EncargadoVoluntarios.routes');
