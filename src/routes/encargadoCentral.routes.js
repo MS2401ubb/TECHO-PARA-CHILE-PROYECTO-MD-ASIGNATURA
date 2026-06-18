@@ -10,4 +10,4 @@ router.post('/planificacion-central/:codigoCiudad/transporte', encargadoCentralC
 
 
 
-module.exports = router;
+export default router;

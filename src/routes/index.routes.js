@@ -15,4 +15,4 @@ router.use('/Cuadrillas',cuadrillaRoutes);
 app.use('/api',jornadaRoutes);//????
 
 
-module.exports = router;
+export default router;

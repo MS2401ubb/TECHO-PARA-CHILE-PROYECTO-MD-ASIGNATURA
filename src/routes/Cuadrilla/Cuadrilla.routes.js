@@ -12,4 +12,4 @@ router.use('/activas',activa);
 
 router.get('/:id/:fecha_inicio',cuadrillaController.mostrarInfoCuadrilla); //cambiar ':fecha-inicio' a query? revisar si es necesario o mejor
 
-module.exports = router;
+export default router;

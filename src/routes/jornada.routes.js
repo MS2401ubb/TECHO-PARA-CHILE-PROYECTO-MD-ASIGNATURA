@@ -10,4 +10,4 @@ const {finalizarJornadaController} = require('../controllers/jornada.controller'
 //definicion de la ruta (url donde llama la web)
 router.post('/jornadas/:id/finalizar',validarFinalizarJornada, finalizarJornadaController);
 
-module.exports = router;
+export default router;
