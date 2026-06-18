@@ -7,6 +7,9 @@ const db = require('./config/db');
 
 // Importación de rutas
 const routerApi = require('./routes/index.routes');
+=======
+
+>>>>>>> main
 
 const app = express();
 

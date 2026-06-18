@@ -100,7 +100,6 @@ const generarDocumentoTransporte = async (codigoCiudad, puntoOrigen) => {
     };
 };
 
-//module.exports = {generarDocumentoTransporte};
 
 
 /**
