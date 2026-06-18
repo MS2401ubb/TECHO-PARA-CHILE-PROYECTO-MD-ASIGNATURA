@@ -24,4 +24,4 @@ router.get('/:id/:fecha_inicio/ubicacion',cuadrillaController.obtenerDetallesUbi
 
 router.get('/:id/:fecha_inicio',cuadrillaController.obtenerInformacionCuadrilla);
 
-module.exports = router;
+export default router;

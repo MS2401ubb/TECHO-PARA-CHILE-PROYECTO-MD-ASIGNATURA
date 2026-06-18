@@ -3,4 +3,4 @@ const router = express.Router();
 
 //import VoluntarioController from '../controllers/Voluntarios.controller.js';
 
-module.exports = router;
+export default router;
