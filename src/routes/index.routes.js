@@ -8,11 +8,11 @@ import cuadrillaRoutes from './Cuadrilla/Cuadrilla.routes.js';
 import voluntarioRoutes from './Voluntario.routes.js';
 import jornadaRoutes from './jornada.routes.js';
 
-router.use('/', encargadoCentralRoutes);
+router.use('/Login', (req, res) => { res.json({ mensaje: 'LOGIN'}) }); 
+router.use('/EncargadoCentral', encargadoCentralRoutes);
 router.use('/AdministracionVoluntarios', encargadoVoluntariosRoutes);
 router.use('/Usuario',usuarioRoutes);
 router.use('/Cuadrillas',cuadrillaRoutes);
-app.use('/api',jornadaRoutes);//????
-
+router.use('/AdministracionJornada', jornadaRoutes);
 
 export default router;

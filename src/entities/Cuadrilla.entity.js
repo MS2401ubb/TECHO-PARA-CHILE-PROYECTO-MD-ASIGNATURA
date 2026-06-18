@@ -13,4 +13,11 @@ module.exports = new EntitySchema({
       type: 'text',
     },
   },
+  relations: {
+    voluntariosParticipando: {
+      target: 'VoluntarioParticipaEnCuadrilla',
+      type: 'one-to-many',
+      inverseSide: 'cuadrilla'
+    }
+  }
 });

@@ -4,7 +4,7 @@ module.exports = new EntitySchema({
   name: 'Vivienda',
   tableName: 'viviendas',
   columns: {
-    codigo: {
+    codigo: { // EJEMPLO: "CONCE-001", "VALPA-002", etc. ({PRIMERAS 5 LETRAS DE LA CIUDAD}-{NÚMERO SECUENCIAL})
       primary: true,
       type: 'varchar',
       length: 50,
@@ -55,5 +55,10 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'codigoCiudad' },
       onDelete: 'RESTRICT', 
     },
+    cuadrillasTrabajando: {
+      target: 'CuadrillaTrabajaEnVivienda',
+      type: 'one-to-many',
+      inverseSide: 'vivienda'
+    }
   },
 });

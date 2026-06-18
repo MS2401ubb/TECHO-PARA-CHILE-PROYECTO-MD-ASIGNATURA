@@ -41,8 +41,10 @@ const crearPdfManifiestoCarga = (data, res) => {
     doc.moveDown(0.5);
     
     doc.fontSize(10).font('Helvetica').fillColor('#333333');
-    doc.text(`Punto de Origen Sugerido (Recogida): `, {库: true, continued: true }).font('Helvetica-Bold').text(informacionLogistica.origen);
-    doc.font('Helvetica').text(`Total de Pasajeros Registrados: `, { continued: true }).font('Helvetica-Bold').text(`${informacionLogistica.totalPasajeros} Voluntarios.`);
+    
+    doc.text(`Punto de Origen Sugerido (Recogida): `, {continued: true }).font('Helvetica-Bold').text(informacionLogistica.origen);
+    doc.text(`Total de Pasajeros Registrados: `, {continued: true }).font('Helvetica-Bold').text(informacionLogistica.totalPasajeros);
+    doc.text(`Fecha de Salida Sugerida: `, {continued: true }).font('Helvetica-Bold').text(informacionLogistica.fechaSalida);
 
     doc.moveDown(2);
 
@@ -54,9 +56,7 @@ const crearPdfManifiestoCarga = (data, res) => {
     
     doc.fontSize(10).fillColor('#333333');
     destinos.forEach((destino, index) => {
-        doc.font('Helvetica-Bold').text(`📍 Parada ${index + 1}: Proyecto ${destino.codigoVivienda}`);
-        doc.font('Helvetica').text(`   Dirección / Zona: ${destino.direccionDestino}`);
-        doc.text(`   Periodo: Desde el ${destino.fechaInicio} al ${destino.fechaFin}`);
+        doc.font('Helvetica-Bold').text(`Parada ${index + 1}: ${destino.direccionDestino} (Proyecto Vivienda: ${destino.codigoVivienda})`);
         doc.moveDown(0.5);
     });
     doc.moveDown(1.5);
@@ -69,18 +69,21 @@ const crearPdfManifiestoCarga = (data, res) => {
 
     // Dibujar Encabezado de la Tabla
     const tableTop = doc.y;
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#ffffff');
+    doc.fontSize(9).font('Helvetica-Bold');
     
     // Rectángulo de fondo para el encabezado de la tabla
     doc.rect(50, tableTop, 512, 18).fill('#0275d8');
     
+    // Resetear color a blanco para el texto de la cabecera
+    doc.fillColor('#ffffff');
+    
     // Textos de la cabecera (X, Y) utilizando coordenadas fijas para simular columnas
     doc.text('RUT', 55, tableTop + 5);
-    doc.text('Nombre Completo', 150, tableTop + 5);
-    doc.text('Contacto Emergencia', 380, tableTop + 5);
-    doc.text('Cuadrilla', 490, tableTop + 5);
+    doc.text('Nombre Completo', 130, tableTop + 5);
+    doc.text('Contacto Emergencia', 270, tableTop + 5);
+    doc.text('Cuadrilla', 390, tableTop + 5);
 
-    // Dibujar las filas de los voluntarios
+    // Dibujar las filas de los voluntar3ios
     let currentY = tableTop + 18;
     doc.font('Helvetica').fillColor('#333333');
 
@@ -98,9 +101,9 @@ const crearPdfManifiestoCarga = (data, res) => {
         }
 
         doc.text(voluntario.rut, 55, currentY + 4);
-        doc.text(voluntario.nombreCompleto, 150, currentY + 4);
-        doc.text(voluntario.telefonoEmergencia, 380, currentY + 4);
-        doc.text(voluntario.cuadrilla, 490, currentY + 4);
+        doc.text(voluntario.nombreCompleto, 130, currentY + 4);
+        doc.text(voluntario.telefonoEmergencia, 270, currentY + 4);
+        doc.text(voluntario.cuadrilla, 390, currentY + 4);
 
         currentY += 16;
     });
@@ -112,7 +115,7 @@ const crearPdfManifiestoCarga = (data, res) => {
     
     const firmaY = doc.y > 650 ? (doc.addPage(), 100) : doc.y + 30;
     
-    doc.moveTo(180, firmaY).lineTo(380, firmaY).stroke('#999999');
+    doc.moveTo(206, firmaY).lineTo(406, firmaY).stroke('#999999');
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#333333')
        .text('Firma y Timbre Encargado de Central', 50, firmaY + 5, { align: 'center' });
     doc.fontSize(8).font('Helvetica-Oblique').fillColor('#777777')
@@ -122,6 +125,4 @@ const crearPdfManifiestoCarga = (data, res) => {
     doc.end();
 };
 
-module.exports = {
-    crearPdfManifiestoCarga
-};
+module.exports = {crearPdfManifiestoCarga};
