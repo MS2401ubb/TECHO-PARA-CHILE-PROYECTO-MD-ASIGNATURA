@@ -1,13 +1,17 @@
 const db = require('../config/db');
 
+const { In, IsNull } = require('typeorm');
 const viviendas = require('../entities/Vivienda.entity');
 const viviendasRepository = db.getRepository(viviendas);
 
 const cuadrillaTrabaja = require('../entities/CuadrillaTrabajaEnVivienda.entity');
-const cuadrillaTrabajaRepository = db.getRepository('CuadrillaTrabajaEnVivienda');
+const cuadrillaViviendaRepository = db.getRepository(cuadrillaTrabaja);
 
 const voluntarios = require('../entities/Voluntario.entity');
-const voluntariosRepository = db.getRepository('voluntario');    
+const voluntarioRepository = db.getRepository(voluntarios);
+
+const voluntarioParticipa = require('../entities/VoluntarioParticipaEnCuadrilla.entity');
+const voluntarioParticipaRepository = db.getRepository(voluntarioParticipa);
 
 
 const obtenerListaVoluntariosTransporte = (viviendasEnCiudad) => {
@@ -56,17 +60,21 @@ const obtenerZonasDeDestino = (viviendasEnCiudad) => {
  */
 const generarDocumentoTransporte = async (codigoCiudad, puntoOrigen) => {
     const viviendasEnCiudad = await viviendasRepository.find({
-        where: { 
-            ciudad: { codigo: codigoCiudad }, 
-            estado: 'planificacion' 
+        where: {
+            ciudad: { codigo: codigoCiudad },
+            estado: 'planificacion'
         },
-        relations: [
-            'cuadrillasTrabajando',
-            'cuadrillasTrabajando.cuadrilla',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando.voluntario',
-            'cuadrillasTrabajando.cuadrilla.voluntariosParticipando.voluntario.usuario'
-        ]
+        relations: {
+            cuadrillasTrabajando: {
+                cuadrilla: {
+                    voluntariosParticipando: {
+                        voluntario: {
+                            usuario: true
+                        }
+                    }
+                }
+            }
+        }
     });
 
     if (!viviendasEnCiudad) {
@@ -114,25 +122,25 @@ const calcularDiasEstancia = (fechaInicio, fechaFin) => {
  * @param {Array} voluntariosActivos - Lista de todos los voluntarios activos del sistema
  * @returns {number} Total de voluntarios activos en la zona
  */
-const obtenerTotalVoluntariosActivosEnZona = (cuadrillaTrabaja, voluntariosActivos) => {
+const obtenerTotalVoluntariosActivosEnZona = async (cuadrillaTrabaja) => {
+    if (!cuadrillaTrabaja || cuadrillaTrabaja.length === 0) return 0;
 
-    let totalVoluntarios = 0;
+    const codigosCuadrillas = cuadrillaTrabaja.map(a => a.codigoCuadrilla);
 
-    //Recorrer cada cuadrilla asignada a la vivienda
-    for (const asignacion of cuadrillaTrabaja) {
-        const codigoCuadrillaAsignada = asignacion.codigoCuadrilla;
+    // Buscar participaciones activas en las cuadrillas de la zona
+    const participaciones = await voluntarioParticipaRepository.find({
+        where: { codigoCuadrilla: In(codigosCuadrillas), fechaFin: IsNull() },
+        relations: { voluntario: true }
+    });
 
-        //Recorrer los voluntarios activos del sistema
-        for (const voluntario of voluntariosActivos) {
-            
-            // Validamos que la cuadrilla de voluntarios sea de la zona
-            if (voluntario.codigoCuadrilla === codigoCuadrillaAsignada) {
-                totalVoluntarios++;
-            }
+    const rutsUnicos = new Set();
+    for (const p of participaciones) {
+        if (p.voluntario && p.voluntario.estado === 'Activo') {
+            rutsUnicos.add(p.rutVoluntario);
         }
     }
 
-    return totalVoluntarios;
+    return rutsUnicos.size;
 };
 
 /**
@@ -141,42 +149,44 @@ const obtenerTotalVoluntariosActivosEnZona = (cuadrillaTrabaja, voluntariosActiv
  * @param {string} rutEncargado - RUT del encargado que realiza la solicitud
  */
 const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) => {
-    //Buscamos la vivienda para verificar que exista
-    const vivienda = await viviendasRepository.findOneBy({ codigo: codigoVivienda });
+    // Normalizamos el código para evitar espacios en blanco inesperados
+    const codigoViviendaNormalizado = codigoVivienda?.trim();
+    if (!codigoViviendaNormalizado) {
+        throw new Error('El código de vivienda es obligatorio.');
+    }
 
-    if (!vivienda) {
+    // Buscamos la vivienda para verificar que exista
+    const viviendaEncontrada = await viviendasRepository.findOneBy({ codigo: codigoViviendaNormalizado });
+
+    if (!viviendaEncontrada) {
+        console.log(`No se encontró la vivienda con código ${codigoViviendaNormalizado}`);
         throw new Error('La vivienda o zona de construcción especificada no existe.');
     }
     
-    const fechaFinLogistica = vivienda.fechaFinEstimada;
+    const fechaFinLogistica = viviendaEncontrada.fechaFinEstimada;
     //verificamos si la zona tiene una fecha asignada, este requisito es obligatorio para la racion de alimentos
-    if (!vivienda.fechaInicioEstimada || !fechaFinLogistica) {
+    if (!viviendaEncontrada.fechaInicioEstimada || !fechaFinLogistica) {
         throw new Error('El sistema no permitirá generar la orden de raciones si la zona de construcción no tiene una fecha de término definida.');
     }
 
     //Obtener las cuadrillas de la zona
     const cuadrillaTrabaja = await cuadrillaViviendaRepository.find({
-        where: { codigoVivienda: codigoVivienda }
+        where: { codigoVivienda: codigoViviendaNormalizado }
     });
 
     if (!cuadrillaTrabaja || cuadrillaTrabaja.length === 0) {
         throw new Error('No hay cuadrillas asignadas a esta zona de construcción.');
     }
 
-    //Obtener voluntarios activos en el sistema
-    const voluntariosActivos = await voluntarioRepository.find({
-        where: { estado: 'activo' }
-    });
-
-    //llamamos la funcion obtenerTotalVoluntariosActivosEnZona
-    const totalVoluntariosActivosEnZona = obtenerTotalVoluntariosActivosEnZona(cuadrillaTrabaja, voluntariosActivos);
+    // Contar voluntarios activos asignados a las cuadrillas de la zona
+    const totalVoluntariosActivosEnZona = await obtenerTotalVoluntariosActivosEnZona(cuadrillaTrabaja);
 
     if (totalVoluntariosActivosEnZona === 0) {
         throw new Error('No se encontraron voluntarios activos asignados a las cuadrillas de esta zona.');
     }
 
     //Calcular la cantidad de días de estancia
-    const diasEstancia = calcularDiasEstancia(vivienda.fechaInicioEstimada, fechaFinLogistica);
+    const diasEstancia = calcularDiasEstancia(viviendaEncontrada.fechaInicioEstimada, fechaFinLogistica);
 
     //Determinar el volumen total de porciones necesarias (desayuno,almuerzo,cena) al dia
     const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3; 
@@ -186,12 +196,12 @@ const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) 
         documentoTipo: "PEDIDO_OFICIAL_INSUMOS_ALIMENTACION",
         fechaGeneracion: new Date(), //generar una fecha para el documento
         detalleZona: {
-            codigoVivienda: vivienda.codigo,
-            descripcion: vivienda.descripcion,
+            codigoVivienda: viviendaEncontrada.codigo,
+            descripcion: viviendaEncontrada.direccion,
             diasEstancia: diasEstancia
         },
         calculoLogistico: {
-            voluntariosActivos: totalVoluntariosActivos,
+            voluntariosActivos: totalVoluntariosActivosEnZona,
             racionesPorPersonaAlDia: 3,
             totalRacionesDeterminadas: totalRaciones //Atributo calculado solicitado
         },

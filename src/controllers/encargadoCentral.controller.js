@@ -1,6 +1,6 @@
 const transporteAlimentoService = require('../services/transporte_alimentacion.service');
 const { crearPdfManifiestoCarga } = require('../utils/transporte_alimento.report');
-//const { crearPdfProvisionAlimento} = require('../utils/provision_alimento.report');
+const { crearPdfOrdenAlimentacion} = require('../utils/documentoAlimentacion.report');
 
 const generarTransporte = async (req, res) => {
     try {
@@ -33,19 +33,17 @@ const generarDocumentoProvisionAlimentos = async (req, res) => {
             return res.status(400).json({ error: 'Falta campo obligatorio: RUT del encargado que gestiona el pedido '})
         }
 
-        const provisionAlimentos = await transporteAlimentoService.generarProvisionAlimentos(
+        const provisionAlimentos = await transporteAlimentoService.generarDocumentoProvisionAlimentos(
             codigoVivienda,
             rutEncargado
         );
-
-        //crearPdfProvisionAlimento(provisionAlimentos,res);
+        crearPdfOrdenAlimentacion(provisionAlimentos,res);
     } catch (error){
-        console.error('Error al generar documento:',error,message);
+        console.error('Error al generar documento de alimentos:',error.message);
         return res.status(500).json({error: error.message});
     }
 };
 
-//no se si hacer un pdf con los datos o entregar un json
 
 module.exports = {
     generarTransporte,

@@ -3,8 +3,12 @@ const AppDataSource = require('./db');
 
 const Ciudad = require('../entities/Ciudad.entity.js');
 const Region = require('../entities/Region.entity.js');
-
 const Usuario = require('../entities/Usuario.entity.js');
+const Voluntario = require('../entities/Voluntario.entity.js');
+const Vivienda = require('../entities/Vivienda.entity.js');
+const Cuadrilla = require('../entities/Cuadrilla.entity.js');
+const VoluntarioParticipaEnCuadrilla = require('../entities/VoluntarioParticipaEnCuadrilla.entity.js');
+const CuadrillaTrabajaEnVivienda = require('../entities/CuadrillaTrabajaEnVivienda.entity.js');
 
 const initialSetup = async () => {
   try {
@@ -428,6 +432,180 @@ const initialSetup = async () => {
         return ciudadRepository.create({ ...rest, region: { codigo: codigoRegion } });
       });
       await ciudadRepository.save(ciudadesEntities);
+    }
+    // PARA PRUEBAS
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+    const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+    const viviendaRepository = AppDataSource.getRepository(Vivienda);
+    const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+    const voluntarioParticipaRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
+    const cuadrillaTrabajaRepository = AppDataSource.getRepository(CuadrillaTrabajaEnVivienda);
+    // =========================================================================
+    // INSERCIÓN DE 15 USUARIOS Y SUS 15 PERFILES DE VOLUNTARIOS
+    // =========================================================================
+    const countUsuarios = await usuarioRepository.count();
+    if (countUsuarios === 0) {
+      console.log('🌱 Insertando 15 voluntarios y usuarios de prueba...');
+
+      const listadoPlano = [
+        { rut: '11.111.111-1', nombre: 'Juan', primerApellido: 'Pérez', segundoApellido: 'Alarcón', email: 'juan@gmail.com', telEmergencia: '+56911111111' },
+        { rut: '22.222.222-2', nombre: 'María', primerApellido: 'García', segundoApellido: 'Soto', email: 'maria@gmail.com', telEmergencia: '+56922222222' },
+        { rut: '33.333.333-3', nombre: 'Carlos', primerApellido: 'Rojas', segundoApellido: 'Mendoza', email: 'carlos@gmail.com', telEmergencia: '+56933333333' },
+        { rut: '44.444.444-4', nombre: 'Ana', primerApellido: 'Silva', segundoApellido: 'Fuentes', email: 'ana@gmail.com', telEmergencia: '+56944444444' },
+        { rut: '55.555.555-5', nombre: 'Pedro', primerApellido: 'López', segundoApellido: 'Castro', email: 'pedro@gmail.com', telEmergencia: '+56955555555' },
+        { rut: '66.666.666-6', nombre: 'Francisca', primerApellido: 'Torres', segundoApellido: 'Gómez', email: 'fran@gmail.com', telEmergencia: '+56966666666' },
+        { rut: '77.777.777-7', nombre: 'Diego', primerApellido: 'Morales', segundoApellido: 'Vera', email: 'diego@gmail.com', telEmergencia: '+56977777777' },
+        { rut: '88.888.888-8', nombre: 'Camila', primerApellido: 'Herrera', segundoApellido: 'Muñoz', email: 'camila@gmail.com', telEmergencia: '+56988888888' },
+        { rut: '99.999.999-9', nombre: 'Luis', primerApellido: 'Contreras', segundoApellido: 'Espinoza', email: 'luis@gmail.com', telEmergencia: '+56999999999' },
+        { rut: '10.101.101-0', nombre: 'Sofía', primerApellido: 'Araya', segundoApellido: 'Sepúlveda', email: 'sofia@gmail.com', telEmergencia: '+56910101010' },
+        { rut: '12.121.121-2', nombre: 'Manuel', primerApellido: 'Vergara', segundoApellido: 'Sanhueza', email: 'manuel@gmail.com', telEmergencia: '+56912121212' },
+        { rut: '13.131.131-3', nombre: 'Valentina', primerApellido: 'Miranda', segundoApellido: 'Jara', email: 'vale@gmail.com', telEmergencia: '+56913131313' },
+        { rut: '14.141.141-4', nombre: 'Andrés', primerApellido: 'Salinas', segundoApellido: 'Ríos', email: 'andres@gmail.com', telEmergencia: '+56914141414' },
+        { rut: '15.151.151-5', nombre: 'Bárbara', primerApellido: 'Pinto', segundoApellido: 'Navarro', email: 'barbara@gmail.com', telEmergencia: '+56915151515' },
+        { rut: '16.161.161-6', nombre: 'Cristóbal', primerApellido: 'Muñoz', segundoApellido: 'Henríquez', email: 'cristobal@gmail.com', telEmergencia: '+56916161616' }
+      ];
+
+      for (const item of listadoPlano) {
+        // A) Insertar Usuario Base
+        await usuarioRepository.save({
+          rut: item.rut,
+          password: 'password123',
+          nombre: item.nombre,
+          primerApellido: item.primerApellido,
+          segundoApellido: item.segundoApellido,
+          fechaNacimiento: '1995-05-15',
+          email: item.email,
+          telefono: '+56988887777',
+          rol: 'Voluntario',
+          ciudad: { codigo: 181 }
+        });
+        // B) Insertar Perfil de Voluntario Asociado
+        await voluntarioRepository.save({
+          rutUsuario: item.rut,
+          tipo: 'General',
+          estado: 'Activo', // Clave para que tu backend los considere en el traslado
+          solicitudActiva: true,
+          fechaValidacionDatos: '2026-03-10',
+          fechaActivacionSolicitud: '2026-03-11',
+          telefonoEmergencia: item.telEmergencia // Clave para pasar el filtro del reporte
+        });
+      }
+    }
+
+    // =========================================================================
+    // INSERCIÓN DE 6 VIVIENDAS (Todas en estado 'planificacion' en Concepción)
+    // =========================================================================
+    const countViviendas = await viviendaRepository.count();
+    if (countViviendas === 0) {
+      console.log('🌱 Insertando 6 viviendas en planificación...');
+      
+      const obras = [
+        { codigo: 'CONCE-001', direccion: 'Sector Palomares Pasaje Sur 45', tipo: 'Vivienda de Emergencia Provisoria' },
+        { codigo: 'CONCE-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria' },
+        { codigo: 'CONCE-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo' },
+        { codigo: 'CONCE-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria' },
+        { codigo: 'CONCE-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo' },
+        { codigo: 'CONCE-006', direccion: 'Nonguén Camino Público Km 4.5', tipo: 'Vivienda de Emergencia Provisoria' }
+      ];
+
+      
+      for (const obra of obras) {
+        await viviendaRepository.save({
+          codigo: obra.codigo,
+          direccion: obra.direccion,
+          tipoObra: obra.tipo,
+          estado: 'planificacion', // Requisito estricto de tu consulta SQL/TypeORM
+          porcentajeAvance: 0,
+          fechaInicioEstimada: '2026-06-15',
+          fechaFinEstimada: '2026-06-22', // Generará una estancia de 7 días para el cálculo de comida
+          fechaFinReal: null,
+          montajeEstructural: false,
+          habilidadTecnica: false,
+          conexionesBasicas: false,
+          observacionesValidacion: 'Zona despejada y apta cartográficamente para construcción.',
+          ciudad: { codigo: 181 }
+        });
+      }
+    }
+
+    // =========================================================================
+    // INSERCIÓN DE 4 CUADRILLAS
+    // =========================================================================
+    const countCuadrillas = await cuadrillaRepository.count();
+    if (countCuadrillas === 0) {
+      console.log('🌱 Insertando 4 cuadrillas de trabajo...');
+      
+      await cuadrillaRepository.save({ codigo: 'CUAD-ALFA', descripcion: 'Cuadrilla Alfa - Biobío' });
+      await cuadrillaRepository.save({ codigo: 'CUAD-BETA', descripcion: 'Cuadrilla Beta - Construcción' });
+      await cuadrillaRepository.save({ codigo: 'CUAD-GAMMA', descripcion: 'Cuadrilla Gamma - Soporte' });
+      await cuadrillaRepository.save({ codigo: 'CUAD-DELTA', descripcion: 'Cuadrilla Delta - Avanzada' });
+    }
+
+    // =========================================================================
+    // ASIGNACIÓN DE VOLUNTARIOS A CUADRILLAS (Mínimo 3 por cuadrilla)
+    // =========================================================================
+    const countVolParticipa = await voluntarioParticipaRepository.count();
+    if (countVolParticipa === 0) {
+      console.log('🌱 Distribuyendo voluntarios en las cuadrillas...');
+
+      const asignaciones = [
+        // Cuadrilla Alfa (4 integrantes)
+        { rut: '11.111.111-1', cuad: 'CUAD-ALFA' },
+        { rut: '22.222.222-2', cuad: 'CUAD-ALFA' },
+        { rut: '33.333.333-3', cuad: 'CUAD-ALFA' },
+        { rut: '44.444.444-4', cuad: 'CUAD-ALFA' },
+
+        // Cuadrilla Beta (4 integrantes)
+        { rut: '55.555.555-5', cuad: 'CUAD-BETA' },
+        { rut: '66.666.666-6', cuad: 'CUAD-BETA' },
+        { rut: '77.777.777-7', cuad: 'CUAD-BETA' },
+        { rut: '88.888.888-8', cuad: 'CUAD-BETA' },
+
+        // Cuadrilla Gamma (4 integrantes)
+        { rut: '99.999.999-9', cuad: 'CUAD-GAMMA' },
+        { rut: '10.101.101-0', cuad: 'CUAD-GAMMA' },
+        { rut: '12.121.121-2', cuad: 'CUAD-GAMMA' },
+        { rut: '13.131.131-3', cuad: 'CUAD-GAMMA' },
+
+        // Cuadrilla Delta (3 integrantes)
+        { rut: '14.141.141-4', cuad: 'CUAD-DELTA' },
+        { rut: '15.151.151-5', cuad: 'CUAD-DELTA' },
+        { rut: '16.161.161-6', cuad: 'CUAD-DELTA' }
+      ];
+
+      for (const asig of asignaciones) {
+        await voluntarioParticipaRepository.save({
+          rutVoluntario: asig.rut,
+          codigoCuadrilla: asig.cuad,
+          fechaInicio: '2026-03-15',
+          fechaFin: null // Se mantienen activos dentro de la cuadrilla
+        });
+      }
+    }
+
+    // =========================================================================
+    // ASIGNACIÓN DE CUADRILLAS A LAS VIVIENDAS (Asociaciones de trabajo)
+    // =========================================================================
+    const countCuadrillaTrabaja = await cuadrillaTrabajaRepository.count();
+    if (countCuadrillaTrabaja === 0) {
+      console.log('🌱 Vinculando cuadrillas a los proyectos de vivienda...');
+
+      const despliegues = [
+        { cuad: 'CUAD-ALFA', viv: 'CONCE-001' },
+        { cuad: 'CUAD-BETA', viv: 'CONCE-003' },
+        { cuad: 'CUAD-GAMMA', viv: 'CONCE-004' },
+        { cuad: 'CUAD-DELTA', viv: 'CONCE-006' }
+      ];
+
+      for (const despliegue of despliegues) {
+        await cuadrillaTrabajaRepository.save({
+          codigoCuadrilla: despliegue.cuad,
+          codigoVivienda: despliegue.viv,
+          fechaInicio: '2026-06-15',
+          fechaFin: null // Siguen asignados trabajando activamente en la planificación de la obra
+        });
+      }
+      console.log('✨ Base de datos poblada con éxito para simulación logística.');
     }
     process.exit(0);
   } catch (error) {
