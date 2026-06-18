@@ -68,10 +68,22 @@ async function aprobarIngresoPostulante(req, res) {
   }
 }
 
+const obtenerVoluntariosPorZonaRiesgo = async (req,res) =>{
+
+};
+
+const asignarCuadrilla = async (req,res) =>{
+
+};
+
 module.exports = {
   obtenerListaPostulantes,
   obtenerListaVoluntarios,
   obtenerPostulante,
   obtenerVoluntario,
   aprobarIngresoPostulante,
+  obtenerVoluntariosPorZonaRiesgo,
+  asignarCuadrilla
 };
+
+
