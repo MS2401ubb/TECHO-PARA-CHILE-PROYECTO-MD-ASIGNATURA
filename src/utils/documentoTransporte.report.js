@@ -13,7 +13,7 @@ const crearPdfManifiestoCarga = (data, res) => {
 
     // Configurar los encabezados de respuesta de Express para que el navegador entienda que es un PDF descargable
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Manifiesto_de_Carga_${Date.now()}.pdf`);
+    res.setHeader('Content-Disposition', `attachment; filename=Solicitud_TECHO_-_Manifiesto_de_Carga_${Date.now()}.pdf`);
 
     // Tubería (Pipe): Todo lo que dibuje el doc se enviará directamente al cliente de Express
     doc.pipe(res);
