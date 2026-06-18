@@ -1,7 +1,8 @@
 import express from 'express';
 const router = express.Router();
 
-//import cuadrillaController from '../controllers/Cuadrilla.controller.js';
+import cuadrillaController from '../../controllers/Cuadrilla.controller.js'
+
 
 router.get('/',cuadrillaController.listarCuadrillas); //en funciones cuadrilla revisar url para en un if al inicio de la función, cual lista de cuadrilas necesita
 router.get('/lista-regiones',cuadrillaController.listarRegionesConZonaRiesgo);
@@ -14,7 +15,7 @@ router.get('/personal-disponible',cuadrillaController.obtenerPersonalDisponible)
 router.post('/crear-cuadrilla',cuadrillaController.crearCuadrilla);
 
 
-router.post('/:id/:fecha_inicio/asignar-jefe');//esta deberia estar detra de '/:id/:fecha_inicio'
+//router.post('/:id/:fecha_inicio/asignar-jefe');//esta deberia estar detra de '/:id/:fecha_inicio'
 //CAMBIAR 'asignar-voluntario', DEBERIA SER RUTA DE 'EncargadoVoluntarios.routes.js' YA QUE ES MÁS UTIL PARA EL CLIENTE QUE SEA SELECCIÓN DIRECTA DESDE LA LISTA MASIVA.
 /*router.get('/:id/fecha_inicio/detalles-region'); //de la cuadrilla específica, necesita id y fecha_inicio;
 router.get('/id:/fecha_inicio/detalles-zona'); //lo mismo que region, pero para área con cuadrillas de catastrofe relacionada

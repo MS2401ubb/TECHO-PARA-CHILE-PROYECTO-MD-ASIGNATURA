@@ -6,7 +6,7 @@ const config = require('./config/config');
 const db = require('./config/db');
 
 // Importación de rutas
-const routerApi = require('./routes/index.routes');
+const routerApi = require('./routes/index.routes.js').default;
 
 const app = express();
 
@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 
 // Uso de rutas
-app.use(routerApi);
+app.use('/',routerApi);
 
 // Configuración del puerto
 const PORT = config.PORT || process.env.PORT || 3000;

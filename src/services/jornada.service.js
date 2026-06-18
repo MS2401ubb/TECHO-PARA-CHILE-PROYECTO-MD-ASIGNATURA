@@ -20,7 +20,7 @@ const obtenerNumeroVoluntariosCuadrilla = async (codigoCuadrilla) => {
   return voluntariosEnCuadrilla;
 }
 
-const obtenerNumeroVoluntariosCuadrilla = async (codigoCuadrilla,fechaActual) => {
+const obtenerListaVoluntariosCuadrilla = async (codigoCuadrilla,fechaActual) => {
   const participacionRepository = AppDataSource.getRepository('VoluntarioParticipaEnCuadrilla');
   const jornadaRepository = AppDataSource.getRepository('Jornada');
   const cuadrillaTrabajaViviendaRepository = AppDataSource.getRepository('CuadrillaTrabajaEnVivienda');
@@ -125,4 +125,7 @@ const finalizarJornadaService = async (idJornada, materialesContados) => {
   return { mensaje: 'Cierre administrativo y técnico completado con éxito.' };
 };
 
-module.exports = { finalizarJornadaService };
+module.exports = { finalizarJornadaService,
+  obtenerNumeroVoluntariosCuadrilla,
+  obtenerListaVoluntariosCuadrilla
+};
