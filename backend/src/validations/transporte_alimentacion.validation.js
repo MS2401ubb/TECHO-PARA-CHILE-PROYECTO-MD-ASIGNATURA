@@ -1,4 +1,5 @@
 import Joi from "joi";
+
 export const validarDatosDeCentralTransporte = Joi.object({
     codigoCiudad: Joi.number()
         .integer()
@@ -15,7 +16,8 @@ export const validarDatosDeCentralTransporte = Joi.object({
             "any.required": "El punto de origen es obligatorio"
         })
 }).options({
-    stripUnknown: true
+    stripUnknown: true,
+    abortEarly: false
 });
 
 export const validarDatosProvisionAlimentos = Joi.object({
@@ -27,5 +29,6 @@ export const validarDatosProvisionAlimentos = Joi.object({
             "any.required": "El RUT del encargado es obligatorio"
         })
 }).options({
-    stripUnknown: true
+    stripUnknown: true,
+    abortEarly: false
 });

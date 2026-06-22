@@ -1,46 +1,43 @@
 import transporteAlimentoService from '../services/transporte_alimentacion.service.js';
+import { handleSuccess, handleErrorClient, handleErrorServer} from '../handlers/responseHandlers.js';
+import { validarDatosDeCentralTransporte, validarDatosProvisionAlimentos } from '../validations/transporte_alimentacion.validation.js';
 import { crearPdfManifiestoCarga } from '../utils/documentoTransporte.util.js';
 import { crearPdfProvisionAlimentacion } from '../utils/documentoAlimentacion.util.js';
 
+
+
+// DOCUMENTOS DE PLANIFICACION DE TRANSPORTE Y PROVISION DE ALIMENTOS
 export const generarDocumentoTransporte = async (req, res) => {
     try {
-        const { codigoCiudad } = req.params;
-        const { trasladoPuntoOrigen } = req.body;
-
-        if (!trasladoPuntoOrigen) {
-            return res.status(400).json({ error: 'Falta campo obligatorio: Punto de origen.' });
+        const { body } = req;
+        const { error, value } = validarDatosDeCentralTransporte.validate(body);
+        
+        if (error) {
+            console.log('Error de validación al generar documento de transporte:', error);
+            return handleErrorClient(res, 400, "Datos de transporte inválidos", error.message);
         }
     
-        const datosLogística = await transporteAlimentoService.generarDocumentoTransporte(
-            codigoCiudad, 
-            trasladoPuntoOrigen
-        );
-
-        crearPdfManifiestoCarga(datosLogística, res);
+        const datosLogística = await transporteAlimentoService.generarDocumentoTransporte(body);
+        await crearPdfManifiestoCarga(datosLogística, res);
 
     } catch (error) {
-        console.error('Error al generar manifiesto:', error.message);
-        // Si falló una validación (ej: voluntario sin contacto), capturamos el mensaje y avisamos al frontend
-        return res.status(500).json({ error: error.message });
+        return handleErrorServer(res, 500, "Error del servidor al generar documento de transporte", error.message);
     }
 };
-
 export const generarDocumentoProvisionAlimentos = async (req, res) => {
     try{
-        const { codigoVivienda } = req.params;
-        const { rutEncargado } = req.body;
-        if(!rutEncargado){
-            return res.status(400).json({ error: 'Falta campo obligatorio: RUT del encargado que gestiona el pedido '})
+        const { body } = req;
+        const { error, value } = validarDatosProvisionAlimentos.validate(body);
+
+        if (error) {
+            console.log('Error de validación al generar documento de provisión de alimentos:', error);
+            return handleErrorClient(res, 400, "Datos de provisión de alimentos inválidos", error.message);
         }
+    
+        const provisionAlimentos = await transporteAlimentoService.generarDocumentoProvisionAlimentos(body);
+        await crearPdfProvisionAlimentacion(provisionAlimentos,res);
 
-        const provisionAlimentos = await transporteAlimentoService.generarDocumentoProvisionAlimentos(
-            codigoVivienda,
-            rutEncargado
-        );
-
-        //crearPdfProvisionAlimentacion(provisionAlimentos,res);
     } catch (error){
-        console.error('Error al generar documento de alimentos:',error.message);
-        return res.status(500).json({error: error.message});
+        return handleErrorServer(res, 500, "Error del servidor al generar documento de provisión de alimentos", error.message);
     }
 };

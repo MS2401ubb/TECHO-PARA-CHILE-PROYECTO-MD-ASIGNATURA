@@ -8,7 +8,7 @@ import { Router } from "express";
 import authRoutes from "./auth.routes.js";
 import perfilRoutes from "./perfil.routes.js";
 import voluntarioRoutes from './voluntario.routes.js';
-import jefeCuadrillaRoutes from './jefeCuadrilla.routes.js';
+//import jefeCuadrillaRoutes from "./jefeCuadrilla.routes.js";
 import encargadoVoluntariosRoutes from './encargadoVoluntarios.routes.js';
 import encargadoCentralRoutes from './encargadoCentral.routes.js';
 import { verifyRoles } from "../middleware/authorization.middleware.js";
@@ -29,8 +29,8 @@ export function routerApi(app) {
 
     router.use('/auth', authRoutes);
     router.use('/perfil', verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central"]), perfilRoutes);
-    router.use('/voluntario', verifyRoles(["Voluntario"]), voluntarioRoutes);
-    router.use('/jefe-cuadrilla', verifyRoles(["Jefe de Cuadrilla"]), jefeCuadrillaRoutes);
-    router.use('/encargado-voluntarios', verifyRoles(["Encargado de Voluntarios"]), encargadoVoluntariosRoutes);
-    router.use('/central', verifyRoles(["Encargado de Central"]), encargadoCentralRoutes);
+    //router.use('/voluntario', verifyRoles(["Voluntario"]), voluntarioRoutes);
+    //router.use('/jefe-cuadrilla', verifyRoles(["Jefe de Cuadrilla"]), jefeCuadrillaRoutes);
+    //router.use('/encargado-voluntarios', verifyRoles(["Encargado de Voluntarios"]), encargadoVoluntariosRoutes);
+    router.use('/central', encargadoCentralRoutes);
 }

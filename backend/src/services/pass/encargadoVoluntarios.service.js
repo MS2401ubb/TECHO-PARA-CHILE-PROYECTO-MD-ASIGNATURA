@@ -1,4 +1,4 @@
-import AppDataSource from '../config/configDb.js';
+import AppDataSource from '../../config/configDb.js';
 import { IsNull } from 'typeorm';
 
 const ESTADO_POSTULANTE = 'Postulante';

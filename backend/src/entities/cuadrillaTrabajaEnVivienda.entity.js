@@ -6,8 +6,7 @@ export default new EntitySchema({
   columns: {
     codigoCuadrilla: {
       primary: true,
-      type: 'varchar',
-      length: 50,
+      type: 'int',
     },
     codigoVivienda: {
       primary: true,

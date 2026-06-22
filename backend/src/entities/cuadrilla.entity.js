@@ -6,8 +6,8 @@ export default new EntitySchema({
   columns: {
     codigo: {
       primary: true,
-      type: 'varchar',
-      length: 50,
+      type: 'int',
+      generated: true,
     },
     descripcion: {
       type: 'text',
