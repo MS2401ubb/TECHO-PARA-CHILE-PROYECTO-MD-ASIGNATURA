@@ -1,10 +1,8 @@
-import transporteAlimentoService from '../services/transporte_alimentacion.service.js';
+import transporteAlimentoService from '../services/documentoLogistico.service.js';
 import { handleSuccess, handleErrorClient, handleErrorServer} from '../handlers/responseHandlers.js';
-import { validarDatosDeCentralTransporte, validarDatosProvisionAlimentos } from '../validations/transporte_alimentacion.validation.js';
+import { validarDatosDeCentralTransporte, validarDatosProvisionAlimentos } from '../validations/documentoLogistico.validation.js';
 import { crearPdfManifiestoCarga } from '../utils/documentoTransporte.util.js';
 import { crearPdfProvisionAlimentacion } from '../utils/documentoAlimentacion.util.js';
-
-
 
 // DOCUMENTOS DE PLANIFICACION DE TRANSPORTE Y PROVISION DE ALIMENTOS
 export const generarDocumentoTransporte = async (req, res) => {

@@ -1,6 +1,10 @@
-import express from 'express';
-const router = express.Router();
+import { Router } from "express";
+import { listaPostulantes, listaVoluntarios, voluntarioPorRut } from "../controllers/voluntario.controller.js";
 
-//import VoluntarioController from '../controllers/Voluntarios.controller.js';
+const router = Router();
+
+router.get("/postulantes", listaPostulantes);
+router.get("/voluntarios", listaVoluntarios);
+router.get("/voluntario/:rut", voluntarioPorRut);
 
 export default router;

@@ -1,9 +1,6 @@
 import { loginService, registerService } from "../services/auth.service.js";
+import { userLoginBodyValidation, userRegisterBodyValidation } from "../validations/auth.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
-import {
-    userLoginBodyValidation,
-    userRegisterBodyValidation
-} from "../validations/auth.validation.js";
 
 export async function login(req, res) {
     try {
