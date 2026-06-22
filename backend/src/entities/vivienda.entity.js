@@ -4,7 +4,7 @@ export default new EntitySchema({
   name: 'Vivienda',
   tableName: 'viviendas',
   columns: {
-    codigo: { // EJEMPLO: "CONCE-001", "VALPA-002", etc. ({PRIMERAS 5 LETRAS DE LA CIUDAD}-{NÚMERO SECUENCIAL})
+    codigo: { // EJEMPLO: "CONC-001", "VALP-002", etc. ({PRIMERAS 4 LETRAS DE LA CIUDAD}-{NÚMERO SECUENCIAL})
       primary: true,
       type: 'varchar',
       length: 50,

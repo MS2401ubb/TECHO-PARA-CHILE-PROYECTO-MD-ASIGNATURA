@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/configDb.js";
 import { JWT_SECRET } from "../config/configEnv.js";
-import { User } from "../entities/usuario.entity.js";
+import User from "../entities/usuario.entity.js";
 
 export async function loginService(data) {
     const userRepository = AppDataSource.getRepository(User);

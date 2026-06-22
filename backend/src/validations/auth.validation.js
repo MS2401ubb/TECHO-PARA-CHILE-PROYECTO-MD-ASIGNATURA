@@ -75,17 +75,18 @@ export const userRegisterBodyValidation = Joi.object({
             "any.only": "El rol debe ser: Voluntario, Jefe de Cuadrilla, Encargado de Voluntarios o Encargado de Central"
         })
 }).options({
-    stripUnknown: true
+    stripUnknown: true,
+    abortEarly: false
 });
 
 export const userLoginBodyValidation = Joi.object({
-    email: Joi.string()
-        .email()
+    rut: Joi.string()
+        .pattern(/^\d{7,8}-[\dkK]$/)
         .required()
         .messages({
-            "string.email": "Debe ser un email válido",
-            "string.empty": "El email no puede estar vacío",
-            "any.required": "El email es obligatorio"
+            "string.pattern.base": "El RUT debe tener formato 12345678-9 o 12345678-k",
+            "string.empty": "El RUT no puede estar vacío",
+            "any.required": "El RUT es obligatorio"
         }),
     password: Joi.string()
         .min(8)
@@ -96,5 +97,6 @@ export const userLoginBodyValidation = Joi.object({
             "any.required": "La contraseña es obligatoria"
         })
 }).options({
-    stripUnknown: true
+    stripUnknown: true,
+    abortEarly: false
 });

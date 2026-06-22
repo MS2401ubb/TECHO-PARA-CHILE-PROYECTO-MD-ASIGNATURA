@@ -1,31 +1,46 @@
-require('reflect-metadata');
-require('dotenv').config();
-
-const express = require('express');
-const config = require('./config/config');
-const db = require('./config/db');
-
-// Importación de rutas
-const routerApi = require('./routes/index.routes');
+import 'reflect-metadata';
+import express from 'express';
+import { routerApi } from './routes/index.routes.js';
+import db from './config/configDb.js';
+import {  createInitialRegionesAndCiudades,
+          createInitialUsuarios,
+          createInitialViviendas,
+          createInitialCuadrillas,
+          createInitialRelations
+        } from './config/initialSetup.js';
+import { PORT } from './config/configEnv.js';
 
 const app = express();
-// Uso de middlewares
 app.use(express.json());
-// Uso de rutas
-app.use(routerApi);
 
-// Configuración del puerto
-const PORT = config.PORT || process.env.PORT || 3000;
+app.get("/", (req, res) => {
+  res.send("Bienvenido al sistema de TECHO");
+});
 
-// Inicializar la base de datos
-db.initialize()
-  .then(() => {
-    console.log('✅ Base de datos conectada con TypeORM');
-    app.listen(PORT, () => {
-      console.log(`✅ Servidor ejecutándose en puerto ${PORT}`);
-      console.log(`🔗 http://localhost:${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error('❌ Error al conectar la base de datos:', error);
+// Rutas globales
+routerApi(app);
+
+// Inicialización asíncrona global
+try {
+  console.log('⏳ Conectando a la base de datos...');
+  await db.initialize();
+  console.log('✅ Base de datos conectada con TypeORM');
+
+  console.log('⏳ Cargando datos iniciales...');
+  await createInitialRegionesAndCiudades();
+  await createInitialUsuarios();
+  await createInitialViviendas();
+  await createInitialCuadrillas();
+  await createInitialRelations();
+  console.log('✅ Datos Cargados con éxito.');
+
+  // Encender el servidor una vez que todo está listo
+  app.listen(PORT || 3000, () => {
+    console.log(`✅ Servidor ejecutándose en puerto ${PORT}`);
+    console.log(`🔗 http://localhost:${PORT}`);
   });
+
+} catch (error) {
+  console.error('❌ Error crítico durante el inicio del sistema:', error);
+  process.exit(1);
+}

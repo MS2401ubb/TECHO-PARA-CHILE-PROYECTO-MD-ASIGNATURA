@@ -1,26 +1,28 @@
-"use strict";
 import 'reflect-metadata';
+import bcrypt from "bcrypt";
+
 import AppDataSource from './configDb.js';
 
 import Ciudad from '../entities/ciudad.entity.js';
 import Region from '../entities/region.entity.js';
+
 import Usuario from '../entities/usuario.entity.js';
 import Voluntario from '../entities/voluntario.entity.js';
+import jefeCuadrilla from '../entities/jefeCuadrilla.entity.js';
+import encargadoVoluntarios from '../entities/encargadoVoluntarios.entity.js';
+import encargadoCentral from '../entities/encargadoCentral.entity.js';
+
 import Vivienda from '../entities/vivienda.entity.js';
 import Cuadrilla from '../entities/cuadrilla.entity.js';
+
 import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
 import CuadrillaTrabajaEnVivienda from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
 
-const initialSetup = async () => {
-  try {
-    console.log('🔄 Iniciando configuración inicial...');
-    
-    await AppDataSource.initialize();
-    console.log('✅ Conexión establecida');
-    await AppDataSource.synchronize(true);
-    console.log('✅ Tablas creadas/sincronizadas');
 
-    // Opcional: Seeding (Datos iniciales)
+
+
+export const createInitialRegionesAndCiudades = async () => {
+  try{
     const regionRepository = AppDataSource.getRepository(Region);
     const countRegion = await regionRepository.count();
     if (countRegion === 0) {
@@ -434,168 +436,242 @@ const initialSetup = async () => {
       });
       await ciudadRepository.save(ciudadesEntities);
     }
-    // PARA PRUEBAS
+    console.log("🌱 Regiones y Ciudades ingresadas a la base de datos.");
+  } catch(error){
+    console.log(`❌ Error al ingresar Regiones y Ciudades a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
+export const createInitialUsuarios = async () => {
+  try{
     const usuarioRepository = AppDataSource.getRepository(Usuario);
-    const voluntarioRepository = AppDataSource.getRepository(Voluntario);
-    const viviendaRepository = AppDataSource.getRepository(Vivienda);
-    const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
-    const voluntarioParticipaRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
-    const cuadrillaTrabajaRepository = AppDataSource.getRepository(CuadrillaTrabajaEnVivienda);
-    // =========================================================================
-    // INSERCIÓN DE 15 USUARIOS Y SUS 15 PERFILES DE VOLUNTARIOS
-    // =========================================================================
     const countUsuarios = await usuarioRepository.count();
-    if (countUsuarios === 0) {
-      console.log('🌱 Insertando 15 voluntarios y usuarios de prueba...');
-
-      const listadoPlano = [
-        { rut: '11111111-1', nombre: 'Juan', primerApellido: 'Pérez', segundoApellido: 'Alarcón', email: 'juan@gmail.com', telEmergencia: '911111111' },
-        { rut: '22222222-2', nombre: 'María', primerApellido: 'García', segundoApellido: 'Soto', email: 'maria@gmail.com', telEmergencia: '922222222' },
-        { rut: '33333333-3', nombre: 'Carlos', primerApellido: 'Rojas', segundoApellido: 'Mendoza', email: 'carlos@gmail.com', telEmergencia: '933333333' },
-        { rut: '44444444-4', nombre: 'Ana', primerApellido: 'Silva', segundoApellido: 'Fuentes', email: 'ana@gmail.com', telEmergencia: '944444444' },
-        { rut: '55555555-5', nombre: 'Pedro', primerApellido: 'López', segundoApellido: 'Castro', email: 'pedro@gmail.com', telEmergencia: '955555555' },
-        { rut: '66666666-6', nombre: 'Francisca', primerApellido: 'Torres', segundoApellido: 'Gómez', email: 'fran@gmail.com', telEmergencia: '966666666' },
-        { rut: '77777777-7', nombre: 'Diego', primerApellido: 'Morales', segundoApellido: 'Vera', email: 'diego@gmail.com', telEmergencia: '977777777' },
-        { rut: '88888888-8', nombre: 'Camila', primerApellido: 'Herrera', segundoApellido: 'Muñoz', email: 'camila@gmail.com', telEmergencia: '988888888' },
-        { rut: '99999999-9', nombre: 'Luis', primerApellido: 'Contreras', segundoApellido: 'Espinoza', email: 'luis@gmail.com', telEmergencia: '999999999' },
-        { rut: '10101010-0', nombre: 'Sofía', primerApellido: 'Araya', segundoApellido: 'Sepúlveda', email: 'sofia@gmail.com', telEmergencia: '910101010' },
-        { rut: '12121212-2', nombre: 'Manuel', primerApellido: 'Vergara', segundoApellido: 'Sanhueza', email: 'manuel@gmail.com', telEmergencia: '912121212' },
-        { rut: '13131313-3', nombre: 'Valentina', primerApellido: 'Miranda', segundoApellido: 'Jara', email: 'vale@gmail.com', telEmergencia: '913131313' },
-        { rut: '14141414-4', nombre: 'Andrés', primerApellido: 'Salinas', segundoApellido: 'Ríos', email: 'andres@gmail.com', telEmergencia: '914141414' },
-        { rut: '15151515-5', nombre: 'Bárbara', primerApellido: 'Pinto', segundoApellido: 'Navarro', email: 'barbara@gmail.com', telEmergencia: '915151515' },
-        { rut: '16161616-6', nombre: 'Cristóbal', primerApellido: 'Muñoz', segundoApellido: 'Henríquez', email:'cristobal@gmail.com', telEmergencia: '916161616' }
+    if (countUsuarios === 0){
+      // -------------------------------------------------------
+      // VOLUNTARIOS
+      const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+      const listadoPlanaVoluntarios = [
+        { rut: '11111111-1', nombre: 'Juan', primerApellido: 'Pérez', segundoApellido: 'Alarcón', fechaNacimiento: '1995-05-15', email: 'juan@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '911111111' },
+        { rut: '22222222-2', nombre: 'María', primerApellido: 'García', segundoApellido: 'Soto', fechaNacimiento: '1995-05-15', email: 'maria@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '922222222' },
+        { rut: '33333333-3', nombre: 'Carlos', primerApellido: 'Rojas', segundoApellido: 'Mendoza', fechaNacimiento: '1995-05-15', email: 'carlos@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '933333333' },
+        { rut: '44444444-4', nombre: 'Ana', primerApellido: 'Silva', segundoApellido: 'Fuentes', fechaNacimiento: '1995-05-15', email: 'ana@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '944444444' },
+        { rut: '55555555-5', nombre: 'Pedro', primerApellido: 'López', segundoApellido: 'Castro', fechaNacimiento: '1995-05-15', email: 'pedro@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '955555555' },
+        { rut: '66666666-6', nombre: 'Francisca', primerApellido: 'Torres', segundoApellido: 'Gómez', fechaNacimiento: '1995-05-15', email: 'fran@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '966666666' },
+        { rut: '77777777-7', nombre: 'Diego', primerApellido: 'Morales', segundoApellido: 'Vera', fechaNacimiento: '1995-05-15', email: 'diego@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '977777777' },
+        { rut: '88888888-8', nombre: 'Camila', primerApellido: 'Herrera', segundoApellido: 'Muñoz', fechaNacimiento: '1995-05-15', email: 'camila@gmail.com', telefono: '988887777', ciudad: { codigo: 181 }, telEmergencia: '988888888' },
+        { rut: '99999999-9', nombre: 'Luis', primerApellido: 'Contreras', segundoApellido: 'Espinoza', fechaNacimiento: '1995-05-15', email: 'luis@gmail.com', telefono: '988887777', ciudad: { codigo: 14 }, telEmergencia: '999999999' },
+        { rut: '10101010-0', nombre: 'Sofía', primerApellido: 'Araya', segundoApellido: 'Sepúlveda', fechaNacimiento: '1995-05-15', email: 'sofia@gmail.com', telefono: '988887777', ciudad: { codigo: 14 }, telEmergencia: '910101010' },
+        { rut: '12121212-2', nombre: 'Manuel', primerApellido: 'Vergara', segundoApellido: 'Sanhueza', fechaNacimiento: '1995-05-15', email: 'manuel@gmail.com', telefono: '988887777', ciudad: { codigo: 14 }, telEmergencia: '912121212' },
+        { rut: '13131313-3', nombre: 'Valentina', primerApellido: 'Miranda', segundoApellido: 'Jara', fechaNacimiento: '1995-05-15', email: 'vale@gmail.com', telefono: '988887777', ciudad: { codigo: 14 }, telEmergencia: '913131313' },
+        { rut: '14141414-4', nombre: 'Andrés', primerApellido: 'Salinas', segundoApellido: 'Ríos', fechaNacimiento: '1995-05-15', email: 'andres@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '914141414' },
+        { rut: '15151515-5', nombre: 'Bárbara', primerApellido: 'Pinto', segundoApellido: 'Navarro', fechaNacimiento: '1995-05-15', email: 'barbara@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '915151515' },
+        { rut: '16161616-6', nombre: 'Cristóbal', primerApellido: 'Muñoz', segundoApellido: 'Henríquez', fechaNacimiento: '1995-05-15', email:'cristobal@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '916161616' }
       ];
-
-      for (const item of listadoPlano) {
+      for (const item of listadoPlanaVoluntarios) {
         // A) Insertar Usuario Base
         await usuarioRepository.save({
           rut: item.rut,
-          password: await bcrypt.hash(item.nombre.toLowerCase()+"123", 10),
+          password: await bcrypt.hash(item.nombre.toLowerCase()+"123vol", 10),
           nombre: item.nombre,
           primerApellido: item.primerApellido,
           segundoApellido: item.segundoApellido,
-          fechaNacimiento: '1995-05-15',
+          fechaNacimiento: item.fechaNacimiento,
           email: item.email,
-          telefono: '988887777',
+          telefono: item.telefono,
           rol: 'Voluntario',
-          ciudad: { codigo: 181 }
+          ciudad: item.ciudad
         });
         // B) Insertar Perfil de Voluntario Asociado
         await voluntarioRepository.save({
           rutUsuario: item.rut,
           tipo: 'General',
-          estado: 'Activo', // Clave para que tu backend los considere en el traslado
+          estado: 'Activo',
           solicitudActiva: true,
           fechaValidacionDatos: '2026-03-10',
           fechaActivacionSolicitud: '2026-03-11',
-          telefonoEmergencia: item.telEmergencia // Clave para pasar el filtro del reporte
+          telefonoEmergencia: item.telEmergencia 
+        });
+      }
+      // -------------------------------------------------------
+      // JEFE DE CUADRILLA
+      const jefeCuadrillaRepository = AppDataSource.getRepository(jefeCuadrilla);
+      const listaPlanaJefeCuadrilla = [
+        { rut: '17171717-7', nombre: 'Nicolás', primerApellido: 'Tapia', segundoApellido: 'Vargas', fechaNacimiento: '1996-08-20', email: 'nicolas@gmail.com', telefono: '917171717', ciudad: { codigo: 181 } },
+        { rut: '18181818-8', nombre: 'Catalina', primerApellido: 'Cárcamo', segundoApellido: 'Maldonado', fechaNacimiento: '1994-03-12', email: 'cata@gmail.com', telefono: '918181818', ciudad: { codigo: 14 } },
+        { rut: '19191919-9', nombre: 'Javier', primerApellido: 'Gutiérrez', segundoApellido: 'Poblete', fechaNacimiento: '1997-11-05', email: 'javier@gmail.com', telefono: '919191919', ciudad: { codigo: 244 } }
+      ]
+      for (const item of listaPlanaJefeCuadrilla) {
+        // A) Insertar Usuario Base
+        await usuarioRepository.save({
+          rut: item.rut,
+          password: await bcrypt.hash(item.nombre.toLowerCase()+"123jefcuad", 10),
+          nombre: item.nombre,
+          primerApellido: item.primerApellido,
+          segundoApellido: item.segundoApellido,
+          fechaNacimiento: item.fechaNacimiento,
+          email: item.email,
+          telefono: item.telefono,
+          rol: 'Jefe de Cuadrilla',
+          ciudad: item.ciudad
+        });
+        // B) Insertar Perfil de Jefe de Cuadrilla Asociado
+        await jefeCuadrillaRepository.save({
+          rutUsuario: item.rut,
+        });
+      }
+      // -------------------------------------------------------
+      // ENCARGADO DE VOLUNTARIOS
+      const encargadoVoluntariosRepository = AppDataSource.getRepository(encargadoVoluntarios);
+      const listaPlanaEncargadoVoluntarios = [
+        { rut: '20202020-0', nombre: 'Fernanda', primerApellido: 'Andrade', segundoApellido: 'Marín', fechaNacimiento: '1998-04-17', email: 'fernanda@gmail.com', telefono: '920202020', ciudad: { codigo: 113 } },
+        { rut: '21212121-1', nombre: 'Matías', primerApellido: 'Donoso', segundoApellido: 'Valenzuela', fechaNacimiento: '1993-12-30', email: 'matias@gmail.com', telefono: '921212121', ciudad: { codigo: 4 } }
+      ]
+      for (const item of listaPlanaEncargadoVoluntarios) {
+        // A) Insertar Usuario Base
+        await usuarioRepository.save({
+          rut: item.rut,
+          password: await bcrypt.hash(item.nombre.toLowerCase()+"123encargvol", 10),
+          nombre: item.nombre,
+          primerApellido: item.primerApellido,
+          segundoApellido: item.segundoApellido,
+          fechaNacimiento: item.fechaNacimiento,
+          email: item.email,
+          telefono: item.telefono,
+          rol: 'Encargado de Voluntarios',
+          ciudad: item.ciudad
+        });
+        // B) Insertar Perfil de Encargados de Voluntarios Asociado
+        await encargadoVoluntariosRepository.save({
+          rutUsuario: item.rut,
+        });
+      }
+      // -------------------------------------------------------
+      // ENCARGADO DE CENTRAL
+      const encargadoCentralRepository = AppDataSource.getRepository(encargadoCentral);
+      const listaPlanaEncargadoCentral = [
+        { rut: '23232323-3', nombre: 'Gonzalo', primerApellido: 'Arriagada', segundoApellido: 'Orellana', fechaNacimiento: '1996-01-14', email: 'gonzalo@gmail.com', telefono: '923232323', ciudad: { codigo: 222 } },
+        { rut: '24242424-4', nombre: 'Daniela', primerApellido: 'Sáez', segundoApellido: 'Carrasco', fechaNacimiento: '1995-07-22', email: 'daniela@gmail.com', telefono: '924242424', ciudad: { codigo: 121 } }
+      ]
+      for (const item of listaPlanaEncargadoCentral) {
+        // A) Insertar Usuario Base
+        await usuarioRepository.save({
+          rut: item.rut,
+          password: await bcrypt.hash(item.nombre.toLowerCase()+"123encargcen", 10),
+          nombre: item.nombre,
+          primerApellido: item.primerApellido,
+          segundoApellido: item.segundoApellido,
+          fechaNacimiento: item.fechaNacimiento,
+          email: item.email,
+          telefono: item.telefono,
+          rol: 'Encargado de Central',
+          ciudad: item.ciudad
+        });
+        // B) Insertar Perfil de Encargados de Central Asociado
+        await encargadoCentralRepository.save({
+          rutUsuario: item.rut,
         });
       }
     }
-
-    // =========================================================================
-    // INSERCIÓN DE 6 VIVIENDAS (Todas en estado 'planificacion' en Concepción)
-    // =========================================================================
-    const countViviendas = await viviendaRepository.count();
-    if (countViviendas === 0) {
-      console.log('🌱 Insertando 6 viviendas en planificación...');
-      
+    console.log("🌱 Usuarios ingresadas a la base de datos.");
+  } catch(error){
+    console.log(`❌ Error al ingresar usuarios a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
+export const createInitialViviendas = async () => {
+  try{
+    const viviendasRepository = AppDataSource.getRepository(Vivienda);
+    const countViviendas = await viviendasRepository.count();
+    if (countViviendas === 0){
       const obras = [
-        { codigo: 'CONCE-001', direccion: 'Sector Palomares Pasaje Sur 45', tipo: 'Vivienda de Emergencia Provisoria' },
-        { codigo: 'CONCE-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria' },
-        { codigo: 'CONCE-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo' },
-        { codigo: 'CONCE-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria' },
-        { codigo: 'CONCE-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo' },
-        { codigo: 'CONCE-006', direccion: 'Nonguén Camino Público Km 4.5', tipo: 'Vivienda de Emergencia Provisoria' }
-      ];
-
-      
+        { codigo: 'CONC-001', direccion: 'Sector Palomares Pasaje Sur 45', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
+        { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'PICA-006', direccion: 'San Isidro 462', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 10}}
+      ]; 
       for (const obra of obras) {
-        await viviendaRepository.save({
+        await viviendasRepository.save({
           codigo: obra.codigo,
           direccion: obra.direccion,
           tipoObra: obra.tipo,
-          estado: 'planificacion', // Requisito estricto de tu consulta SQL/TypeORM
+          estado: obra.estado,
           porcentajeAvance: 0,
           fechaInicioEstimada: '2026-06-15',
-          fechaFinEstimada: '2026-06-22', // Generará una estancia de 7 días para el cálculo de comida
+          fechaFinEstimada: '2026-06-22',
           fechaFinReal: null,
           montajeEstructural: false,
           habilidadTecnica: false,
           conexionesBasicas: false,
           observacionesValidacion: ' ',
-          ciudad: { codigo: 181 }
+          ciudad: obra.ciudad
         });
       }
     }
-
-    // =========================================================================
-    // INSERCIÓN DE 4 CUADRILLAS
-    // =========================================================================
+    console.log("🌱 Viviendas ingresadas a la base de datos.");
+  } catch (error){
+    console.log(`❌ Error al ingresar viviendas a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
+export const createInitialCuadrillas = async () => {
+  try {
+    const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
     const countCuadrillas = await cuadrillaRepository.count();
-    if (countCuadrillas === 0) {
-      console.log('🌱 Insertando 4 cuadrillas de trabajo...');
-      
-      await cuadrillaRepository.save({ codigo: 'CUAD-ALFA', descripcion: 'Cuadrilla Alfa - Biobío' });
-      await cuadrillaRepository.save({ codigo: 'CUAD-BETA', descripcion: 'Cuadrilla Beta - Construcción' });
-      await cuadrillaRepository.save({ codigo: 'CUAD-GAMMA', descripcion: 'Cuadrilla Gamma - Soporte' });
-      await cuadrillaRepository.save({ codigo: 'CUAD-DELTA', descripcion: 'Cuadrilla Delta - Avanzada' });
+    if (countCuadrillas === 0){
+      const cuadrillas = [
+        { descripcion: 'Cuadrilla para vivienda en Concepción'},
+        { descripcion: 'Cuadrilla para obra en Concepción'},
+      ]
+      await cuadrillaRepository.save(cuadrillas);
     }
+    console.log("🌱 Cuadrillas ingresadas a la base de datos.");
+  } catch (error){
+    console.log(`❌ Error al ingresar cuadrillas a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
 
-    // =========================================================================
-    // ASIGNACIÓN DE VOLUNTARIOS A CUADRILLAS (Mínimo 3 por cuadrilla)
-    // =========================================================================
-    const countVolParticipa = await voluntarioParticipaRepository.count();
-    if (countVolParticipa === 0) {
-      console.log('🌱 Distribuyendo voluntarios en las cuadrillas...');
+// FALTARIAN ESTAS PARA LAS PRUEBAS
+//export const createInitialJornadas = async () => {}
+//export const createInitialMateriales = async () => {}
 
+
+export const createInitialRelations = async () => {
+  try {
+    const voluntarioParticipaRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
+    const countVolPar = await voluntarioParticipaRepository.count();
+    if (countVolPar === 0){
       const asignaciones = [
-        // Cuadrilla Alfa (4 integrantes)
-        { rut: '11111111-1', cuad: 'CUAD-ALFA' },
-        { rut: '22222222-2', cuad: 'CUAD-ALFA' },
-        { rut: '33333333-3', cuad: 'CUAD-ALFA' },
-        { rut: '44444444-4', cuad: 'CUAD-ALFA' },
+        // CUADRILLA 1
+        { rut: '11111111-1', cuad: 1 },
+        { rut: '22222222-2', cuad: 1 },
+        { rut: '33333333-3', cuad: 1 },
+        { rut: '44444444-4', cuad: 1 },
 
-        // Cuadrilla Beta (4 integrantes)
-        { rut: '55555555-5', cuad: 'CUAD-BETA' },
-        { rut: '66666666-6', cuad: 'CUAD-BETA' },
-        { rut: '77777777-7', cuad: 'CUAD-BETA' },
-        { rut: '88888888-8', cuad: 'CUAD-BETA' },
-
-        // Cuadrilla Gamma (4 integrantes)
-        { rut: '99999999-9', cuad: 'CUAD-GAMMA' },
-        { rut: '10101010-0', cuad: 'CUAD-GAMMA' },
-        { rut: '12121121-2', cuad: 'CUAD-GAMMA' },
-        { rut: '13131131-3', cuad: 'CUAD-GAMMA' },
-
-        // Cuadrilla Delta (3 integrantes)
-        { rut: '14141141-4', cuad: 'CUAD-DELTA' },
-        { rut: '15151151-5', cuad: 'CUAD-DELTA' },
-        { rut: '16161161-6', cuad: 'CUAD-DELTA' }
-      ];
-
+        // CUADRILLA 2
+        { rut: '55555555-5', cuad: 2 },
+        { rut: '66666666-6', cuad: 2 },
+        { rut: '77777777-7', cuad: 2 },
+        { rut: '88888888-8', cuad: 2 },
+      ]
       for (const asig of asignaciones) {
         await voluntarioParticipaRepository.save({
           rutVoluntario: asig.rut,
           codigoCuadrilla: asig.cuad,
           fechaInicio: '2026-03-15',
-          fechaFin: null // Se mantienen activos dentro de la cuadrilla
+          fechaFin: null
         });
       }
     }
-
-    // =========================================================================
-    // ASIGNACIÓN DE CUADRILLAS A LAS VIVIENDAS (Asociaciones de trabajo)
-    // =========================================================================
-    const countCuadrillaTrabaja = await cuadrillaTrabajaRepository.count();
-    if (countCuadrillaTrabaja === 0) {
-      console.log('🌱 Vinculando cuadrillas a los proyectos de vivienda...');
-
+ 
+    const cuadrillaTrabajaRepository = AppDataSource.getRepository(CuadrillaTrabajaEnVivienda);
+    const countCuaTra = await cuadrillaTrabajaRepository.count();
+    if (countCuaTra === 0){
       const despliegues = [
-        { cuad: 'CUAD-ALFA', viv: 'CONCE-001' },
-        { cuad: 'CUAD-BETA', viv: 'CONCE-003' },
-        { cuad: 'CUAD-GAMMA', viv: 'CONCE-004' },
-        { cuad: 'CUAD-DELTA', viv: 'CONCE-006' }
+        { cuad: 1, viv: 'CONC-001' },
+        { cuad: 2, viv: 'CONC-003' }
       ];
 
       for (const despliegue of despliegues) {
@@ -603,18 +679,13 @@ const initialSetup = async () => {
           codigoCuadrilla: despliegue.cuad,
           codigoVivienda: despliegue.viv,
           fechaInicio: '2026-06-15',
-          fechaFin: null // Siguen asignados trabajando activamente en la planificación de la obra
+          fechaFin: null
         });
       }
-      console.log('✨ Base de datos poblada con éxito para simulación logística.');
     }
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Error durante la configuración inicial:', error);
+    console.log("🌱 Relaciones ingresadas a la base de datos.");
+  } catch (error){
+    console.log(`❌ Error al ingresar relaciones a la base de datos, ${error}.`);
     process.exit(1);
   }
-};
-
-initialSetup();
-
-export default initialSetup;
+}

@@ -42,8 +42,8 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
     
     doc.fontSize(10).font('Helvetica').fillColor('#333333');
     doc.text(`Código de Proyecto / Vivienda: `, { continued: true }).font('Helvetica-Bold').text(detalleZona.codigoVivienda);
-    doc.font('Helvetica').text(`Dirección del Despliegue: `, { continued: true }).font('Helvetica-Bold').text(detalleZona.descripcion);
-    doc.font('Helvetica').text(`Días de Estancia Planificados: `, { continued: true }).font('Helvetica-Bold').text(`${detalleZona.diasEstancia} Días.`);
+    doc.text(`Dirección del Despliegue: `, {continued: true}).font('Helvetica-Bold').text(detalleZona.descripcion);
+    doc.text(`Días de Estancia Planificados: `, {continued: true}).font('Helvetica-Bold').text(`${detalleZona.diasEstancia} Días.`);
 
     doc.moveDown(2);
 

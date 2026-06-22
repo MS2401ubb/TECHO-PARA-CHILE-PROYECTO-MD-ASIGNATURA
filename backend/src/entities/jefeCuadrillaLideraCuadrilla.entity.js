@@ -1,10 +1,10 @@
 import { EntitySchema } from 'typeorm';
 
 export default new EntitySchema({
-  name: 'VoluntarioParticipaEnCuadrilla',
-  tableName: 'voluntario_participa_en_cuadrilla',
+  name: 'JefeCuadrillaLideraCuadrilla',
+  tableName: 'jefe_cuadrilla_lidera_cuadrilla',
   columns: {
-    rutVoluntario: {
+    rutJefeCuadrilla: {
       primary: true,
       type: 'varchar',
       length: 20,
@@ -19,18 +19,18 @@ export default new EntitySchema({
     },
     fechaFin: {
       type: 'date',
-      nullable: true, // Permanece NULL mientras el voluntario siga activo en esa cuadrilla
+      nullable: true, // Permanece NULL mientras el jefe de cuadrilla siga liderando de forma activa
     },
   },
   relations: {
-    voluntario: {
-      target: 'Voluntario',
+    jefeCuadrilla: {
+      target: 'JefeCuadrilla',
       type: 'many-to-one',
-      joinColumn: { name: 'rutVoluntario' },
+      joinColumn: { name: 'rutJefeCuadrilla' },
       onDelete: 'CASCADE',
     },
     cuadrilla: {
-      target: 'Cuadrilla',
+      target: 'Cuadrilla', 
       type: 'many-to-one',
       joinColumn: { name: 'codigoCuadrilla' },
       onDelete: 'CASCADE',
