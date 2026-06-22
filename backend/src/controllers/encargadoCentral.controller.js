@@ -1,4 +1,4 @@
-import transporteAlimentoService from '../services/transporte_alimentacion.service.js';
+import transporteAlimentoService from '../services/documentoLogistico.service.js';
 import { handleSuccess, handleErrorClient, handleErrorServer} from '../handlers/responseHandlers.js';
 import { validarDatosDeCentralTransporte, validarDatosProvisionAlimentos } from '../validations/transporte_alimentacion.validation.js';
 import { crearPdfManifiestoCarga } from '../utils/documentoTransporte.util.js';

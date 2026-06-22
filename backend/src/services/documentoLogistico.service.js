@@ -1,7 +1,6 @@
 import db from '../config/configDb.js';
 
-const { In, IsNull } = require('typeorm');
-
+import { In, IsNull} from 'typeorm';
 
 
 import viviendas from '../entities/vivienda.entity.js';
