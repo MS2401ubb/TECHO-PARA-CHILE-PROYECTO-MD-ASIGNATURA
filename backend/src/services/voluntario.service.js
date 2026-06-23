@@ -1,17 +1,23 @@
 import { AppDataSource } from "../config/configDb.js";
 import Voluntario from "../entities/voluntario.entity.js";
+import VoluntarioParticipaEnCuadrilla from "../entities/voluntarioParticipaEnCuadrilla.entity.js";
+import { IsNull } from "typeorm";
 
+const ESTADOS_VOLUNTARIO = ['Postulante', 'Activo', 'Rechazado', 'Inactivo'];
 
 async function listarPorEstado(estado) {
   const voluntarioRepository = AppDataSource.getRepository(Voluntario);
   return voluntarioRepository.find({
     where: { estado },
+    relations: { usuario: true },
   });
 }
+
 // GET VOLUNTARIOS POSTULANTES
 export async function obtenerListaPostulantes() {
   return listarPorEstado('Postulante');
 }
+
 // GET VOLUNTARIOS ACTIVOS
 export async function obtenerListaVoluntarios() {
   return listarPorEstado('Activo');
@@ -19,13 +25,193 @@ export async function obtenerListaVoluntarios() {
 
 // GET VOLUNTARIO POR RUT
 export async function obtenerVoluntarioPorRut(rut) {
-    const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const voluntario = await voluntarioRepository.findOne({
+    where: { usuario: { rut } },
+    relations: { usuario: true },
+  });
+  if (!voluntario) {
+    throw new Error('No se encontro un voluntario con el RUT indicado.');
+  }
+  return voluntario;
+}
+
+// OBTENER VOLUNTARIO CON DETALLES COMPLETOS (nombre, email, teléfono, etc)
+export async function obtenerVoluntarioConDetallesCompletos(rut) {
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const voluntario = await voluntarioRepository.findOne({
+    where: { usuario: { rut } },
+    relations: { usuario: true },
+  });
+  if (!voluntario) {
+    throw new Error('Voluntario no encontrado.');
+  }
+  return {
+    rutVoluntario: voluntario.rutUsuario,
+    estado: voluntario.estado,
+    tipo: voluntario.tipo,
+    solicitudActiva: voluntario.solicitudActiva,
+    fechaValidacionDatos: voluntario.fechaValidacionDatos,
+    fechaActivacionSolicitud: voluntario.fechaActivacionSolicitud,
+    telefonoEmergencia: voluntario.telefonoEmergencia,
+    motivoRechazo: voluntario.motivoRechazo,
+    usuario: {
+      rut: voluntario.usuario.rut,
+      nombre: voluntario.usuario.nombre,
+      primerApellido: voluntario.usuario.primerApellido,
+      segundoApellido: voluntario.usuario.segundoApellido,
+      email: voluntario.usuario.email,
+      telefono: voluntario.usuario.telefono,
+      fechaNacimiento: voluntario.usuario.fechaNacimiento,
+    },
+  };
+}
+
+// APROBAR VOLUNTARIO (cambiar de Postulante a Activo)
+export async function aprobarVoluntario(rut, rutEncargado) {
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const voluntarioRepository = queryRunner.manager.getRepository(Voluntario);
+    const usuarioRepository = queryRunner.manager.getRepository('Usuario');
+
     const voluntario = await voluntarioRepository.findOne({
-        where: { usuario: { rut } },
+      where: { usuario: { rut } },
     });
+
     if (!voluntario) {
-        throw new Error('No se encontro un voluntario con el RUT indicado.');
+      throw new Error('Voluntario no encontrado.');
     }
 
-    return voluntario;
+    if (voluntario.estado !== 'Postulante') {
+      throw new Error(`No se puede aprobar un voluntario en estado ${voluntario.estado}. Solo se pueden aprobar Postulantes.`);
+    }
+
+    const encargado = await usuarioRepository.findOne({ where: { rut: rutEncargado } });
+    if (!encargado) {
+      throw new Error('Encargado no encontrado.');
+    }
+
+    voluntario.estado = 'Activo';
+    voluntario.solicitudActiva = false;
+    voluntario.fechaValidacionDatos = new Date();
+
+    await voluntarioRepository.save(voluntario);
+    await queryRunner.commitTransaction();
+
+    return {
+      rutVoluntario: voluntario.rutUsuario,
+      estadoAnterior: 'Postulante',
+      estadoNuevo: 'Activo',
+      fechaAprobacion: voluntario.fechaValidacionDatos,
+      aprobadoPor: rutEncargado,
+    };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
 }
+
+// RECHAZAR VOLUNTARIO (cambiar de Postulante a Rechazado)
+export async function rechazarVoluntario(rut, motivo, rutEncargado) {
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const voluntarioRepository = queryRunner.manager.getRepository(Voluntario);
+    const usuarioRepository = queryRunner.manager.getRepository('Usuario');
+
+    const voluntario = await voluntarioRepository.findOne({
+      where: { usuario: { rut } },
+    });
+
+    if (!voluntario) {
+      throw new Error('Voluntario no encontrado.');
+    }
+
+    if (voluntario.estado !== 'Postulante') {
+      throw new Error(`No se puede rechazar un voluntario en estado ${voluntario.estado}. Solo se pueden rechazar Postulantes.`);
+    }
+
+    const encargado = await usuarioRepository.findOne({ where: { rut: rutEncargado } });
+    if (!encargado) {
+      throw new Error('Encargado no encontrado.');
+    }
+
+    voluntario.estado = 'Rechazado';
+    voluntario.solicitudActiva = false;
+    voluntario.motivoRechazo = motivo?.trim() || 'Sin especificar';
+
+    await voluntarioRepository.save(voluntario);
+    await queryRunner.commitTransaction();
+
+    return {
+      rutVoluntario: voluntario.rutUsuario,
+      estadoAnterior: 'Postulante',
+      estadoNuevo: 'Rechazado',
+      motivo: voluntario.motivoRechazo,
+      rechazadoPor: rutEncargado,
+    };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+}
+
+// OBTENER VOLUNTARIOS DISPONIBLES POR ZONA (Activos sin asignación activa)
+export async function obtenerVoluntariosDisponiblesPorZona(codigoCiudad) {
+  const codigoCiudadNumero = Number(codigoCiudad);
+  if (!Number.isInteger(codigoCiudadNumero) || codigoCiudadNumero <= 0) {
+    throw new Error('El codigoCiudad debe ser un número entero positivo.');
+  }
+
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const participacionRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
+
+  const voluntariosActivos = await voluntarioRepository
+    .createQueryBuilder('voluntario')
+    .leftJoinAndSelect('voluntario.usuario', 'usuario')
+    .leftJoin('usuario.ciudad', 'ciudad')
+    .where('voluntario.estado = :estado', { estado: 'Activo' })
+    .andWhere('ciudad.codigo = :codigoCiudad', { codigoCiudad: codigoCiudadNumero })
+    .getMany();
+
+  const disponibles = [];
+
+  for (const vol of voluntariosActivos) {
+    const asignacionActiva = await participacionRepository.findOne({
+      where: {
+        rutVoluntario: vol.rutUsuario,
+        fechaFin: IsNull(),
+      },
+    });
+
+    if (!asignacionActiva) {
+      disponibles.push({
+        rutVoluntario: vol.rutUsuario,
+        nombre: vol.usuario?.nombre,
+        primerApellido: vol.usuario?.primerApellido,
+        segundoApellido: vol.usuario?.segundoApellido,
+        email: vol.usuario?.email,
+        telefono: vol.usuario?.telefono,
+        telefonoEmergencia: vol.telefonoEmergencia,
+        estado: vol.estado,
+        codigoCiudad: codigoCiudadNumero,
+      });
+    }
+  }
+  if (disponibles.length === 0) {
+    throw new Error('No hay voluntarios disponibles en la ciudad especificada.');
+  }
+
+  return disponibles;
+}
+
+export { ESTADOS_VOLUNTARIO };

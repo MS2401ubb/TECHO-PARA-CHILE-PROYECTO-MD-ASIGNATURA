@@ -1,4 +1,4 @@
-import { SESSION_SECRET } from "../config/configEnv.js";
+import { JWT_SECRET } from "../config/configEnv.js";
 import jwt from "jsonwebtoken";
 
 export function authenticateJwt(req, res, next) {
@@ -10,7 +10,7 @@ export function authenticateJwt(req, res, next) {
     const token = authHeader.split(" ")[1];
 
     try {
-        const decoded = jwt.verify(token, SESSION_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
         next();
     } catch (error) {

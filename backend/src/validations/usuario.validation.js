@@ -1,5 +1,13 @@
 import Joi from "joi";
 
+const ROLES_VALIDOS = [
+    "Voluntario",
+    "Jefe de Cuadrilla",
+    "Encargado de Voluntarios",
+    "Encargado de Central",
+    "admin"
+];
+
 export const editUserBodyValidation = Joi.object({
     password: Joi.string()
         .min(8)
@@ -45,9 +53,22 @@ export const editUserBodyValidation = Joi.object({
             "string.empty": "El teléfono no puede estar vacío",
         }),
     rol: Joi.string()
-        .valid("Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central")
+        .valid(...ROLES_VALIDOS)
         .messages({
-            "any.only": "El rol debe ser: Voluntario, Jefe de Cuadrilla, Encargado de Voluntarios o Encargado de Central"
+            "any.only": `El rol debe ser uno de: ${ROLES_VALIDOS.join(", ")}`
+        })
+}).options({
+    stripUnknown: true,
+    abortEarly: false
+});
+
+export const assignRoleBodyValidation = Joi.object({
+    rol: Joi.string()
+        .valid(...ROLES_VALIDOS)
+        .required()
+        .messages({
+            "any.only": `El rol debe ser uno de: ${ROLES_VALIDOS.join(", ")}`,
+            "any.required": "El rol es obligatorio"
         })
 }).options({
     stripUnknown: true,

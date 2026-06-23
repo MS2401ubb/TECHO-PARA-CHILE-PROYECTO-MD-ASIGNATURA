@@ -2,6 +2,14 @@ import { AppDataSource } from "../config/configDb.js";
 import User from "../entities/usuario.entity.js";
 import bcrypt from "bcrypt";
 
+const ROLES_VALIDOS = [
+  "Voluntario",
+  "Jefe de Cuadrilla",
+  "Encargado de Voluntarios",
+  "Encargado de Central",
+  "admin",
+];
+
 // ALL
 export async function getUsersService() {
   const userRepository = AppDataSource.getRepository(User);
@@ -61,3 +69,29 @@ export async function deleteUserService(rut) {
   await userRepository.remove(user);
   return true;
 }
+
+export async function asignarRolUsuarioService(rut, nuevoRol) {
+  if (!ROLES_VALIDOS.includes(nuevoRol)) {
+    throw new Error(`Rol inválido. Roles permitidos: ${ROLES_VALIDOS.join(", ")}`);
+  }
+
+  const userRepository = AppDataSource.getRepository(User);
+  const user = await userRepository.findOne({ where: { rut } });
+
+  if (!user) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  const rolAnterior = user.rol;
+  user.rol = nuevoRol;
+  const updatedUser = await userRepository.save(user);
+  delete updatedUser.password;
+
+  return {
+    rut: updatedUser.rut,
+    rolAnterior,
+    rolNuevo: updatedUser.rol,
+  };
+}
+
+export { ROLES_VALIDOS };

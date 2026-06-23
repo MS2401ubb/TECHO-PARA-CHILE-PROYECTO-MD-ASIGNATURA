@@ -1,5 +1,11 @@
-import { getUsersService, getUserByRutService, editUserService, deleteUserService } from "../services/usuario.service.js";
-import { editUserBodyValidation } from "../validations/usuario.validation.js";
+import {
+  getUsersService,
+  getUserByRutService,
+  editUserService,
+  deleteUserService,
+  asignarRolUsuarioService,
+} from "../services/usuario.service.js";
+import { editUserBodyValidation, assignRoleBodyValidation } from "../validations/usuario.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
 export async function getUsers(req, res) {
@@ -67,5 +73,26 @@ export async function deleteUser(req, res) {
     handleSuccess(res, 200, "Usuario eliminado exitosamente");
   } catch (error) {
     handleErrorServer(res, 500, "Error al eliminar usuario", error.message);
+  }
+}
+
+export async function asignarRolUsuario(req, res) {
+  try {
+    const { rut } = req.params;
+    const { body } = req;
+
+    const { error, value } = assignRoleBodyValidation.validate(body);
+    if (error) return handleErrorClient(res, 400, "Parámetros inválidos", error.message);
+
+    const data = await asignarRolUsuarioService(rut, value.rol);
+    return handleSuccess(res, 200, "Rol de usuario actualizado exitosamente", data);
+  } catch (error) {
+    if (error.message === "Usuario no encontrado") {
+      return handleErrorClient(res, 404, error.message);
+    }
+    if (error.message.startsWith("Rol inválido")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, "Error al actualizar rol de usuario", error.message);
   }
 }

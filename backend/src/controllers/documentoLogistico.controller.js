@@ -4,7 +4,6 @@ import { validarDatosDeCentralTransporte, validarDatosProvisionAlimentos } from 
 import { crearPdfManifiestoCarga } from '../utils/documentoTransporte.util.js';
 import { crearPdfProvisionAlimentacion } from '../utils/documentoAlimentacion.util.js';
 
-// DOCUMENTOS DE PLANIFICACION DE TRANSPORTE Y PROVISION DE ALIMENTOS
 export const generarDocumentoTransporte = async (req, res) => {
     try {
         const { body } = req;

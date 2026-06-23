@@ -14,9 +14,13 @@ import encargadoCentral from '../entities/encargadoCentral.entity.js';
 
 import Vivienda from '../entities/vivienda.entity.js';
 import Cuadrilla from '../entities/cuadrilla.entity.js';
+import Jornada from '../entities/jornada.entity.js';
+import Material from '../entities/material.entity.js';
 
 import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
 import CuadrillaTrabajaEnVivienda from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
+import InventarioJornada from '../entities/inventarioJornada.entity.js';
+import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
 
 
 
@@ -632,10 +636,55 @@ export const createInitialCuadrillas = async () => {
     process.exit(1);
   }
 }
+export const createInitialJornadas = async () => {
+  try {
+    const jornadaRepository = AppDataSource.getRepository(Jornada);
+    const countJornadas = await jornadaRepository.count();
+    if (countJornadas === 0) {
+      const jornadas = [
+        { fecha: '2026-06-16', estado: 'Activa', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
+        { fecha: '2026-06-16', estado: 'Activa', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' },
+        { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
+        { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' }
+      ];
 
-// FALTARIAN ESTAS PARA LAS PRUEBAS
-//export const createInitialJornadas = async () => {}
-//export const createInitialMateriales = async () => {}
+      for (const jornada of jornadas) {
+        await jornadaRepository.save({
+          fecha: jornada.fecha,
+          estado: jornada.estado,
+          jefeCuadrilla: { rutUsuario: jornada.rutJefe },
+          vivienda: { codigo: jornada.codigoVivienda }
+        });
+      }
+    }
+    console.log('🌱 Jornadas ingresadas a la base de datos.');
+  } catch (error) {
+    console.log(`❌ Error al ingresar jornadas a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
+export const createInitialMateriales = async () => {
+  try {
+    const materialRepository = AppDataSource.getRepository(Material);
+    const countMateriales = await materialRepository.count();
+    if (countMateriales === 0) {
+      const materiales = [
+        { nombre: 'Madera 2x4', tipo: 'Material', stock_digital: 180 },
+        { nombre: 'Planchas OSB', tipo: 'Material', stock_digital: 95 },
+        { nombre: 'Clavos 3 pulgadas', tipo: 'Material', stock_digital: 1500 },
+        { nombre: 'Martillo carpintero', tipo: 'Herramienta', stock_digital: 40 },
+        { nombre: 'Taladro inalambrico', tipo: 'Herramienta', stock_digital: 18 },
+        { nombre: 'Sierra circular', tipo: 'Herramienta', stock_digital: 12 }
+      ];
+
+      await materialRepository.save(materiales);
+    }
+    console.log('🌱 Materiales ingresados a la base de datos.');
+  } catch (error) {
+    console.log(`❌ Error al ingresar materiales a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
 
 
 export const createInitialRelations = async () => {
@@ -683,6 +732,55 @@ export const createInitialRelations = async () => {
         });
       }
     }
+
+    const jefeLideraRepository = AppDataSource.getRepository(JefeCuadrillaLideraCuadrilla);
+    const countJefesLideran = await jefeLideraRepository.count();
+    if (countJefesLideran === 0) {
+      const liderazgos = [
+        { rut: '17171717-7', cuad: 1, inicio: '2026-03-15' },
+        { rut: '18181818-8', cuad: 2, inicio: '2026-03-15' }
+      ];
+
+      for (const liderazgo of liderazgos) {
+        await jefeLideraRepository.save({
+          rutJefeCuadrilla: liderazgo.rut,
+          codigoCuadrilla: liderazgo.cuad,
+          fechaInicio: liderazgo.inicio,
+          fechaFin: null
+        });
+      }
+    }
+
+    const inventarioJornadaRepository = AppDataSource.getRepository(InventarioJornada);
+    const countInventario = await inventarioJornadaRepository.count();
+    if (countInventario === 0) {
+      const jornadaRepository = AppDataSource.getRepository(Jornada);
+      const materialRepository = AppDataSource.getRepository(Material);
+
+      const jornadas = await jornadaRepository.find({ order: { id: 'ASC' } });
+      const materiales = await materialRepository.find();
+      const materialIdByNombre = new Map(materiales.map((m) => [m.nombre, m.id]));
+
+      if (jornadas.length > 0) {
+        const consumos = [
+          { jornada: jornadas[0]?.id, material: materialIdByNombre.get('Madera 2x4'), cantidad: 24 },
+          { jornada: jornadas[0]?.id, material: materialIdByNombre.get('Clavos 3 pulgadas'), cantidad: 300 },
+          { jornada: jornadas[1]?.id, material: materialIdByNombre.get('Planchas OSB'), cantidad: 16 },
+          { jornada: jornadas[1]?.id, material: materialIdByNombre.get('Taladro inalambrico'), cantidad: 2 },
+          { jornada: jornadas[2]?.id, material: materialIdByNombre.get('Martillo carpintero'), cantidad: 4 },
+          { jornada: jornadas[3]?.id, material: materialIdByNombre.get('Sierra circular'), cantidad: 1 }
+        ].filter((item) => item.jornada && item.material);
+
+        for (const consumo of consumos) {
+          await inventarioJornadaRepository.save({
+            cantidad_fisica: consumo.cantidad,
+            jornada: { id: consumo.jornada },
+            material: { id: consumo.material }
+          });
+        }
+      }
+    }
+
     console.log("🌱 Relaciones ingresadas a la base de datos.");
   } catch (error){
     console.log(`❌ Error al ingresar relaciones a la base de datos, ${error}.`);

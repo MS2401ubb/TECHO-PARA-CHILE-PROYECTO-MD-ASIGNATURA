@@ -17,6 +17,12 @@ export default new EntitySchema({
       type: 'varchar',
       length: 50,
       nullable: true,
+      comment: 'Postulante, Activo, Rechazado, Inactivo'
+    },
+    motivoRechazo: {
+      type: 'varchar',
+      length: 250,
+      nullable: true,
     },
     solicitudActiva: {
       type: 'boolean',
