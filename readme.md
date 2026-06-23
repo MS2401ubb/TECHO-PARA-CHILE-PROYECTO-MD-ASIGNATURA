@@ -19,12 +19,12 @@ El sistema permite:
 `
 backend/
 ├── src/
-│   ├── config/                      # Configuración de BD y Setup inicial
+│   ├── config/  # Configuración de BD y Setup inicial
 │   │   ├── configDb.js
 │   │   ├── configEnv.js
 │   │   └── initialSetup.js
 │   │
-│   ├── controllers/                 # Lógica de peticiones HTTP
+│   ├── controllers/  # Lógica de peticiones HTTP
 │   │   ├── auth.controller.js
 │   │   ├── usuario.controller.js
 │   │   ├── voluntario.controller.js
@@ -33,7 +33,7 @@ backend/
 │   │   ├── vivienda.controller.js
 │   │   └── documentoLogistico.controller.js
 │   │
-│   ├── entities/                    # Modelos de BD (TypeORM)
+│   ├── entities/  # Modelos de BD (TypeORM)
 │   │   ├── usuario.entity.js
 │   │   ├── voluntario.entity.js
 │   │   ├── cuadrilla.entity.js
@@ -44,32 +44,32 @@ backend/
 │   │   ├── ciudad.entity.js
 │   │   └── ... (entidades de relación)
 │   │
-│   ├── services/                    # Lógica de negocio
+│   ├── services/  # Lógica de negocio
 │   │   ├── auth.service.js
 │   │   ├── usuario.service.js
 │   │   ├── cuadrilla.service.js
 │   │   ├── jornada.service.js
 │   │   └── ...
 │   │
-│   ├── routes/                      # Definición de endpoints
+│   ├── routes/  # Definición de endpoints
 │   │   ├── auth.routes.js
 │   │   ├── usuario.routes.js
 │   │   ├── cuadrilla.routes.js
 │   │   └── ...
 │   │
-│   ├── middleware/                  # Autenticación y autorización
+│   ├── middleware/  # Autenticación y autorización
 │   │   ├── authentication.middleware.js
 │   │   └── authorization.middleware.js
 │   │
-│   ├── validations/                 # Validación de datos
+│   ├── validations/  # Validación de datos
 │   │   ├── auth.validation.js
 │   │   ├── usuario.validation.js
 │   │   └── ...
 │   │
-│   ├── handlers/                    # Manejadores de respuestas
+│   ├── handlers/  # Manejadores de respuestas
 │   │   └── responseHandlers.js
 │   │
-│   └── utils/                       # Utilidades diversas
+│   └── utils/  # Utilidades diversas
 │       ├── documentoAlimentacion.util.js
 │       └── documentoTransporte.util.js
 │
