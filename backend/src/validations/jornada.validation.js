@@ -1,6 +1,5 @@
 import Joi from 'joi';
 
-//Esquema base 
 
 export const finalizarJornadaSchema = Joi.object({
     materiales: Joi.array().items(
@@ -10,22 +9,7 @@ export const finalizarJornadaSchema = Joi.object({
         })
     ).required()
 });
-// El MIDDLEWARE
 
-export const validarFinalizarJornada = (req,res,next) => {
-    const {error} = finalizarJornadaSchema.validate(req.body);
-
-
-if (error) {
-    return res.status(400).json ({
-        error: 'Datos de inventario invalidos'
-    
-    });
-}
-
-next ();
-
-};
 
 export default {
     finalizarJornadaSchema,

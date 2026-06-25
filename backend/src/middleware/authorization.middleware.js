@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 import { handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
+import { JWT_SECRET } from "../config/configEnv.js";
 
 export function getUserRole(req) {
+  if (req.user) {
+    return req.user.rol || req.user.role || null;
+  }
+
   const authHeader = req.headers["authorization"];
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -12,8 +17,8 @@ export function getUserRole(req) {
   const token = authHeader.split(" ")[1];
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    return payload.role;
+    const payload = jwt.verify(token, JWT_SECRET);
+    return payload.rol || payload.role || null;
   } catch (error) {
     // Token invalido o expirado
     return null;
@@ -22,10 +27,11 @@ export function getUserRole(req) {
 
 // Utilizado para mostrar el nombre del rol en el mensaje
 const roleNames = {
-  voluntario: "Voluntario",
-  jefe_cuadrilla: "Jefe de Cuadrilla",
-  encargado_voluntarios: "Encargado de Voluntarios",
-  encargado_central: "Encargado de Central",
+  "admin": "admin",
+  "Voluntario": "Voluntario",
+  "Jefe de Cuadrilla": "Jefe de Cuadrilla",
+  "Encargado de Voluntarios": "Encargado de Voluntarios",
+  "Encargado de Central": "Encargado de Central",
 };
 
 export function verifyRoles(roles) {
@@ -36,7 +42,9 @@ export function verifyRoles(roles) {
       if (!userRole) return handleErrorClient(res, 401, "Token inválido o expirado");
 
       if (!roles.includes(userRole)) {
-        const validRolesNames = roles.map((role) => roleNames[role]).join(", ");
+        const validRolesNames = roles
+          .map((role) => roleNames[role] || role)
+          .join(", ");
 
         return handleErrorClient(res, 403, `Acceso denegado: se necesitan privilegios de ${validRolesNames}`)
       }

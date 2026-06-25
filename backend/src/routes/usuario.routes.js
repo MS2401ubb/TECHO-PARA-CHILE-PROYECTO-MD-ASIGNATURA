@@ -1,10 +1,19 @@
-import express from 'express';
-const router = express.Router();
-//CUANDO SE COMPLETE CONTROLLER
-import usuarioController from '../controllers/Usuario.controller.js';
+import { Router } from "express";
+import { getUsers, getUserByRut, editUser, deleteUser, asignarRolUsuario } from "../controllers/usuario.controller.js";
+import { authenticateJwt } from "../middleware/authentication.middleware.js";
+import { verifyRoles } from "../middleware/authorization.middleware.js";
 
-router.get('/',usuarioController.mostrarUsuario); //lo manda a '/Acceso' si no tiene sesion iniciada? 
-router.patch('/Modificar-perfil',usuarioController.actualizarUsuario);
-router.post('/Acceso',usuarioController.iniciarSesion);
+const router = Router();
+
+router.get("/", getUsers);
+router.get("/:rut", getUserByRut);
+router.patch(
+	"/:rut/asignar-rol",
+	authenticateJwt,
+	verifyRoles(["admin", "Encargado de Central"]),
+	asignarRolUsuario
+);
+router.patch("/:rut", editUser);
+router.delete("/:rut", deleteUser);
 
 export default router;

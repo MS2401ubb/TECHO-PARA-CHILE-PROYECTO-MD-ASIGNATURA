@@ -6,6 +6,8 @@ import {  createInitialRegionesAndCiudades,
           createInitialUsuarios,
           createInitialViviendas,
           createInitialCuadrillas,
+          createInitialJornadas,
+          createInitialMateriales,
           createInitialRelations
         } from './config/initialSetup.js';
 import { PORT } from './config/configEnv.js';
@@ -31,6 +33,8 @@ try {
   await createInitialUsuarios();
   await createInitialViviendas();
   await createInitialCuadrillas();
+  await createInitialJornadas();
+  await createInitialMateriales();
   await createInitialRelations();
   console.log('✅ Datos Cargados con éxito.');
 
