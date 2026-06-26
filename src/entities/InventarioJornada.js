@@ -12,6 +12,10 @@ module.exports = new EntitySchema({
         cantidad_fisica: {
             type: "int",
             nullable: false
+        },
+        incidencia: {
+            type: "text",
+            nullable: true
         }
     },
     relations: {
