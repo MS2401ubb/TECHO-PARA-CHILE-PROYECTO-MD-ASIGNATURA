@@ -1,0 +1,38 @@
+{
+  "name": "backend-techo-para-chile",
+  "version": "1.0.0",
+  "description": "Backend para el proyecto \"Techo Para Chile\"",
+  "homepage": "https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA#readme",
+  "bugs": {
+    "url": "https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MS2401ubb/TECHO-PARA-CHILE-PROYECTO-MD-ASIGNATURA.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "joi": "^18.2.1",
+    "pdfkit": "^0.18.0",
+    "pg": "^8.21.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.0.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
