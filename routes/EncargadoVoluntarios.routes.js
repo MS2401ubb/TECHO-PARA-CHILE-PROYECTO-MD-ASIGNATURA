@@ -1,5 +1,5 @@
-const express = require('express');
-const encargadoVoluntariosController = require('../controllers/EncargadoVoluntarios.controller');
+import express from 'express';
+import encargadoVoluntariosController from '../controllers/EncargadoVoluntarios.controller.js';
 
 const router = express.Router();
 
@@ -9,4 +9,5 @@ router.get('/ListaPostulantes/:rut', encargadoVoluntariosController.obtenerPostu
 router.get('/ListaVoluntarios/:rut', encargadoVoluntariosController.obtenerVoluntario);
 router.patch('/ListaPostulantes/:rut/aprobar', encargadoVoluntariosController.aprobarIngresoPostulante);
 
-module.exports = router;
+export default router;
+

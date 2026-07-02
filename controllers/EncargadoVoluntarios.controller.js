@@ -1,5 +1,15 @@
-const encargadoVoluntariosService = require('../services/EncargadoVoluntarios.service');
-const { aprobarPostulanteSchema } = require('../validations/EncargadoVoluntarios.validation');
+import {
+  aprobarPostulante,
+  obtenerListaPostulantes,
+  obtenerListaVoluntarios,
+  obtenerPostulante,
+  obtenerVoluntario,
+} from '../services/EncargadoVoluntarios.service.js';
+import { aprobarPostulanteSchema } from '../validations/EncargadoVoluntarios.validation.js';
+
+function obtenerDataSource(req) {
+  return req.app.locals.dataSource;
+}
 
 function responderError(res, error) {
   return res.status(error.statusCode || 500).json({
@@ -8,36 +18,36 @@ function responderError(res, error) {
   });
 }
 
-async function obtenerListaPostulantes(req, res) {
+async function listarPostulantes(req, res) {
   try {
-    const postulantes = await encargadoVoluntariosService.obtenerListaPostulantes();
+    const postulantes = await obtenerListaPostulantes(obtenerDataSource(req));
     return res.status(200).json(postulantes);
   } catch (error) {
     return responderError(res, error);
   }
 }
 
-async function obtenerListaVoluntarios(req, res) {
+async function listarVoluntarios(req, res) {
   try {
-    const voluntarios = await encargadoVoluntariosService.obtenerListaVoluntarios();
+    const voluntarios = await obtenerListaVoluntarios(obtenerDataSource(req));
     return res.status(200).json(voluntarios);
   } catch (error) {
     return responderError(res, error);
   }
 }
 
-async function obtenerPostulante(req, res) {
+async function mostrarPostulante(req, res) {
   try {
-    const postulante = await encargadoVoluntariosService.obtenerPostulante(req.params.rut);
+    const postulante = await obtenerPostulante(obtenerDataSource(req), req.params.rut);
     return res.status(200).json(postulante);
   } catch (error) {
     return responderError(res, error);
   }
 }
 
-async function obtenerVoluntario(req, res) {
+async function mostrarVoluntario(req, res) {
   try {
-    const voluntario = await encargadoVoluntariosService.obtenerVoluntario(req.params.rut);
+    const voluntario = await obtenerVoluntario(obtenerDataSource(req), req.params.rut);
     return res.status(200).json(voluntario);
   } catch (error) {
     return responderError(res, error);
@@ -58,7 +68,7 @@ async function aprobarIngresoPostulante(req, res) {
   }
 
   try {
-    const resultado = await encargadoVoluntariosService.aprobarPostulante(req.params.rut, value);
+    const resultado = await aprobarPostulante(obtenerDataSource(req), req.params.rut, value);
     return res.status(200).json({
       message: 'Postulante aprobado y solicitud activada correctamente.',
       data: resultado,
@@ -68,10 +78,10 @@ async function aprobarIngresoPostulante(req, res) {
   }
 }
 
-module.exports = {
-  obtenerListaPostulantes,
-  obtenerListaVoluntarios,
-  obtenerPostulante,
-  obtenerVoluntario,
+export default {
+  obtenerListaPostulantes: listarPostulantes,
+  obtenerListaVoluntarios: listarVoluntarios,
+  obtenerPostulante: mostrarPostulante,
+  obtenerVoluntario: mostrarVoluntario,
   aprobarIngresoPostulante,
 };
