@@ -19,9 +19,9 @@
   },
   "dependencies": {
     "express": "^5.2.1",
-    "typeorm": "^1.0.0",
     "joi": "^18.2.1",
     "pg": "^8.21.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.0.0"
   }
-} 
+}

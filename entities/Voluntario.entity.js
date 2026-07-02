@@ -18,6 +18,18 @@ module.exports = new EntitySchema({
       length: 50,
       nullable: true,
     },
+    solicitudActiva: {
+      type: 'boolean',
+      default: false,
+    },
+    fechaValidacionDatos: {
+      type: 'date',
+      nullable: true,
+    },
+    fechaActivacionSolicitud: {
+      type: 'date',
+      nullable: true,
+    },
     telefonoEmergencia: {
       type: 'varchar',
       length: 20,

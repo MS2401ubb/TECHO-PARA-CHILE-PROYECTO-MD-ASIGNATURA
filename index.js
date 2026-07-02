@@ -3,9 +3,9 @@
 import express from 'express';
 //import config
 //import db
-import usuarioRoutes from './routes/Usuario.routes.js';
-import encargadoVoluntariosRoutes from './routes/EncargadoVoluntarios.routes.js';
-import cuadrillaRoutes from './routes/Cuadrilla.routes.js';
+import {usuarioRoutes} from './routes/Usuario.routes.js';
+import {encargadoVoluntariosRoutes} from './routes/EncargadoVoluntarios.routes.js';
+import {cuadrillaRoutes} from './routes/Cuadrilla.routes.js';
 
 const app = express();
 
