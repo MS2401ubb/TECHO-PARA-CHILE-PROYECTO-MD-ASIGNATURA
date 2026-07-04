@@ -16,6 +16,7 @@ import Material from '../entities/material.entity.js';
 import Jornada from '../entities/jornada.entity.js';
 import InventarioJornada from '../entities/inventarioJornada.entity.js';
 import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
+import Reporte from '../entities/reporte.entity.js';
 
 import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } from './configEnv.js';
 
@@ -44,7 +45,8 @@ const AppDataSource = new DataSource({
     Material,
     Jornada,
     InventarioJornada,
-    JefeCuadrillaLideraCuadrilla
+    JefeCuadrillaLideraCuadrilla,
+    Reporte
   ],
 });
 
