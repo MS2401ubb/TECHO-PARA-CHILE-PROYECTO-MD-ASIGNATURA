@@ -8,31 +8,42 @@ export default new EntitySchema({
         id: {
             primary: true,
             type: 'int',
-            generated: true,
+            generated: true
         },
         valorToken: {
             type: 'varchar',
-            length: 10,
-            unique: true,
+            length: 10
         },
         fechaCreacion: {
             type: 'timestamp',
-            default: () => 'CURRENT_TIMESTAMP',
+            default: () => 'CURRENT_TIMESTAMP'
         },
         activo: {
             type: 'boolean',
-            default: true,
+            default: true
         },
         codigoCuadrilla:{
             type: 'int',
+            nullable: false
         },
     },
     relations: {
         cuadrilla: {
             target: 'Cuadrilla',
             type: 'many-to-one',
-            joinColumn: {name: 'codigoCuadrilla'},
+            joinColumn: { name: 'codigoCuadrilla' },
             onDelete: 'CASCADE',
         },
+        voluntariosAsociados: {
+            target: 'Voluntario',
+            type: 'one-to-many',
+            inverseSide: 'tokenIngresado'
+        }
     },
-});
+    indices: [{
+        name: 'IDX_TokenCuadrilla_Valor_Activo_UNIQ',
+        columns: ['valorToken'],
+        unique: true,
+        where: 'activo = true' //unicidad importa solo si token esta activo (entre distintas cuadrillas o la misma).
+    }]
+}); 
