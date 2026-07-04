@@ -8,6 +8,7 @@ import {
   obtenerVoluntariosDisponiblesPorZona,
 } from "../services/voluntario.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import { aprobarPostulanteBodyValidation } from "../validations/voluntario.validation.js";
 
 export async function listaPostulantes(req, res) {
   try {
@@ -70,17 +71,34 @@ export async function aprobarPostulante(req, res) {
   try {
     const { rut } = req.params;
     const rutEncargado = req.user?.rut;
+    const { error, value } = aprobarPostulanteBodyValidation.validate(req.body);
+
+    if (error) {
+      return handleErrorClient(
+        res,
+        400,
+        "Datos de asignación inválidos",
+        error.details.map((detail) => detail.message),
+      );
+    }
 
     if (!rutEncargado) {
       return handleErrorClient(res, 401, "Usuario no autenticado");
     }
 
-    const data = await aprobarVoluntario(rut, rutEncargado);
+    const data = await aprobarVoluntario(rut, rutEncargado, value);
     handleSuccess(res, 200, "Voluntario aprobado exitosamente", data);
   } catch (error) {
     if (error.message.includes("no encontrado")) {
       handleErrorClient(res, 404, error.message);
-    } else if (error.message.includes("No se puede aprobar")) {
+    } else if (
+      error.message.includes("No se puede aprobar") ||
+      error.message.includes("campos obligatorios") ||
+      error.message.includes("codigoCuadrilla") ||
+      error.message.includes("fechaInicio") ||
+      error.message.includes("ya está asignado") ||
+      error.message.includes("No existen cuadrillas")
+    ) {
       handleErrorClient(res, 400, error.message);
     } else {
       handleErrorServer(res, 500, "Error al aprobar voluntario", error.message);

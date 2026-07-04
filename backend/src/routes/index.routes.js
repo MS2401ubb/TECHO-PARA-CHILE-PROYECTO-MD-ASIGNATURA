@@ -6,6 +6,7 @@ import cuadrillaRoutes from './cuadrilla.routes.js';
 import documentoLogisticoRoutes from './documentoLogistico.routes.js';
 import jornadaRoutes from './jornada.routes.js';
 import materialRoutes from './material.routes.js';
+import reporteRoutes from './reporte.routes.js';
 import usuarioRoutes from './usuario.routes.js';
 import viviendaRoutes from './vivienda.routes.js';
 import voluntarioRoutes from './voluntario.routes.js';
@@ -29,6 +30,7 @@ export function routerApi(app) {
     //}
     router.use('/jornada', jornadaRoutes);
     router.use('/material', materialRoutes);
+    router.use('/reporte', reporteRoutes);
     router.use('/usuario', usuarioRoutes);
     router.use('/vivienda', viviendaRoutes);
     router.use('/voluntario', voluntarioRoutes);

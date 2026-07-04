@@ -19,6 +19,7 @@ import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadril
 import TokenAsignaCuadrilla from '../entities/tokenCuadrilla.entity.js';
 
 import { UsuarioSubscriber } from '../utils/usuario.subscriber.js';
+import Reporte from '../entities/reporte.entity.js';
 
 import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } from './configEnv.js';
 
@@ -48,7 +49,8 @@ const AppDataSource = new DataSource({
     Jornada,
     InventarioJornada,
     JefeCuadrillaLideraCuadrilla,
-    TokenAsignaCuadrilla
+    TokenAsignaCuadrilla,
+    Reporte
   ],
   subscribers:[ UsuarioSubscriber],
 });
