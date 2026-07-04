@@ -17,6 +17,8 @@ import Jornada from '../entities/jornada.entity.js';
 import InventarioJornada from '../entities/inventarioJornada.entity.js';
 import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
 
+import { UsuarioSubscriber } from '../utils/usuario.subscriber.js';
+
 import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } from './configEnv.js';
 
 const AppDataSource = new DataSource({
@@ -46,6 +48,7 @@ const AppDataSource = new DataSource({
     InventarioJornada,
     JefeCuadrillaLideraCuadrilla
   ],
+  subscribers:[ UsuarioSubscriber],
 });
 
 export { AppDataSource };
