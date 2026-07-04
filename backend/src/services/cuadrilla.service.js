@@ -5,8 +5,10 @@ import VoluntarioParticipaEnCuadrilla from "../entities/voluntarioParticipaEnCua
 import JefeCuadrilla from "../entities/jefeCuadrilla.entity.js";
 import JefeCuadrillaLideraCuadrilla from "../entities/jefeCuadrillaLideraCuadrilla.entity.js";
 import TokenAsignaCuadrilla from "../entities/tokenCuadrilla.entity.js";
+import Usuario from "../entities/usuario.entity.js";
 import { IsNull, Not} from "typeorm";
 
+import bcrypt from "bcrypt";
 
 // ALL
 export async function getCuadrillasService() {
@@ -326,4 +328,142 @@ async function generarTokenUnicoString(tokenRepository,codigoCuadrillaNumero) {
 //Voluntario: "Unirme a Cuadrilla" (Invitado, solo tiene rut) -> POST /API/cuadrillas/token/canjear -> vinculación inmediata a cuadrilla.
 //asocia idToken a voluntario, crea Usuario y Voluntario (con mayoria de columnas NULL)
 //o si el voluntario ya existe y fue re-asignado, solo actualiza cuadrilla actual (le da fecha-fin, en entities asociadas, etc)
+/**
+ * rutVoluntario 
+ * @param {string} tipoVoluntario - 'General' o 'Espontáneo'
+ * @param {Object} datosUsuarioNuevo
+ * @param {string} datosUsuarioNuevo.rut
+ * @param {string} datosUsuarioNuevo.nombre
+ * @param {string} datosUsuarioNuevo.primerApellido
+ * @param {string} datosUsuarioNuevo.telefono
+ * @param {string} tokenEntregado
+ */
+/**
+ * @param {string} tipoVoluntario - 'General' o 'Espontáneo'
+ * @param {Object} datosUsuarioNuevo
+ * @param {string} datosUsuarioNuevo.rut
+ * @param {string} datosUsuarioNuevo.nombre
+ * @param {string} datosUsuarioNuevo.primerApellido
+ * @param {string} datosUsuarioNuevo.telefono
+ * @param {string} tokenEntregado
+ */
+export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tokenEntregado) {
+  const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const usuarioRepository = AppDataSource.getRepository(Usuario);
+  const participacionRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
 
+  // 1. VALIDAR EL TOKEN ENTRANTE
+  const tokenValido = await tokenRepository.findOne({
+    where: {
+      valorToken: tokenEntregado,
+      activo: true
+    }
+  });
+  if (!tokenValido) throw new Error("El código de token ingresado no es válido o ya expiró.");
+
+  const idTokenTemp = tokenValido.id;
+  const codigoCuadrillaAsociada = tokenValido.codigoCuadrilla;
+
+  // 2. CORRECCIÓN DE SEGURIDAD: Validar si el RUT ya existe de verdad en el sistema
+  const usuarioExistente = await usuarioRepository.findOne({
+    where: { rut: datosUsuarioNuevo.rut }
+  });
+
+  // Forzamos el tipo real basado en los datos de la BD, evitando fraudes o errores del front
+  let tipoRealFlujo = tipoVoluntario;
+  if (usuarioExistente) {
+    tipoRealFlujo = "General"; 
+  }
+
+  // Iniciamos la transacción con QueryRunner
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  
+  try {
+    switch (tipoRealFlujo) {
+      case "Espontáneo": {
+        // CREACIÓN DE USUARIO NUEVO
+        const nuevoUsuario = usuarioRepository.create({
+          rut: datosUsuarioNuevo.rut,
+          password: await bcrypt.hash(datosUsuarioNuevo.nombre.toLowerCase() + "123vol", 10),
+          nombre: datosUsuarioNuevo.nombre,
+          primerApellido: datosUsuarioNuevo.primerApellido,
+          rol: "Voluntario Espontáneo",
+          telefono: datosUsuarioNuevo.telefono
+        });
+        await queryRunner.manager.save(nuevoUsuario);
+
+        // CREACIÓN DE VOLUNTARIO ASOCIADO
+        const nuevoVoluntario = voluntarioRepository.create({
+          rutUsuario: datosUsuarioNuevo.rut,
+          tipo: "Espontáneo",
+          estado: "Activo",
+          solicitudActiva: false,
+          idToken: idTokenTemp
+        });
+        await queryRunner.manager.save(nuevoVoluntario);
+
+        break;
+      }
+      
+      case "General": {
+        // ENFOQUE REASIGNACIÓN: Buscamos el voluntario ya registrado
+        const voluntarioExistente = await voluntarioRepository.findOne({
+          where: { rutUsuario: datosUsuarioNuevo.rut }
+        });
+        if (!voluntarioExistente) {
+          throw new Error("El RUT ya existe en el sistema pero no pertenece a un perfil de Voluntario.");
+        }
+
+        // Buscamos si tiene un despliegue sin cerrar en otra cuadrilla (fechaFin null)
+        const participacionActiva = await participacionRepository.findOne({
+          where: { rutVoluntario: datosUsuarioNuevo.rut, fechaFin: IsNull() }
+        });
+
+        // Si estaba asignado a otra cuadrilla hoy, hacemos el cierre técnico antes de moverlo
+        if (participacionActiva) {
+          participacionActiva.fechaFin = new Date();
+          await queryRunner.manager.save(participacionActiva);
+        }
+
+        // Actualizamos la trazabilidad del token usado en el voluntario existente
+        voluntarioExistente.idToken = idTokenTemp;
+        await queryRunner.manager.save(voluntarioExistente);
+
+        break;
+      }
+      
+      default: {
+        throw new Error("Tipo de voluntario inválido.");
+      }
+    }
+
+    // 3. PASO COMÚN: Registrar la nueva asignación en la cuadrilla en tiempo real
+    const nuevaParticipacion = participacionRepository.create({
+      rutVoluntario: datosUsuarioNuevo.rut,
+      codigoCuadrilla: codigoCuadrillaAsociada,
+      fechaInicio: new Date(),
+      fechaFin: null
+    });
+    await queryRunner.manager.save(nuevaParticipacion);
+
+    // Guardamos definitivamente los cambios de la transacción
+    await queryRunner.commitTransaction();
+
+    return {
+      success: true,
+      message: `Asignación express completada con éxito en la cuadrilla ${codigoCuadrillaAsociada}.`,
+      flujoProcesado: tipoRealFlujo
+    };
+
+  } catch (error) {
+    // Si algo falló en cualquier parte del proceso, deshacemos todo en cascada
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    // Liberamos el QueryRunner para no agotar las conexiones del pool de la BD
+    await queryRunner.release();
+  }
+}

@@ -1,5 +1,15 @@
 import { boolean } from 'joi';
 import { EntitySchema } from 'typeorm';
+import { Timestamp } from 'typeorm/driver/mongodb/bson.typings.js';
+
+/**
+ * @typedef {Object} TokenType
+ * @property {number} id
+ * @property {string} valor
+ * @property {Timestamp} creacion
+ * @property {boolean} activo
+ * @property {number} codigoCuadrilla
+ */
 
 export default new EntitySchema({
     name: 'TokenAsignacionCuadrilla',
