@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 
 const ROLES_VALIDOS = [
   "Voluntario",
+  "Voluntario Espontáneo",
+  "Voluntario General",
   "Jefe de Cuadrilla",
   "Encargado de Voluntarios",
   "Encargado de Central",
