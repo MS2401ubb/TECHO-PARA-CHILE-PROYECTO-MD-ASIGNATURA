@@ -4,8 +4,7 @@ import { verifyRoles } from "../middleware/authorization.middleware.js";
 import authRoutes from "./auth.routes.js";
 import cuadrillaRoutes from './cuadrilla.routes.js';
 import documentoLogisticoRoutes from './documentoLogistico.routes.js';
-import jornadaRoutes from './jornada.routes.js';
-import materialRoutes from './material.routes.js';
+import herramientasRoutes from './herramientas.routes.js';
 import usuarioRoutes from './usuario.routes.js';
 import viviendaRoutes from './vivienda.routes.js';
 import voluntarioRoutes from './voluntario.routes.js';
@@ -27,8 +26,7 @@ export function routerApi(app) {
     // "codigoVivienda": "CONC-001",
     // "rutEncargado": "24242424-4"
     //}
-    router.use('/jornada', jornadaRoutes);
-    router.use('/material', materialRoutes);
+    router.use('/herramientas', herramientasRoutes);
     router.use('/usuario', usuarioRoutes);
     router.use('/vivienda', viviendaRoutes);
     router.use('/voluntario', voluntarioRoutes);

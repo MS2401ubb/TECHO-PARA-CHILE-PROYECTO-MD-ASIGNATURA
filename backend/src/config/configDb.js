@@ -12,10 +12,14 @@ import Region from '../entities/region.entity.js';
 import Usuario from '../entities/usuario.entity.js';
 import Voluntario from '../entities/voluntario.entity.js';
 import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
-import Material from '../entities/material.entity.js';
 import Jornada from '../entities/jornada.entity.js';
 import InventarioJornada from '../entities/inventarioJornada.entity.js';
 import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
+import Herramienta from '../entities/herramientas.entity.js';
+import CoberturaHerramienta from '../entities/coberturaHerramienta.entity.js';
+import ValidacionDespliegueHerramienta from '../entities/validacionDespliegueHerramienta.entity.js';
+import JornadaValidacion from '../entities/jornadaValidacion.entity.js';
+import TareasValidacionJornada from '../entities/tareasValidacionJornada.entity.js';
 
 import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } from './configEnv.js';
 
@@ -41,10 +45,14 @@ const AppDataSource = new DataSource({
     Usuario,
     Voluntario,
     VoluntarioParticipaEnCuadrilla,
-    Material,
+    Herramienta,
+    CoberturaHerramienta,
+    ValidacionDespliegueHerramienta,
     Jornada,
     InventarioJornada,
-    JefeCuadrillaLideraCuadrilla
+    JefeCuadrillaLideraCuadrilla,
+    JornadaValidacion,
+    TareasValidacionJornada
   ],
 });
 

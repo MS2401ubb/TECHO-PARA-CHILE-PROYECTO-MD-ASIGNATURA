@@ -1,4 +1,4 @@
-import { EntitySchema } from 'typeorm';
+import { EntitySchema } from "typeorm";
 
 export default new EntitySchema({
     name: "InventarioJornada",
@@ -9,12 +9,53 @@ export default new EntitySchema({
             type: "int",
             generated: true
         },
-        cantidad_fisica: {
+        fecha: {
+            type: "date",
+            default: () => "CURRENT_DATE"
+        },
+        codigo_vivienda: {
+            type: "varchar",
+            length: 50,
+            nullable: true
+        },
+        cantidad_inicial: {
             type: "int",
             nullable: false
         },
+        cantidad_fisica_final: {
+            type: "int",
+            nullable: true
+        },
         incidencia: {
             type: "text",
+            nullable: true
+        },
+        codigoCuadrilla: {
+            type: "int",
+            nullable: false
+        },
+        rutJefeQueRealizoSetup: {
+            type: "varchar",
+            length: 15,
+            nullable: false
+        },
+        rutJefeQueRealizoConteo: {
+            type: "varchar",
+            length: 15,
+            nullable: true
+        },
+        estado_cierre: {
+            type: "enum",
+            enum: ["ACTIVO", "BLOQUEADO", "AUTORIZADO", "CERRADO"],
+            default: "ACTIVO"
+        },
+        rutCentralQueAutorizo: {
+            type: "varchar",
+            length: 15,
+            nullable: true
+        },
+        fechaAutorizacion: {
+            type: "timestamp",
             nullable: true
         }
     },
@@ -25,10 +66,16 @@ export default new EntitySchema({
             joinColumn: { name: "id_jornada" },
             onDelete: "CASCADE"
         },
-        material: {
-            target: "Material",
+        herramienta: {
+            target: "Herramienta",
             type: "many-to-one",
-            joinColumn: { name: "id_material" },
+            joinColumn: { name: "id_herramienta" },
+            onDelete: "RESTRICT"
+        },
+        cuadrilla: {
+            target: "Cuadrilla",
+            type: "many-to-one",
+            joinColumn: { name: "codigoCuadrilla" },
             onDelete: "RESTRICT"
         }
     }
