@@ -5,6 +5,8 @@ import {
   deleteCuadrillaService,
   asignarVoluntarioACuadrillaService,
   asignarJefeCuadrillaACuadrillaService,
+  obtenerToken,
+  canjearTokenExpress
 } from "../services/cuadrilla.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
@@ -119,3 +121,29 @@ export async function asignarJefeCuadrillaACuadrilla(req, res) {
     handleErrorServer(res, 500, "Error al asignar jefe de cuadrilla", error.message);
   }
 }
+
+//POST /api/cuadrillas/:codigo/token
+export async function getTokenCuadrilla(req,res) {
+  try{
+    const {codigo} = req.params;
+    const rutJefeCuadrilla= req.user.rut;
+
+    const data = await obtenerToken(rutJefeCuadrilla,codigo);
+    handleSuccess(res,201,"Token creado exitosamente",data);
+  }catch (error){
+    if (error.message.includes("no encontrado") || error.message.includes("no encontrada")) {
+      return handleErrorClient(res, 404, error.message);
+    }
+if (
+      error.message.includes("jefe activo") ||
+      error.message.includes("entero positivo")
+    ) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    handleErrorServer(res,500,"Error al generar Token de asignación a cuadrilla",error.message);
+  }
+}
+
+
+//POST /api/cuadrillas/token/canjear
+//const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, orden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"

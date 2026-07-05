@@ -6,6 +6,7 @@ import {
 	deleteCuadrilla,
 	asignarVoluntarioACuadrilla,
 	asignarJefeCuadrillaACuadrilla,
+	getTokenCuadrilla,
 } from "../controllers/cuadrilla.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
@@ -28,5 +29,8 @@ router.post(
 	verifyRoles(["Encargado de Voluntarios", "Encargado de Central"]),
 	asignarJefeCuadrillaACuadrilla
 );
+
+router.post("/:codigo/token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),getTokenCuadrilla);
+
 
 export default router;
