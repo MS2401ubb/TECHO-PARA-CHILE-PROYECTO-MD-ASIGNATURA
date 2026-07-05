@@ -8,7 +8,9 @@ import {
   obtenerToken,
   canjearTokenExpress
 } from "../services/cuadrilla.service.js";
+import {tokenCanjeoBodyValidation} from "../validations/token.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+
 
 export async function getCuadrillas(req, res) {
   try {
@@ -129,7 +131,7 @@ export async function getTokenCuadrilla(req,res) {
     const rutJefeCuadrilla= req.user.rut;
 
     const data = await obtenerToken(rutJefeCuadrilla,codigo);
-    handleSuccess(res,201,"Token creado exitosamente",data);
+    handleSuccess(res,201,"Token creado exitosamente",data);//data muestra código, para que Jefe de Cuadrilla lo muestre a Voluntario
   }catch (error){
     if (error.message.includes("no encontrado") || error.message.includes("no encontrada")) {
       return handleErrorClient(res, 404, error.message);
@@ -144,6 +146,27 @@ if (
   }
 }
 
-
 //POST /api/cuadrillas/token/canjear
 //const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, orden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"
+export async function getTokenVoluntario(req,res){
+  try{
+    const {error, value} = tokenCanjeoBodyValidation.validate(req.body);
+
+    if(error) return handleErrorClient(res,400,"parámetros de canje inválidos",error.message);
+    const {tipoVoluntario, tokenEntregado, datosUsuarioNuevo} = value;
+
+    const resultado = await canjearTokenExpress(tipoVoluntario,datosUsuarioNuevo,tokenEntregado);
+    handleSuccess(res,200,resultado.message,resultado);
+  }catch(error){
+    if(error.message.includes("no es válido") || error.message.includes("expiró")){
+      return handleErrorClient(res, 400, error.message);
+    }
+    if (error.message.includes("pertenece a un usuario pero no")) {
+      return handleErrorClient(res, 403, error.message); // Forbidden o Bad Request según prefieras
+    }
+
+    // Error crítico del servidor
+    handleErrorServer(res, 500, "Error al procesar el canje del token express", error.message);
+  }
+}
+
