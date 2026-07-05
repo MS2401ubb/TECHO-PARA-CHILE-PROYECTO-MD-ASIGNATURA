@@ -128,7 +128,7 @@ const obtenerTotalVoluntariosActivosEnZona = (cuadrillaTrabaja, voluntariosActiv
         }
     }
 
-    return totalVoluntarios;
+    return rutsUnicos.size;
 };
 export const generarDocumentoProvisionAlimentos = async (data) => {
     //Buscamos la vivienda para verificar que exista
@@ -136,13 +136,17 @@ export const generarDocumentoProvisionAlimentos = async (data) => {
 
     const vivienda = await viviendasRepository.findOneBy({ codigo: codigoVivienda });
 
-    if (!vivienda) {
+    // Buscamos la vivienda para verificar que exista
+    const viviendaEncontrada = await viviendasRepository.findOneBy({ codigo: codigoViviendaNormalizado });
+
+    if (!viviendaEncontrada) {
+        console.log(`No se encontró la vivienda con código ${codigoViviendaNormalizado}`);
         throw new Error('La vivienda o zona de construcción especificada no existe.');
     }
     
-    const fechaFinLogistica = vivienda.fechaFinEstimada;
+    const fechaFinLogistica = viviendaEncontrada.fechaFinEstimada;
     //verificamos si la zona tiene una fecha asignada, este requisito es obligatorio para la racion de alimentos
-    if (!vivienda.fechaInicioEstimada || !fechaFinLogistica) {
+    if (!viviendaEncontrada.fechaInicioEstimada || !fechaFinLogistica) {
         throw new Error('El sistema no permitirá generar la orden de raciones si la zona de construcción no tiene una fecha de término definida.');
     }
 
@@ -171,7 +175,7 @@ export const generarDocumentoProvisionAlimentos = async (data) => {
     }
 
     //Calcular la cantidad de días de estancia
-    const diasEstancia = calcularDiasEstancia(vivienda.fechaInicioEstimada, fechaFinLogistica);
+    const diasEstancia = calcularDiasEstancia(viviendaEncontrada.fechaInicioEstimada, fechaFinLogistica);
 
     //Determinar el volumen total de porciones necesarias (desayuno,almuerzo,cena) al dia
     const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3; 

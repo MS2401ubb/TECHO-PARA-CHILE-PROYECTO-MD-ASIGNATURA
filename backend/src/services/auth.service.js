@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/configDb.js";
 import { JWT_SECRET } from "../config/configEnv.js";
 import User from "../entities/usuario.entity.js";
+import Voluntario from "../entities/voluntario.entity.js";
 
 export async function loginService(data) {
     const userRepository = AppDataSource.getRepository(User);
@@ -60,5 +61,19 @@ export async function registerService(data) {
             rol: data.rol
     });
     
-    return await userRepository.save(newUser);
+    const savedUser = await userRepository.save(newUser);
+
+    // Si el rol es Voluntario, crear también el perfil en la tabla `voluntarios` como Postulante
+    if (data.rol === 'Voluntario') {
+        const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+        await voluntarioRepository.save({
+            rutUsuario: savedUser.rut,
+            tipo: data.tipo || 'General',
+            estado: 'Postulante',
+            solicitudActiva: true,
+            telefonoEmergencia: data.telefonoEmergencia || null
+        });
+    }
+
+    return savedUser;
 }
