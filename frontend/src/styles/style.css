@@ -199,6 +199,36 @@ button {
   font-size: 0.9rem;
 }
 
+/* Password input with inline toggle button */
+.password-wrapper {
+  position: relative;
+}
+.password-wrapper input {
+  padding-right: 44px;
+}
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+}
+.toggle-password:focus {
+  outline: none;
+  box-shadow: none;
+}
+.toggle-password:focus-visible {
+  outline: 2px solid rgba(15,76,129,0.15);
+  border-radius: 6px;
+}
+
 .form-actions {
   display: flex;
   flex-wrap: wrap;
