@@ -17,16 +17,11 @@ export function routerApi(app) {
     router.use('/auth', authRoutes);
     // PARA PROBAR http://localhost:3000/api/auth/login :
     //{
-    // "rut": "11111111-1",
-    // "password": "juan123vol"
+    // "rut": "admin",
+    // "password": "admin123"
     //}
     router.use('/cuadrilla', cuadrillaRoutes);
     router.use('/documento-logistico', documentoLogisticoRoutes);
-    // PARA PROBAR http://localhost:3000/api/documento-logistico/documento-provision-alimentos :
-    //{
-    // "codigoVivienda": "CONC-001",
-    // "rutEncargado": "24242424-4"
-    //}
     router.use('/reporte', reporteRoutes);
     router.use('/herramientas', herramientasRoutes);
     router.use('/usuario', usuarioRoutes);

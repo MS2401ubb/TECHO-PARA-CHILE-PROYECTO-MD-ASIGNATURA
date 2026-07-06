@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import { useState } from 'react'
 
 const useLogin = () => {
   const [errorRUT, setErrorRUT] = useState(""); //nose que va adentro del useState
@@ -11,7 +11,7 @@ const useLogin = () => {
             setErrorPassword(dataMessage);
         }
     };
-  const handleInputChange = (e) => {
+  const handleInputChange = () => {
         setErrorRUT("");
         setErrorPassword("");
       };

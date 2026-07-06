@@ -452,6 +452,21 @@ export const createInitialUsuarios = async () => {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
     const countUsuarios = await usuarioRepository.count();
     if (countUsuarios === 0){
+      await usuarioRepository.save([
+        usuarioRepository.create({
+          rut: 'admin', 
+          password: await bcrypt.hash('admin123', 10), 
+          rol: 'admin',           
+          nombre: 'Administrador',
+          primerApellido: 'Super',
+          segundoApellido: 'Poderoso',
+          fechaNacimiento: '1111-01-01',
+          email: 'admin@admin.com',
+          telefono: '911111111',
+          ciudad: { codigo: null },
+        }),
+      ]);
+    
       // -------------------------------------------------------
       // VOLUNTARIOS
       const voluntarioRepository = AppDataSource.getRepository(Voluntario);
@@ -590,10 +605,10 @@ export const createInitialViviendas = async () => {
     if (countViviendas === 0){
       const obras = [
         { codigo: 'CONC-001', direccion: 'Sector Palomares Pasaje Sur 45', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
-        { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
+        { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
+        { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
         { codigo: 'PICA-006', direccion: 'San Isidro 462', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 10}}
       ]; 
       for (const obra of obras) {

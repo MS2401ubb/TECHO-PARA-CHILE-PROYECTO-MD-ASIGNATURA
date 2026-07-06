@@ -46,6 +46,7 @@ export async function loginService(data) {
 }
 
 export async function registerService(data) {
+
     const userRepository = AppDataSource.getRepository(User);
     const hashedPassword = await bcrypt.hash(data.password, 10);
     

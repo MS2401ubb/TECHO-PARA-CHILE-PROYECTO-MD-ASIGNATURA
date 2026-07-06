@@ -1,75 +1,64 @@
-import { useState } from 'react'
-import useLogin from '../hooks/useLogin'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3000` : 'http://localhost:3000')
-
-function Login({ onSuccess, onClose }) {
+function Login() {
+  const navigate = useNavigate()
+  const { login, isAuthenticated } = useAuth()
   const [rut, setRut] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { errorRUT, errorPassword, errorData, handleInputChange } = useLogin()
-  const [serverError, setServerError] = useState('')
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setServerError('')
+  useEffect(() => {
+    if (isAuthenticated) navigate('/home')
+  }, [isAuthenticated, navigate])
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
     setLoading(true)
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rut, password })
-      })
-      const payload = await res.json()
-      if (!res.ok) {
-        const msg = payload?.message || 'Error en el inicio de sesión'
-        errorData(msg)
-        setServerError(msg)
-        setLoading(false)
-        return
-      }
-      const { data } = payload
-      if (data?.token) {
-        localStorage.setItem('token', data.token)
-      }
-      onSuccess && onSuccess(data?.user || null)
-      setRut('')
-      setPassword('')
-      handleInputChange()
-      onClose && onClose()
-    } catch (err) {
-      setServerError('Error de conexión al servidor')
-      console.error(err)
-    } finally {
-      setLoading(false)
+    console.error('Login attempt:', { rut, password }); // Debugging line
+    const result = await login(rut, password)
+    setLoading(false)
+
+    if (!result.success) {
+      setError(result.message || 'No fue posible iniciar sesión')
+      return
     }
+
+    navigate('/home')
   }
 
   return (
-    <div className="login-card">
-      <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <label htmlFor="rut">RUT</label>
-          <input id="rut" name="rut" value={rut} onChange={(e) => { setRut(e.target.value); handleInputChange(e) }} />
-          {errorRUT && <span className="input-error">{errorRUT}</span>}
-        </div>
-        <div className="form-row">
-          <label htmlFor="password">Contraseña</label>
-          <div className="password-field">
-            <input id="password" name="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); handleInputChange(e) }} />
-            <button type="button" className="password-toggle" onClick={() => setShowPassword((s) => !s)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
-              {showPassword ? 'Ocultar' : 'Ver'}
+    <div className="public-shell">
+      <section className="auth-card">
+        <h1>Ingreso Plataforma TECHO</h1>
+        <p>Inicia sesión para entrar al panel operativo según tu rol.</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label htmlFor="rut">RUT</label>
+            <input id="rut" value={rut} onChange={(e) => setRut(e.target.value)} required />
+          </div>
+          <div className="form-row">
+            <label htmlFor="password">Contraseña</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+
+          {error && <p className="text-error">{error}</p>}
+
+          <div className="form-actions">
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </div>
-          {errorPassword && <span className="input-error">{errorPassword}</span>}
-        </div>
-        {serverError && <p className="text-error">{serverError}</p>}
-        <div className="form-actions">
-          <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Ingresando...' : 'Ingresar'}</button>
-          <button type="button" className="secondary" onClick={onClose}>Cerrar</button>
-        </div>
-      </form>
+        </form>
+
+        <p className="helper-text">
+          ¿Quieres postular como voluntario? <Link to="/postulacion-voluntario">Completa el formulario público</Link>.
+        </p>
+      </section>
     </div>
   )
 }
