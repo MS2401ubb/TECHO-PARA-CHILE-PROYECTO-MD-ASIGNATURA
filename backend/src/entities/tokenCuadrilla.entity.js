@@ -1,6 +1,5 @@
-import { boolean } from 'joi';
+import boolean from 'joi';
 import { EntitySchema } from 'typeorm';
-import { Timestamp } from 'typeorm/driver/mongodb/bson.typings.js';
 
 /**
  * @typedef {Object} TokenType
@@ -25,8 +24,8 @@ export default new EntitySchema({
             length: 10
         },
         fechaCreacion: {
-            type: 'timestamp',
-            default: () => 'CURRENT_TIMESTAMP'
+            type: 'date',
+            nullable: false,
         },
         activo: {
             type: 'boolean',

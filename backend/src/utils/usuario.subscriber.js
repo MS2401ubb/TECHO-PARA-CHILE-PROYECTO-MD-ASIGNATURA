@@ -1,6 +1,6 @@
 import { BeforeInsert } from 'typeorm';
 import AppDataSource from '../config/configDb.js';
-import {Usuario} from '../entities/usuario.entity';
+import Usuario from '../entities/usuario.entity.js';
 
 export const UsuarioSubscriber = {
   listenTo() {

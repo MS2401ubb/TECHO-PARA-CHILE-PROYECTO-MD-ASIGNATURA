@@ -13,7 +13,7 @@ export const tokenCanjeoBodyValidation = Joi.object({
         rut: Joi.string()
         .pattern(/^\d{7,8}-[\dkK]$/)
         .required()
-        .message({
+        .messages({
             "string.pattern.base": "El RUT debe tener formato 12345678-9 o 12345678-k",
             "any.required": "El RUT es obligatorio"
         }),
