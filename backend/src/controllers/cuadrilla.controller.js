@@ -124,7 +124,7 @@ export async function asignarJefeCuadrillaACuadrilla(req, res) {
   }
 }
 
-//POST /api/cuadrillas/:codigo/token
+//POST /api//:codigo/token
 export async function getTokenCuadrilla(req,res) {
   try{
     const {codigo} = req.params;
