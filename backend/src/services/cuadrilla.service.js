@@ -259,6 +259,7 @@ export async function obtenerToken(rutJefe,codigoCuadrilla){
   const jefeCuadrillaRepository = AppDataSource.getRepository(JefeCuadrilla);
   const liderazgoRepository = AppDataSource.getRepository(JefeCuadrillaLideraCuadrilla);
   const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
 
   try{
 
@@ -348,12 +349,10 @@ async function generarTokenUnicoString(tokenRepository,codigoCuadrillaNumero) {
  * @param {string} tokenEntregado
  */
 export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tokenEntregado) {
+  // 1. VALIDACIONES PREVIAS (Fuera de la transacción)
   const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
-  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
   const usuarioRepository = AppDataSource.getRepository(Usuario);
-  const participacionRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
 
-  // 1. VALIDAR EL TOKEN ENTRANTE
   const tokenValido = await tokenRepository.findOne({
     where: {
       valorToken: tokenEntregado,
@@ -365,27 +364,30 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
   const idTokenTemp = tokenValido.id;
   const codigoCuadrillaAsociada = tokenValido.codigoCuadrilla;
 
-  // 2. CORRECCIÓN DE SEGURIDAD: Validar si el RUT ya existe de verdad en el sistema
+  // Validación de seguridad de duplicados
   const usuarioExistente = await usuarioRepository.findOne({
     where: { rut: datosUsuarioNuevo.rut }
   });
 
-  // Forzamos el tipo real basado en los datos de la BD, evitando fraudes o errores del front
   let tipoRealFlujo = tipoVoluntario;
   if (usuarioExistente) {
     tipoRealFlujo = "General"; 
   }
 
-  // Iniciamos la transacción con QueryRunner
+  // 2. INICIAR TRANSACCIÓN CON QUERYRUNNER
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
   
   try {
+    // Repositorios enlazados directamente a esta transacción
+    const txUsuarioRepository = queryRunner.manager.getRepository(Usuario);
+    const txVoluntarioRepository = queryRunner.manager.getRepository(Voluntario);
+    const txParticipacionRepository = queryRunner.manager.getRepository(VoluntarioParticipaEnCuadrilla);
+
     switch (tipoRealFlujo) {
       case "Espontáneo": {
-        // CREACIÓN DE USUARIO NUEVO
-        const nuevoUsuario = usuarioRepository.create({
+        const nuevoUsuario = txUsuarioRepository.create({
           rut: datosUsuarioNuevo.rut,
           password: await bcrypt.hash(datosUsuarioNuevo.nombre.toLowerCase() + "123vol", 10),
           nombre: datosUsuarioNuevo.nombre,
@@ -393,44 +395,43 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
           rol: "Voluntario Espontáneo",
           telefono: datosUsuarioNuevo.telefono
         });
-        await queryRunner.manager.save(nuevoUsuario);
+        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
+        await queryRunner.manager.save(Usuario, nuevoUsuario);
 
-        // CREACIÓN DE VOLUNTARIO ASOCIADO
-        const nuevoVoluntario = voluntarioRepository.create({
+        const nuevoVoluntario = txVoluntarioRepository.create({
           rutUsuario: datosUsuarioNuevo.rut,
           tipo: "Espontáneo",
           estado: "Activo",
           solicitudActiva: false,
           idToken: idTokenTemp
         });
-        await queryRunner.manager.save(nuevoVoluntario);
+        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
+        await queryRunner.manager.save(Voluntario, nuevoVoluntario);
 
         break;
       }
       
       case "General": {
-        // ENFOQUE REASIGNACIÓN: Buscamos el voluntario ya registrado
-        const voluntarioExistente = await voluntarioRepository.findOne({
+        const voluntarioExistente = await txVoluntarioRepository.findOne({
           where: { rutUsuario: datosUsuarioNuevo.rut }
         });
         if (!voluntarioExistente) {
           throw new Error("El RUT ya existe en el sistema pero no pertenece a un perfil de Voluntario.");
         }
 
-        // Buscamos si tiene un despliegue sin cerrar en otra cuadrilla (fechaFin null)
-        const participacionActiva = await participacionRepository.findOne({
+        const participacionActiva = await txParticipacionRepository.findOne({
           where: { rutVoluntario: datosUsuarioNuevo.rut, fechaFin: IsNull() }
         });
 
-        // Si estaba asignado a otra cuadrilla hoy, hacemos el cierre técnico antes de moverlo
         if (participacionActiva) {
           participacionActiva.fechaFin = new Date();
-          await queryRunner.manager.save(participacionActiva);
+          // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
+          await queryRunner.manager.save(VoluntarioParticipaEnCuadrilla, participacionActiva);
         }
 
-        // Actualizamos la trazabilidad del token usado en el voluntario existente
         voluntarioExistente.idToken = idTokenTemp;
-        await queryRunner.manager.save(voluntarioExistente);
+        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
+        await queryRunner.manager.save(Voluntario, voluntarioExistente);
 
         break;
       }
@@ -440,16 +441,18 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
       }
     }
 
-    // 3. PASO COMÚN: Registrar la nueva asignación en la cuadrilla en tiempo real
-    const nuevaParticipacion = participacionRepository.create({
+    // 3. REGISTRAR LA NUEVA ASIGNACIÓN (Paso común definitivo)
+    const nuevaParticipacion = txParticipacionRepository.create({
       rutVoluntario: datosUsuarioNuevo.rut,
       codigoCuadrilla: codigoCuadrillaAsociada,
       fechaInicio: new Date(),
       fechaFin: null
     });
-    await queryRunner.manager.save(nuevaParticipacion);
+    
+    // SOLUCIÓN CRÍTICA: Forzamos el Entity Target (VoluntarioParticipaEnCuadrilla) antes del objeto
+    await queryRunner.manager.save(VoluntarioParticipaEnCuadrilla, nuevaParticipacion);
 
-    // Guardamos definitivamente los cambios de la transacción
+    // Confirmamos la transacción
     await queryRunner.commitTransaction();
 
     return {
@@ -459,11 +462,9 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
     };
 
   } catch (error) {
-    // Si algo falló en cualquier parte del proceso, deshacemos todo en cascada
     await queryRunner.rollbackTransaction();
     throw error;
   } finally {
-    // Liberamos el QueryRunner para no agotar las conexiones del pool de la BD
     await queryRunner.release();
   }
 }
