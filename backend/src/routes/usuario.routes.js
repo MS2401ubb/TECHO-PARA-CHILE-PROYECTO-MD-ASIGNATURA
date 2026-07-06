@@ -5,15 +5,35 @@ import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-router.get("/", getUsers);
-router.get("/:rut", getUserByRut);
+router.get(
+	"/",
+	authenticateJwt,
+	verifyRoles(["admin", "Encargado de Central"]),
+	getUsers
+);
+router.get(
+	"/:rut",
+	authenticateJwt,
+	verifyRoles(["admin", "Encargado de Central"]),
+	getUserByRut
+);
+router.patch(
+	"/:rut",
+	authenticateJwt,
+	verifyRoles(["admin", "Encargado de Central"]),
+	editUser
+);
 router.patch(
 	"/:rut/asignar-rol",
 	authenticateJwt,
 	verifyRoles(["admin", "Encargado de Central"]),
 	asignarRolUsuario
 );
-router.patch("/:rut", editUser);
-router.delete("/:rut", deleteUser);
+router.delete(
+	"/:rut",
+	authenticateJwt,
+	verifyRoles(["admin"]),
+	deleteUser
+);
 
 export default router;

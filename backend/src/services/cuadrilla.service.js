@@ -468,3 +468,63 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
     await queryRunner.release();
   }
 }
+
+// OBTENER VOLUNTARIOS RELACIONADOS A UNA CUADRILLA
+export async function getVoluntariosCuadrilla(codigoCuadrilla) {
+  const codigoCuadrillaNumero = Number(codigoCuadrilla);
+
+  if (!Number.isInteger(codigoCuadrillaNumero) || codigoCuadrillaNumero <= 0) {
+    throw new Error("El codigo de cuadrilla debe ser un número entero positivo.");
+  }
+
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+  const participacionRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
+
+  const cuadrilla = await cuadrillaRepository.findOne({
+    where: { codigo: codigoCuadrillaNumero },
+  });
+
+  if (!cuadrilla) {
+    throw new Error("Cuadrilla no encontrada.");
+  }
+
+  const participaciones = await participacionRepository.find({
+    where: { codigoCuadrilla: codigoCuadrillaNumero },
+    relations: {
+      voluntario: {
+        usuario: true,
+      },
+    },
+    order: {
+      fechaInicio: "ASC",
+    },
+  });
+
+  const voluntarios = participaciones.map((participacion) => ({
+    rut: participacion.rutVoluntario,
+    estadoAsignacion: participacion.fechaFin ? "FINALIZADA" : "ACTIVA",
+    fechaInicio: participacion.fechaInicio,
+    fechaFin: participacion.fechaFin,
+    datosVoluntario: {
+      estado: participacion.voluntario?.estado || null,
+      telefonoEmergencia: participacion.voluntario?.telefonoEmergencia || null,
+    },
+    datosUsuario: {
+      nombre: participacion.voluntario?.usuario?.nombre || null,
+      primerApellido: participacion.voluntario?.usuario?.primerApellido || null,
+      segundoApellido: participacion.voluntario?.usuario?.segundoApellido || null,
+      email: participacion.voluntario?.usuario?.email || null,
+      telefono: participacion.voluntario?.usuario?.telefono || null,
+    },
+  }));
+
+  const totalVoluntariosActivos = participaciones.filter((participacion) => !participacion.fechaFin).length;
+
+  return {
+    codigoCuadrilla: codigoCuadrillaNumero,
+    descripcionCuadrilla: cuadrilla.descripcion,
+    totalVoluntarios: participaciones.length,
+    totalVoluntariosActivos,
+    voluntarios,
+  };
+}

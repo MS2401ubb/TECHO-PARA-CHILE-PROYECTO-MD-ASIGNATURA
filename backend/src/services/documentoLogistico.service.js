@@ -1,21 +1,16 @@
 import db from '../config/configDb.js';
 
-import { In, IsNull} from 'typeorm';
-
-
-import viviendas from '../entities/vivienda.entity.js';
-const viviendasRepository = db.getRepository(viviendas);
-import cuadrillaTrabaja from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
-const cuadrillaTrabajaRepository = db.getRepository(cuadrillaTrabaja);
-import voluntarios from '../entities/voluntario.entity.js';
-const voluntariosRepository = db.getRepository(voluntarios);
+const viviendasRepository = db.getRepository('Vivienda');
+const cuadrillaTrabajaRepository = db.getRepository('CuadrillaTrabajaEnVivienda');
+const voluntariosRepository = db.getRepository('Voluntario');
+const jefeCuadrillaLideraCuadrillaRepository = db.getRepository('JefeCuadrillaLideraCuadrilla');
 
 import voluntarioParticipa from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
 const voluntarioParticipaRepository = db.getRepository('VoluntarioParticipaEnCuadrilla');
 
 // TRANSPORTE
-const obtenerListaVoluntariosTransporte = (viviendasEnCiudad) => {
-    const listaVoluntarios = [];
+const obtenerListaVoluntariosAndJefeCuadrillasTransporte = async (viviendasEnCiudad) => {
+    const listaVoluntariosAndJefes = [];
     
     for (const vivienda of viviendasEnCiudad) {
         for (const relacionCuadrilla of vivienda.cuadrillasTrabajando) {
@@ -30,46 +25,72 @@ const obtenerListaVoluntariosTransporte = (viviendasEnCiudad) => {
                 }
 
                 // Evitamos duplicar voluntarios si participan en más de algo (seguridad)
-                if (!listaVoluntarios.some(v => v.rut === datosUsuario.rut)) {
-                    listaVoluntarios.push({
+                if (!listaVoluntariosAndJefes.some((v) => v.rut === datosUsuario.rut)) {
+                    listaVoluntariosAndJefes.push({
                         rut: datosUsuario.rut,
                         nombreCompleto: `${datosUsuario.nombre} ${datosUsuario.primerApellido} ${datosUsuario.segundoApellido || ''}`.trim(),
                         telefonoEmergencia: voluntario.telefonoEmergencia,
-                        cuadrilla: cuadrilla.descripcion || cuadrilla.codigo
+                        cuadrilla: cuadrilla.codigo
                     });
                 }
             }
         }
     }
-    return listaVoluntarios;
+    for (const vivienda of viviendasEnCiudad) {
+        for (const relacionCuadrilla of vivienda.cuadrillasTrabajando) {
+            const cuadrilla = relacionCuadrilla.cuadrilla;
+            const jefesRelacionados = await jefeCuadrillaLideraCuadrillaRepository.find({
+                where: { codigoCuadrilla: cuadrilla.codigo },
+                relations: {
+                    jefeCuadrilla: {
+                        usuario: true
+                    }
+                }
+            });
+
+            for (const relacionJefe of jefesRelacionados) {
+                const jefe = relacionJefe.jefeCuadrilla;
+                const datosUsuarioJefe = jefe.usuario;
+                if (jefe && !listaVoluntariosAndJefes.some((v) => v.rut === datosUsuarioJefe.rut)) {
+                    listaVoluntariosAndJefes.push({
+                        rut: datosUsuarioJefe.rut,
+                        nombreCompleto: `${datosUsuarioJefe.nombre} ${datosUsuarioJefe.primerApellido} ${datosUsuarioJefe.segundoApellido || ''}`.trim(),
+                        telefonoEmergencia: datosUsuarioJefe.telefono || '',
+                        cuadrilla: `Jefe de Cuadrilla ${cuadrilla.codigo}`
+                    });
+                }
+            }
+        }
+    }
+    return listaVoluntariosAndJefes;
 };
 const obtenerZonasDeDestino = (viviendasEnCiudad) => {
-    return viviendasEnCiudad.map(vivienda => ({
+    return viviendasEnCiudad.map((vivienda) => ({
         codigoVivienda: vivienda.codigo,
         direccionDestino: vivienda.direccion,
         fechaInicio: vivienda.fechaInicioEstimada,
-        fechaFin: vivienda.fechaFinEstimada
+        fechaFin: vivienda.fechaFinEstimada,
     }));
 };
 export const generarDocumentoTransporte = async (data) => {
 
-    const {codigoCiudad, trasladoPuntoOrigen} = data;
+    const { codigoCiudad, trasladoPuntoOrigen } = data;
 
     const viviendasEnCiudad = await viviendasRepository.find({
-        where: {
-            ciudad: { codigo: codigoCiudad },
-            estado: 'Planificacion'
+        where: { 
+            ciudad: { codigo: codigoCiudad }, 
+            estado: 'Planificacion' 
         },
         relations: {
-            cuadrillasTrabajando: {
-                cuadrilla: {
-                    voluntariosParticipando: {
-                        voluntario: {
-                            usuario: true
-                        }
-                    }
+        cuadrillasTrabajando: {
+            cuadrilla: {
+            voluntariosParticipando: {
+                voluntario: {
+                usuario: true
                 }
             }
+            }
+        }
         }
     });
 
@@ -78,10 +99,10 @@ export const generarDocumentoTransporte = async (data) => {
     }
 
     // Llamamos a las subfunciones
-    const listaVoluntarios = obtenerListaVoluntariosTransporte(viviendasEnCiudad);
+    const listaVoluntariosAndJefes = await obtenerListaVoluntariosAndJefeCuadrillasTransporte(viviendasEnCiudad);
     const destinos = obtenerZonasDeDestino(viviendasEnCiudad);
 
-    const totalPasajeros = listaVoluntarios.length;
+    const totalPasajeros = listaVoluntariosAndJefes.length;
 
     // Retornamos el objeto estructurado listo para que la librería PDF dibuje el reporte
     return {
@@ -89,14 +110,14 @@ export const generarDocumentoTransporte = async (data) => {
             origen: trasladoPuntoOrigen,
             totalPasajeros: totalPasajeros,
             // fechaSalida que sea una fecha mínima entre todas las viviendas en planificación, para sugerir la fecha de salida al chofer. Formato YYYY-MM-DD
-            fechaSalida:  
+            fechaSalida:
                 viviendasEnCiudad.reduce((fechaMin, vivienda) => {
                     const fechaInicio = new Date(vivienda.fechaInicioEstimada);
                     return fechaInicio < fechaMin ? fechaInicio : fechaMin;
                 }, new Date(viviendasEnCiudad[0].fechaInicioEstimada)).toISOString().split('T')[0] // Formato YYYY-MM-DD
         },
         destinos: destinos, // Lista de paradas/casas
-        voluntarios: listaVoluntarios // Lista detallada para el chofer
+        voluntarios: listaVoluntariosAndJefes // Lista detallada para el chofer
     };
 };
 
@@ -105,63 +126,56 @@ export const generarDocumentoTransporte = async (data) => {
 const calcularDiasEstancia = (fechaInicio, fechaFin) => {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
-    const milisegundos = 24 * 60 * 60 * 1000; //calculo de horas*minutos*segundos*milisegundos
+    const milisegundos = 24 * 60 * 60 * 1000; // calculo de horas*minutos*segundos*milisegundos
     const milisegundosTranscurridos = Math.abs(inicio.getTime() - fin.getTime());
     const diasTranscurridos = Math.round(milisegundosTranscurridos / milisegundos);
     
-    return diasTranscurridos; 
+    return diasTranscurridos;
 };
-/**
- * Contabiliza los voluntarios activos asignados a las cuadrillas de una vivienda
- * @param {Array} cuadrillaTrabaja - Lista de asignaciones de la tabla intermedia
- * @returns {number} Total de voluntarios activos en la zona
- */
-const obtenerTotalVoluntariosActivosEnZona = async (cuadrillaTrabaja) => {
-    if (!cuadrillaTrabaja || cuadrillaTrabaja.length === 0) return 0;
-    
-    const codigosCuadrillasZona = cuadrillaTrabaja.map((asignacion) => asignacion.codigoCuadrilla);
+const obtenerTotalVoluntariosActivosEnZona = (cuadrillaTrabaja, voluntariosActivos) => {
 
-    const participaciones = await voluntarioParticipaRepository.find({
-        where: { codigoCuadrilla: In(codigosCuadrillasZona), fechaFin: IsNull() },
-        relations: { voluntario: true }
-    });
-    //Recorrer los voluntarios activos del sistema
+    const codigosCuadrillasZona = new Set(
+        cuadrillaTrabaja.map((asignacion) => asignacion.codigoCuadrilla)
+    );
+
     const rutsUnicos = new Set();
-    for (const p of participaciones) {
-        if (p.voluntario && p.voluntario.estado === 'Activo') {
-            rutsUnicos.add(p.rutVoluntario);
-        }
+
+    // Recorrer los voluntarios activos del sistema
+    for (const voluntario of voluntariosActivos) {
+        const participaciones = voluntario.voluntariosParticipando || [];
+
+        // Validamos que el voluntario pertenezca a alguna cuadrilla de la zona
+        const participaEnZona = participaciones.some((participacion) =>
+            codigosCuadrillasZona.has(participacion.codigoCuadrilla)
+        );
+
+        if (participaEnZona) rutsUnicos.add(voluntario.rutUsuario);
     }
 
     return rutsUnicos.size;
 };
-/**
- * Calcular raciones de alimentos y generar documento de pedido de insumos
- * @param {string} codigoVivienda - codigo de vivienda
- * @param {string} rutEncargado - RUT del encargado que realiza la solicitud
- */
-export const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEncargado) => {
-    // 1. Normalizamos el código para evitar espacios en blanco inesperados
-    const codigoViviendaNormalizado = codigoVivienda?.trim();
+export const generarDocumentoProvisionAlimentos = async (data) => {
+    const { codigoVivienda, rutEncargado } = data;
+    const codigoViviendaNormalizado = String(codigoVivienda || '').trim();
+
     if (!codigoViviendaNormalizado) {
-        throw new Error('El código de vivienda es obligatorio.');
+        throw new Error('Debe indicar un codigo de vivienda válido.');
     }
 
-    // 2. Buscamos la vivienda para verificar que exista
     const viviendaEncontrada = await viviendasRepository.findOneBy({ codigo: codigoViviendaNormalizado });
 
     if (!viviendaEncontrada) {
         console.log(`No se encontró la vivienda con código ${codigoViviendaNormalizado}`);
         throw new Error('La vivienda o zona de construcción especificada no existe.');
     }
-    
+
     const fechaFinLogistica = viviendaEncontrada.fechaFinEstimada;
-    // 3. Verificamos si la zona tiene una fecha asignada (requisito obligatorio)
+    // verificamos si la zona tiene una fecha asignada, este requisito es obligatorio para la racion de alimentos
     if (!viviendaEncontrada.fechaInicioEstimada || !fechaFinLogistica) {
         throw new Error('El sistema no permitirá generar la orden de raciones si la zona de construcción no tiene una fecha de término definida.');
     }
 
-    // 4. Obtener las cuadrillas de la zona utilizando el código normalizado
+    // Obtener las cuadrillas de la zona
     const cuadrillaTrabaja = await cuadrillaTrabajaRepository.find({
         where: { codigoVivienda: codigoViviendaNormalizado }
     });
@@ -170,32 +184,40 @@ export const generarDocumentoProvisionAlimentos = async (codigoVivienda, rutEnca
         throw new Error('No hay cuadrillas asignadas a esta vivienda.');
     }
 
-    // 5. Contar voluntarios activos asignados en la zona (Llamada única y asíncrona)
-    const totalVoluntariosActivosEnZona = await obtenerTotalVoluntariosActivosEnZona(cuadrillaTrabaja);
+    // Obtener voluntarios activos en el sistema
+    const voluntariosActivos = await voluntariosRepository.find({
+        where: { estado: 'Activo' },
+        relations: {
+            voluntariosParticipando: true
+        }
+    });
+
+    // llamamos la funcion obtenerTotalVoluntariosActivosEnZona
+    const totalVoluntariosActivosEnZona = obtenerTotalVoluntariosActivosEnZona(cuadrillaTrabaja, voluntariosActivos);
 
     if (totalVoluntariosActivosEnZona === 0) {
         throw new Error('No se encontraron voluntarios activos asignados a las cuadrillas de esta zona.');
     }
 
-    // 6. Calcular la cantidad de días de estancia
+    // Calcular la cantidad de dias de estancia
     const diasEstancia = calcularDiasEstancia(viviendaEncontrada.fechaInicioEstimada, fechaFinLogistica);
 
-    // 7. Determinar el volumen total de porciones necesarias (desayuno, almuerzo, cena) al día
-    const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3; 
+    // Determinar el volumen total de porciones necesarias (desayuno,almuerzo,cena) al dia
+    const totalRaciones = totalVoluntariosActivosEnZona * diasEstancia * 3;
 
-    // 8. Retornamos la estructura del documento para el pedido de insumos
+    // Retornamos la estructura del documento para el pedido de insumos
     return {
         documentoTipo: "PEDIDO_OFICIAL_INSUMOS_ALIMENTACION",
-        fechaGeneracion: new Date(), 
+        fechaGeneracion: new Date(), // generar una fecha para el documento
         detalleZona: {
             codigoVivienda: viviendaEncontrada.codigo,
             descripcion: viviendaEncontrada.direccion,
-            diasEstancia: diasEstancia
+            diasEstancia
         },
         calculoLogistico: {
             voluntariosActivos: totalVoluntariosActivosEnZona,
             racionesPorPersonaAlDia: 3,
-            totalRacionesDeterminadas: totalRaciones 
+            totalRacionesDeterminadas: totalRaciones // Atributo calculado solicitado
         },
         respaldoGasto: {
             gestionadoPorRut: rutEncargado,

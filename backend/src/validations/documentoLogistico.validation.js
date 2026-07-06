@@ -21,6 +21,13 @@ export const validarDatosDeCentralTransporte = Joi.object({
 });
 
 export const validarDatosProvisionAlimentos = Joi.object({
+    codigoVivienda: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            "string.empty": "El codigo de vivienda es obligatorio",
+            "any.required": "El codigo de vivienda es obligatorio"
+        }),
     rutEncargado: Joi.string()
         .pattern(/^\d{7,8}-[kK\d]$/)
         .required()

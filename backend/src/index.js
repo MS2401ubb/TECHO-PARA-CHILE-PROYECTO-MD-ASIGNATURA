@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import 'reflect-metadata';
 import express from 'express';
+import cors from 'cors';
 import { routerApi } from './routes/index.routes.js';
 import db from './config/configDb.js';
 import {  createInitialRegionesAndCiudades,
@@ -14,6 +15,7 @@ import {  createInitialRegionesAndCiudades,
 import { PORT } from './config/configEnv.js';
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {

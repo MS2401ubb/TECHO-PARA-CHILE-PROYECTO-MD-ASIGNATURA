@@ -14,8 +14,19 @@ import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-router.get("/", getCuadrillas);
+router.get(
+	"/",
+	authenticateJwt,
+	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
+	getCuadrillas
+);
 router.post("/token/canjear",getTokenVoluntario);
+router.get(
+	"/:codigo",
+	authenticateJwt,
+	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
+	getCuadrillaByCodigo
+);
 router.post("/:codigo/token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),getTokenCuadrilla);
 router.post(
 	"/:codigo/asignar-voluntario",
@@ -29,9 +40,18 @@ router.post(
 	verifyRoles(["Encargado de Voluntarios", "Encargado de Central"]),
 	asignarJefeCuadrillaACuadrilla
 );
-router.get("/:codigo", getCuadrillaByCodigo);
-router.patch("/:codigo", editCuadrilla);
-router.delete("/:codigo", deleteCuadrilla);
+router.patch(
+	"/:codigo",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	editCuadrilla
+);
+router.delete(
+	"/:codigo",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	deleteCuadrilla
+);
 
 
 export default router;
