@@ -4,7 +4,6 @@ import { verifyRoles } from "../middleware/authorization.middleware.js";
 import authRoutes from "./auth.routes.js";
 import cuadrillaRoutes from './cuadrilla.routes.js';
 import documentoLogisticoRoutes from './documentoLogistico.routes.js';
-import reporteRoutes from './reporte.routes.js';
 import herramientasRoutes from './herramientas.routes.js';
 import reporteRoutes from './reporte.routes.js';
 import usuarioRoutes from './usuario.routes.js';
