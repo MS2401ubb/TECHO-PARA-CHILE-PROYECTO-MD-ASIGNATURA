@@ -16,6 +16,7 @@ import Material from '../entities/material.entity.js';
 import Jornada from '../entities/jornada.entity.js';
 import InventarioJornada from '../entities/inventarioJornada.entity.js';
 import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
+import TokenAsignaCuadrilla from '../entities/tokenCuadrilla.entity.js';
 
 import { UsuarioSubscriber } from '../utils/usuario.subscriber.js';
 
@@ -46,7 +47,8 @@ const AppDataSource = new DataSource({
     Material,
     Jornada,
     InventarioJornada,
-    JefeCuadrillaLideraCuadrilla
+    JefeCuadrillaLideraCuadrilla,
+    TokenAsignaCuadrilla
   ],
   subscribers:[ UsuarioSubscriber],
 });

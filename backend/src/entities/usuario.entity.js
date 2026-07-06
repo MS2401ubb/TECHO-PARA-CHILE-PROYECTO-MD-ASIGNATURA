@@ -1,3 +1,5 @@
+import { EntitySchema } from 'typeorm';
+
 export default new EntitySchema({
   name: 'Usuario',
   tableName: 'usuarios',
