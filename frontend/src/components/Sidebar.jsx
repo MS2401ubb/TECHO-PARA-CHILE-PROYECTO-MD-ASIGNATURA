@@ -18,6 +18,8 @@ const menuItems = [
 
 function Sidebar({ open, onClose }) {
   const { user } = useAuth()
+  const isVoluntarioRestringido = user?.rol === 'Voluntario' && user?.estadoVoluntario !== 'Activo'
+  const restrictedAllowed = ['/home', '/mi-perfil']
 
   return (
     <aside className={`app-sidebar ${open ? 'open' : ''}`}>
@@ -28,6 +30,7 @@ function Sidebar({ open, onClose }) {
       <nav className="sidebar-nav">
         {menuItems
           .filter((item) => item.roles.includes(user?.rol))
+          .filter((item) => !isVoluntarioRestringido || restrictedAllowed.includes(item.to))
           .map((item) => (
             <NavLink
               key={item.to}

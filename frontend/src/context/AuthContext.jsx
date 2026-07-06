@@ -49,12 +49,21 @@ export function AuthProvider({ children }) {
     sessionStorage.removeItem(USER_KEY)
   }
 
+  const updateUser = (partialUser) => {
+    setUser((current) => {
+      const nextUser = { ...current, ...partialUser }
+      sessionStorage.setItem(USER_KEY, JSON.stringify(nextUser))
+      return nextUser
+    })
+  }
+
   const value = useMemo(() => ({
     token,
     user,
     loading,
     login,
     logout,
+    updateUser,
     isAuthenticated: Boolean(token && user),
   }), [token, user, loading])
 

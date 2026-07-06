@@ -6,11 +6,19 @@ import {
 	deleteCuadrilla,
 	asignarVoluntarioACuadrilla,
 	asignarJefeCuadrillaACuadrilla,
+	getMiCuadrillaYVivienda,
 } from "../controllers/cuadrilla.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
+
+router.get(
+	"/mi-cuadrilla-vivienda",
+	authenticateJwt,
+	verifyRoles(["Voluntario", "Jefe de Cuadrilla"]),
+	getMiCuadrillaYVivienda
+);
 
 router.get(
 	"/",

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { enviarPostulacionVoluntario } from '../services/enroll.service'
+import { enviarPostulacionVoluntario, listarCiudadesPorRegion, listarRegiones } from '../services/enroll.service'
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -14,15 +14,58 @@ function RegisterVolunteer() {
     fechaNacimiento: '',
     email: '',
     phone: '',
-    city: '',
+    regionCode: '',
+    cityCode: '',
     experience: '',
     emergencyPhone: '',
   })
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [regiones, setRegiones] = useState([])
+  const [ciudades, setCiudades] = useState([])
 
-  const handleChange = (event) => {
+  useEffect(() => {
+    const loadRegiones = async () => {
+      const result = await listarRegiones()
+      if (result.success) {
+        setRegiones(result.data)
+      }
+    }
+
+    loadRegiones()
+  }, [])
+
+  const handleChange = async (event) => {
     const { name, value } = event.target
+
+    if (name === 'regionCode') {
+      setFormData((current) => ({
+        ...current,
+        regionCode: value,
+        cityCode: '',
+      }))
+      setCiudades([])
+      setErrors((current) => ({
+        ...current,
+        regionCode: '',
+        cityCode: '',
+      }))
+      setSubmitted(false)
+
+      if (!value) return
+
+      const result = await listarCiudadesPorRegion(value)
+      if (result.success) {
+        setCiudades(result.data)
+      } else {
+        setErrors((current) => ({
+          ...current,
+          cityCode: result.message || 'No se pudieron obtener ciudades',
+        }))
+      }
+      return
+    }
+
     setFormData((current) => ({
       ...current,
       [name]: value,
@@ -47,6 +90,8 @@ function RegisterVolunteer() {
     if (!formData.email.trim()) nextErrors.email = 'Email es obligatorio.'
     if (!formData.phone.trim()) nextErrors.phone = 'Teléfono es obligatorio.'
     if (!formData.emergencyPhone.trim()) nextErrors.emergencyPhone = 'Teléfono de emergencia es obligatorio.'
+    if (!formData.regionCode) nextErrors.regionCode = 'Región es obligatoria.'
+    if (!formData.cityCode) nextErrors.cityCode = 'Ciudad es obligatoria.'
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
@@ -63,6 +108,8 @@ function RegisterVolunteer() {
       email: formData.email,
       telefono: formData.phone,
       telefonoEmergencia: formData.emergencyPhone,
+      codigoCiudad: Number(formData.cityCode),
+      comentarioPostulacion: formData.experience,
     })
 
     if (!result.success) {
@@ -81,10 +128,12 @@ function RegisterVolunteer() {
       fechaNacimiento: '',
       email: '',
       phone: '',
-      city: '',
+      regionCode: '',
+      cityCode: '',
       experience: '',
       emergencyPhone: '',
     })
+    setCiudades([])
   }
 
   return (
@@ -121,7 +170,7 @@ function RegisterVolunteer() {
         </div>
 
         <div className="form-row">
-          <label htmlFor="segundoApellido">Segundo apellido (opcional)</label>
+          <label htmlFor="segundoApellido">Segundo apellido</label>
           <input id="segundoApellido" name="segundoApellido" type="text" value={formData.segundoApellido} onChange={handleChange} placeholder="Ej. Gómez" />
         </div>
 
@@ -150,10 +199,34 @@ function RegisterVolunteer() {
             </div>
           </div>
 
-        <div className="form-row">
-          <label htmlFor="city">Ciudad</label>
-          <input id="city" name="city" type="text" value={formData.city} onChange={handleChange} placeholder="Ej. Santiago" />
-        </div>
+          <div className="form-row split-2">
+            <div>
+              <label htmlFor="regionCode">Región</label>
+              <select id="regionCode" name="regionCode" value={formData.regionCode} onChange={handleChange}>
+                <option value="">Selecciona una región</option>
+                {regiones.map((region) => (
+                  <option key={region.codigo} value={region.codigo}>{region.nombre}</option>
+                ))}
+              </select>
+              {errors.regionCode && <span className="input-error">{errors.regionCode}</span>}
+            </div>
+            <div>
+              <label htmlFor="cityCode">Ciudad</label>
+              <select
+                id="cityCode"
+                name="cityCode"
+                value={formData.cityCode}
+                onChange={handleChange}
+                disabled={!formData.regionCode}
+              >
+                <option value="">{formData.regionCode ? 'Selecciona una ciudad' : 'Selecciona primero una región'}</option>
+                {ciudades.map((city) => (
+                  <option key={city.codigo} value={city.codigo}>{city.nombre}</option>
+                ))}
+              </select>
+              {errors.cityCode && <span className="input-error">{errors.cityCode}</span>}
+            </div>
+          </div>
 
         <div className="form-row">
           <label htmlFor="experience">Experiencia o comentario</label>

@@ -26,3 +26,16 @@ export async function asignarJefe(codigoCuadrilla, body) {
     return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor' }
   }
 }
+
+export async function obtenerMiCuadrillaYVivienda() {
+  try {
+    const response = await axios.get('/cuadrilla/mi-cuadrilla-vivienda')
+    return { success: true, data: response.data.data }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al conectar con el servidor',
+      data: null,
+    }
+  }
+}

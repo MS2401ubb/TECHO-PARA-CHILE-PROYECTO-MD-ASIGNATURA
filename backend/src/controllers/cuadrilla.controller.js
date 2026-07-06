@@ -5,6 +5,7 @@ import {
   deleteCuadrillaService,
   asignarVoluntarioACuadrillaService,
   asignarJefeCuadrillaACuadrillaService,
+  getMiCuadrillaYViviendaService,
 } from "../services/cuadrilla.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
@@ -117,5 +118,28 @@ export async function asignarJefeCuadrillaACuadrilla(req, res) {
       return handleErrorClient(res, 400, error.message);
     }
     handleErrorServer(res, 500, "Error al asignar jefe de cuadrilla", error.message);
+  }
+}
+
+export async function getMiCuadrillaYVivienda(req, res) {
+  try {
+    const rutUsuario = req.user?.rut;
+    const rolUsuario = req.user?.rol;
+
+    if (!rutUsuario || !rolUsuario) {
+      return handleErrorClient(res, 401, "Usuario no autenticado");
+    }
+
+    const data = await getMiCuadrillaYViviendaService(rutUsuario, rolUsuario);
+    return handleSuccess(res, 200, "Datos de cuadrilla y vivienda obtenidos exitosamente", data);
+  } catch (error) {
+    if (
+      error.message.includes("No tienes una cuadrilla activa") ||
+      error.message.includes("No lideras una cuadrilla activa") ||
+      error.message.includes("solo está disponible")
+    ) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, "Error al obtener datos de cuadrilla y vivienda", error.message);
   }
 }

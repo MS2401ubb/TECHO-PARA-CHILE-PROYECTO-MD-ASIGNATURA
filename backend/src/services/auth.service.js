@@ -7,6 +7,7 @@ import Voluntario from "../entities/voluntario.entity.js";
 
 export async function loginService(data) {
     const userRepository = AppDataSource.getRepository(User);
+    const voluntarioRepository = AppDataSource.getRepository(Voluntario);
     
     const { rut, password } = data;
     // BUSCAMOS EL USUARIO RUT
@@ -29,6 +30,10 @@ export async function loginService(data) {
         JWT_SECRET,
         { expiresIn: "24h" }
     );
+
+    const voluntario = user.rol === 'Voluntario'
+        ? await voluntarioRepository.findOne({ where: { rutUsuario: user.rut } })
+        : null;
     
     return {
         token,
@@ -40,7 +45,10 @@ export async function loginService(data) {
             fechaNacimiento: user.fechaNacimiento,
             email: user.email,
             telefono: user.telefono,
-            rol: user.rol
+            rol: user.rol,
+            estadoVoluntario: voluntario?.estado || null,
+            motivoRechazo: voluntario?.motivoRechazo || null,
+            comentarioPostulacion: voluntario?.comentarioPostulacion || null
         }
     };
 }
@@ -48,7 +56,16 @@ export async function loginService(data) {
 export async function registerService(data) {
 
     const userRepository = AppDataSource.getRepository(User);
+    const ciudadRepository = AppDataSource.getRepository('Ciudad');
     const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const ciudad = await ciudadRepository.findOne({
+        where: { codigo: data.codigoCiudad }
+    });
+
+    if (!ciudad) {
+        throw new Error('La ciudad seleccionada no existe.');
+    }
     
     const newUser = userRepository.create({
             rut: data.rut,
@@ -59,7 +76,8 @@ export async function registerService(data) {
             fechaNacimiento: data.fechaNacimiento,
             email: data.email,
             telefono: data.telefono,
-            rol: data.rol
+                rol: data.rol,
+                ciudad: { codigo: data.codigoCiudad }
     });
     
     const savedUser = await userRepository.save(newUser);
@@ -71,6 +89,7 @@ export async function registerService(data) {
             rutUsuario: savedUser.rut,
             tipo: data.tipo || 'General',
             estado: 'Postulante',
+            comentarioPostulacion: data.comentarioPostulacion?.trim() || null,
             solicitudActiva: true,
             telefonoEmergencia: data.telefonoEmergencia || null
         });

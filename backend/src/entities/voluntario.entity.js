@@ -24,6 +24,11 @@ export default new EntitySchema({
       length: 250,
       nullable: true,
     },
+    comentarioPostulacion: {
+      type: 'varchar',
+      length: 1000,
+      nullable: true,
+    },
     solicitudActiva: {
       type: 'boolean',
       default: false,

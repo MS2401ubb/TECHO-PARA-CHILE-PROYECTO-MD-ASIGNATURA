@@ -4,6 +4,7 @@ import Voluntario from "../entities/voluntario.entity.js";
 import VoluntarioParticipaEnCuadrilla from "../entities/voluntarioParticipaEnCuadrilla.entity.js";
 import JefeCuadrilla from "../entities/jefeCuadrilla.entity.js";
 import JefeCuadrillaLideraCuadrilla from "../entities/jefeCuadrillaLideraCuadrilla.entity.js";
+import CuadrillaTrabajaEnVivienda from "../entities/cuadrillaTrabajaEnVivienda.entity.js";
 import { IsNull } from "typeorm";
 
 
@@ -278,5 +279,131 @@ export async function getVoluntariosCuadrilla(codigoCuadrilla) {
     totalVoluntarios: participaciones.length,
     totalVoluntariosActivos,
     voluntarios,
+  };
+}
+
+export async function getMiCuadrillaYViviendaService(rutUsuario, rolUsuario) {
+  const participacionRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
+  const liderazgoRepository = AppDataSource.getRepository(JefeCuadrillaLideraCuadrilla);
+  const despliegueRepository = AppDataSource.getRepository(CuadrillaTrabajaEnVivienda);
+
+  let codigoCuadrilla = null;
+
+  if (rolUsuario === "Voluntario") {
+    const participacionActiva = await participacionRepository.findOne({
+      where: {
+        rutVoluntario: rutUsuario,
+        fechaFin: IsNull(),
+      },
+      order: {
+        fechaInicio: "DESC",
+      },
+    });
+
+    if (!participacionActiva) {
+      throw new Error("No tienes una cuadrilla activa asignada.");
+    }
+
+    codigoCuadrilla = participacionActiva.codigoCuadrilla;
+  } else if (rolUsuario === "Jefe de Cuadrilla") {
+    const liderazgoActivo = await liderazgoRepository.findOne({
+      where: {
+        rutJefeCuadrilla: rutUsuario,
+        fechaFin: IsNull(),
+      },
+      order: {
+        fechaInicio: "DESC",
+      },
+    });
+
+    if (!liderazgoActivo) {
+      throw new Error("No lideras una cuadrilla activa.");
+    }
+
+    codigoCuadrilla = liderazgoActivo.codigoCuadrilla;
+  } else {
+    throw new Error("Esta vista solo está disponible para Voluntario y Jefe de Cuadrilla.");
+  }
+
+  const participacionesActivas = await participacionRepository.find({
+    where: {
+      codigoCuadrilla,
+      fechaFin: IsNull(),
+    },
+    relations: {
+      voluntario: {
+        usuario: true,
+      },
+    },
+    order: {
+      fechaInicio: "ASC",
+    },
+  });
+
+  const liderazgoActivoCuadrilla = await liderazgoRepository.findOne({
+    where: {
+      codigoCuadrilla,
+      fechaFin: IsNull(),
+    },
+    relations: {
+      jefeCuadrilla: {
+        usuario: true,
+      },
+    },
+    order: {
+      fechaInicio: "DESC",
+    },
+  });
+
+  const despliegueActivo = await despliegueRepository.findOne({
+    where: {
+      codigoCuadrilla,
+      fechaFin: IsNull(),
+    },
+    relations: {
+      vivienda: {
+        ciudad: {
+          region: true,
+        },
+      },
+    },
+    order: {
+      fechaInicio: "DESC",
+    },
+  });
+
+  const integrantes = participacionesActivas.map((participacion) => ({
+    rut: participacion.rutVoluntario,
+    nombre: participacion.voluntario?.usuario?.nombre || "",
+    primerApellido: participacion.voluntario?.usuario?.primerApellido || "",
+    segundoApellido: participacion.voluntario?.usuario?.segundoApellido || "",
+    rol: "Voluntario",
+  }));
+
+  if (liderazgoActivoCuadrilla?.jefeCuadrilla?.usuario) {
+    integrantes.unshift({
+      rut: liderazgoActivoCuadrilla.rutJefeCuadrilla,
+      nombre: liderazgoActivoCuadrilla.jefeCuadrilla.usuario.nombre || "",
+      primerApellido: liderazgoActivoCuadrilla.jefeCuadrilla.usuario.primerApellido || "",
+      segundoApellido: liderazgoActivoCuadrilla.jefeCuadrilla.usuario.segundoApellido || "",
+      rol: "Jefe de Cuadrilla",
+    });
+  }
+
+  const vivienda = despliegueActivo?.vivienda
+    ? {
+        codigo: despliegueActivo.vivienda.codigo,
+        direccion: despliegueActivo.vivienda.direccion,
+        ciudad: despliegueActivo.vivienda.ciudad?.nombre || null,
+        region: despliegueActivo.vivienda.ciudad?.region?.nombre || null,
+        fechaInicioEstimada: despliegueActivo.vivienda.fechaInicioEstimada,
+        fechaFinEstimada: despliegueActivo.vivienda.fechaFinEstimada,
+      }
+    : null;
+
+  return {
+    codigoCuadrilla,
+    integrantes,
+    vivienda,
   };
 }

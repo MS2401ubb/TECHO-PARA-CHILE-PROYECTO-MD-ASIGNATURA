@@ -75,10 +75,16 @@ export const generarDocumentoTransporte = async (data) => {
     const { codigoCiudad, trasladoPuntoOrigen } = data;
 
     const viviendasEnCiudad = await viviendasRepository.find({
-        where: { 
-            ciudad: { codigo: codigoCiudad }, 
-            estado: 'Planificacion' 
-        },
+        where: [
+            {
+                ciudad: { codigo: codigoCiudad },
+                estado: 'Planificacion'
+            },
+            {
+                ciudad: { codigo: codigoCiudad },
+                estado: 'Planificación'
+            }
+        ],
         relations: {
         cuadrillasTrabajando: {
             cuadrilla: {

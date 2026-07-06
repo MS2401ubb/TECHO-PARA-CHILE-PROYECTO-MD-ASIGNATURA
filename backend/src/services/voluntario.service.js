@@ -49,86 +49,6 @@ async function obtenerCantidadVoluntariosActivos(participacionRepository, codigo
   });
 }
 
-function puntajeNecesidadVivienda(vivienda) {
-  const prioridadEstado = {
-    'Distribuyendo Fuerza Laboral': 100,
-    Planificacion: 70,
-    'En Ejecucion': 50,
-    'En Ejecución': 50,
-  };
-
-  const prioridadBase = prioridadEstado[vivienda?.estado] ?? 20;
-  const avance = Number.isInteger(vivienda?.porcentajeAvance) ? vivienda.porcentajeAvance : 0;
-  return prioridadBase + Math.max(0, 100 - avance);
-}
-
-async function seleccionarCuadrillaAutomatica(manager) {
-  const cuadrillaRepository = manager.getRepository(Cuadrilla);
-  const despliegueRepository = manager.getRepository(CuadrillaTrabajaEnVivienda);
-  const participacionRepository = manager.getRepository(VoluntarioParticipaEnCuadrilla);
-
-  const desplieguesActivos = await despliegueRepository.find({
-    where: { fechaFin: IsNull() },
-    relations: { cuadrilla: true, vivienda: true },
-  });
-
-  if (desplieguesActivos.length > 0) {
-    const candidatos = [];
-
-    for (const despliegue of desplieguesActivos) {
-      const cantidadVoluntarios = await obtenerCantidadVoluntariosActivos(
-        participacionRepository,
-        despliegue.codigoCuadrilla,
-      );
-
-      candidatos.push({
-        codigoCuadrilla: despliegue.codigoCuadrilla,
-        codigoVivienda: despliegue.codigoVivienda,
-        estadoVivienda: despliegue.vivienda?.estado,
-        puntajeNecesidad: puntajeNecesidadVivienda(despliegue.vivienda),
-        cantidadVoluntarios,
-      });
-    }
-
-    candidatos.sort((a, b) => {
-      if (b.puntajeNecesidad !== a.puntajeNecesidad) {
-        return b.puntajeNecesidad - a.puntajeNecesidad;
-      }
-      return a.cantidadVoluntarios - b.cantidadVoluntarios;
-    });
-
-    return candidatos[0];
-  }
-
-  const cuadrillas = await cuadrillaRepository.find();
-  if (cuadrillas.length === 0) {
-    throw new Error('No existen cuadrillas disponibles para asignar al voluntario.');
-  }
-
-  const candidatos = [];
-  for (const cuadrilla of cuadrillas) {
-    const cantidadVoluntarios = await obtenerCantidadVoluntariosActivos(participacionRepository, cuadrilla.codigo);
-    candidatos.push({
-      codigoCuadrilla: cuadrilla.codigo,
-      codigoVivienda: null,
-      estadoVivienda: null,
-      puntajeNecesidad: 0,
-      cantidadVoluntarios,
-    });
-  }
-
-  candidatos.sort((a, b) => a.cantidadVoluntarios - b.cantidadVoluntarios);
-  return candidatos[0];
-}
-
-async function listarPorEstado(estado) {
-  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
-  return voluntarioRepository.find({
-    where: { estado },
-    relations: { usuario: true },
-  });
-}
-
 // GET VOLUNTARIOS POSTULANTES
 export async function obtenerListaPostulantes() {
   return listarPorEstado('Postulante');
@@ -171,6 +91,7 @@ export async function obtenerVoluntarioConDetallesCompletos(rut) {
     fechaActivacionSolicitud: voluntario.fechaActivacionSolicitud,
     telefonoEmergencia: voluntario.telefonoEmergencia,
     motivoRechazo: voluntario.motivoRechazo,
+    comentarioPostulacion: voluntario.comentarioPostulacion,
     usuario: {
       rut: voluntario.usuario.rut,
       nombre: voluntario.usuario.nombre,
@@ -192,8 +113,6 @@ export async function aprobarVoluntario(rut, rutEncargado, opcionesAsignacion = 
   try {
     const voluntarioRepository = queryRunner.manager.getRepository(Voluntario);
     const usuarioRepository = queryRunner.manager.getRepository('Usuario');
-    const cuadrillaRepository = queryRunner.manager.getRepository(Cuadrilla);
-    const participacionRepository = queryRunner.manager.getRepository(VoluntarioParticipaEnCuadrilla);
 
     const voluntario = await voluntarioRepository.findOne({
       where: { usuario: { rut } },
@@ -215,43 +134,6 @@ export async function aprobarVoluntario(rut, rutEncargado, opcionesAsignacion = 
       throw new Error('Encargado no encontrado.');
     }
 
-    const tipoAsignacion = opcionesAsignacion.tipoAsignacion || 'automatica';
-    const fechaInicioAsignacion = normalizarFecha(opcionesAsignacion.fechaInicio);
-    let asignacionSeleccionada;
-
-    if (tipoAsignacion === 'manual') {
-      const codigoCuadrillaNumero = Number(opcionesAsignacion.codigoCuadrilla);
-      if (!Number.isInteger(codigoCuadrillaNumero) || codigoCuadrillaNumero <= 0) {
-        throw new Error('Para asignación manual debe indicar un codigoCuadrilla válido.');
-      }
-
-      const cuadrilla = await cuadrillaRepository.findOne({ where: { codigo: codigoCuadrillaNumero } });
-      if (!cuadrilla) {
-        throw new Error('Cuadrilla no encontrada.');
-      }
-
-      asignacionSeleccionada = {
-        codigoCuadrilla: codigoCuadrillaNumero,
-        codigoVivienda: null,
-        estadoVivienda: null,
-        puntajeNecesidad: null,
-        cantidadVoluntarios: null,
-      };
-    } else {
-      asignacionSeleccionada = await seleccionarCuadrillaAutomatica(queryRunner.manager);
-    }
-
-    const asignacionActiva = await participacionRepository.findOne({
-      where: {
-        rutVoluntario: voluntario.rutUsuario,
-        fechaFin: IsNull(),
-      },
-    });
-
-    if (asignacionActiva) {
-      throw new Error('El voluntario ya está asignado a una cuadrilla activa.');
-    }
-
     voluntario.estado = 'Activo';
     voluntario.solicitudActiva = true;
     voluntario.fechaValidacionDatos = new Date();
@@ -259,17 +141,6 @@ export async function aprobarVoluntario(rut, rutEncargado, opcionesAsignacion = 
     voluntario.motivoRechazo = null;
 
     await voluntarioRepository.save(voluntario);
-
-    const nuevaAsignacion = participacionRepository.create({
-      rutVoluntario: voluntario.rutUsuario,
-      codigoCuadrilla: asignacionSeleccionada.codigoCuadrilla,
-      fechaInicio: fechaInicioAsignacion,
-      fechaFin: null,
-      voluntario: { rutUsuario: voluntario.rutUsuario },
-      cuadrilla: { codigo: asignacionSeleccionada.codigoCuadrilla },
-    });
-
-    await participacionRepository.save(nuevaAsignacion);
     await queryRunner.commitTransaction();
 
     return {
@@ -280,13 +151,7 @@ export async function aprobarVoluntario(rut, rutEncargado, opcionesAsignacion = 
       solicitudActiva: voluntario.solicitudActiva,
       fechaActivacionSolicitud: voluntario.fechaActivacionSolicitud,
       aprobadoPor: rutEncargado,
-      asignacion: {
-        tipoAsignacion,
-        codigoCuadrilla: nuevaAsignacion.codigoCuadrilla,
-        fechaInicio: nuevaAsignacion.fechaInicio,
-        codigoViviendaPriorizada: asignacionSeleccionada.codigoVivienda,
-        estadoViviendaPriorizada: asignacionSeleccionada.estadoVivienda,
-      },
+      asignacion: null,
     };
   } catch (error) {
     await queryRunner.rollbackTransaction();
@@ -343,6 +208,38 @@ export async function rechazarVoluntario(rut, motivo, rutEncargado) {
   } finally {
     await queryRunner.release();
   }
+}
+
+export async function apelarVoluntario(rut, comentarioPostulacion) {
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  const voluntario = await voluntarioRepository.findOne({
+    where: { usuario: { rut } },
+    relations: { usuario: true },
+  });
+
+  if (!voluntario) {
+    throw new Error('Voluntario no encontrado.');
+  }
+
+  if (voluntario.estado !== 'Rechazado') {
+    throw new Error(`No se puede apelar un voluntario en estado ${voluntario.estado}. Solo se permite apelar estado Rechazado.`);
+  }
+
+  voluntario.estado = 'Postulante';
+  voluntario.solicitudActiva = true;
+  voluntario.fechaActivacionSolicitud = new Date();
+  voluntario.comentarioPostulacion = comentarioPostulacion.trim();
+  voluntario.motivoRechazo = null;
+
+  await voluntarioRepository.save(voluntario);
+
+  return {
+    rutVoluntario: voluntario.rutUsuario,
+    estadoAnterior: 'Rechazado',
+    estadoNuevo: 'Postulante',
+    solicitudActiva: voluntario.solicitudActiva,
+    comentarioPostulacion: voluntario.comentarioPostulacion,
+  };
 }
 
 // OBTENER VOLUNTARIOS DISPONIBLES POR ZONA (Activos sin asignación activa)
