@@ -5,10 +5,15 @@ import {
   obtenerVoluntarioConDetallesCompletos,
   aprobarVoluntario,
   rechazarVoluntario,
+  apelarVoluntario,
   obtenerVoluntariosDisponiblesPorZona,
 } from "../services/voluntario.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
-import { aprobarPostulanteBodyValidation } from "../validations/voluntario.validation.js";
+import {
+  aprobarPostulanteBodyValidation,
+  apelarPostulanteBodyValidation,
+  rechazarPostulanteBodyValidation,
+} from "../validations/voluntario.validation.js";
 
 export async function listaPostulantes(req, res) {
   try {
@@ -109,14 +114,23 @@ export async function aprobarPostulante(req, res) {
 export async function rechazarPostulante(req, res) {
   try {
     const { rut } = req.params;
-    const { motivo } = req.body;
+    const { error, value } = rechazarPostulanteBodyValidation.validate(req.body);
     const rutEncargado = req.user?.rut;
+
+    if (error) {
+      return handleErrorClient(
+        res,
+        400,
+        "Datos de rechazo inválidos",
+        error.details.map((detail) => detail.message),
+      );
+    }
 
     if (!rutEncargado) {
       return handleErrorClient(res, 401, "Usuario no autenticado");
     }
 
-    const data = await rechazarVoluntario(rut, motivo, rutEncargado);
+    const data = await rechazarVoluntario(rut, value.motivo, rutEncargado);
     handleSuccess(res, 200, "Voluntario rechazado exitosamente", data);
   } catch (error) {
     if (error.message.includes("no encontrado")) {
@@ -126,6 +140,42 @@ export async function rechazarPostulante(req, res) {
     } else {
       handleErrorServer(res, 500, "Error al rechazar voluntario", error.message);
     }
+  }
+}
+
+export async function apelarPostulante(req, res) {
+  try {
+    const { rut } = req.params;
+    const rutSolicitante = req.user?.rut;
+    const { error, value } = apelarPostulanteBodyValidation.validate(req.body);
+
+    if (!rutSolicitante) {
+      return handleErrorClient(res, 401, "Usuario no autenticado");
+    }
+
+    if (rutSolicitante !== rut) {
+      return handleErrorClient(res, 403, "No puedes apelar por otro voluntario");
+    }
+
+    if (error) {
+      return handleErrorClient(
+        res,
+        400,
+        "Datos de apelación inválidos",
+        error.details.map((detail) => detail.message),
+      );
+    }
+
+    const data = await apelarVoluntario(rut, value.comentarioPostulacion);
+    return handleSuccess(res, 200, "Apelación enviada exitosamente", data);
+  } catch (error) {
+    if (error.message.includes("no encontrado")) {
+      return handleErrorClient(res, 404, error.message);
+    }
+    if (error.message.includes("No se puede apelar")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, "Error al enviar apelación", error.message);
   }
 }
 

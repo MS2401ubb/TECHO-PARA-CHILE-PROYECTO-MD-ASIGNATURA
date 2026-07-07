@@ -1,8 +1,8 @@
 import { EntitySchema } from 'typeorm';
 
 export default new EntitySchema({
-    name: "Material",
-    tableName: "materiales",
+    name: "Herramienta",
+    tableName: "herramientas",
     columns: {
         id: {
             primary: true,
@@ -12,11 +12,6 @@ export default new EntitySchema({
         nombre: {
             type: "varchar",
             length: 100,
-            nullable: false
-        },
-        tipo: {
-            type: "enum",
-            enum: ["Herramienta", "Material"],
             nullable: false
         },
         stock_digital: {

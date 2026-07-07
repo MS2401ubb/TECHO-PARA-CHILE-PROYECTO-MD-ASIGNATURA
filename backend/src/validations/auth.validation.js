@@ -39,6 +39,7 @@ export const userRegisterBodyValidation = Joi.object({
         }),
     segundoApellido: Joi.string()
         .optional()
+        .allow("")
         .min(2)
         .max(100)
         .messages({
@@ -68,11 +69,34 @@ export const userRegisterBodyValidation = Joi.object({
             "string.empty": "El teléfono no puede estar vacío",
             "any.required": "El teléfono es obligatorio"
         }),
-    rol: Joi.string()
-        .valid("Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central")
+    telefonoEmergencia: Joi.string()
+        .pattern(/^\d{9}$/)
         .required()
         .messages({
-            "any.only": "El rol debe ser: Voluntario, Jefe de Cuadrilla, Encargado de Voluntarios o Encargado de Central"
+            "string.pattern.base": "El teléfono de emergencia debe tener 9 dígitos",
+            "string.empty": "El teléfono de emergencia no puede estar vacío",
+            "any.required": "El teléfono de emergencia es obligatorio"
+        }),
+    codigoCiudad: Joi.number()
+        .integer()
+        .positive()
+        .required()
+        .messages({
+            "number.base": "El código de ciudad debe ser un número",
+            "any.required": "El código de ciudad es obligatorio"
+        }),
+    comentarioPostulacion: Joi.string()
+        .optional()
+        .allow("")
+        .max(1000)
+        .messages({
+            "string.max": "El comentario de postulación no puede exceder 1000 caracteres"
+        }),
+    rol: Joi.string()
+        .valid("Voluntario")
+        .required()
+        .messages({
+            "any.only": "El rol permitido para registro público es: Voluntario"
         })
 }).options({
     stripUnknown: true,
@@ -80,13 +104,16 @@ export const userRegisterBodyValidation = Joi.object({
 });
 
 export const userLoginBodyValidation = Joi.object({
-    rut: Joi.string()
-        .pattern(/^\d{7,8}-[\dkK]$/)
+    rut: Joi.alternatives()
+        .try(
+            Joi.string().pattern(/^\d{7,8}-[\dkK]$/),
+            Joi.string().valid('admin')
+        )
         .required()
         .messages({
             "string.pattern.base": "El RUT debe tener formato 12345678-9 o 12345678-k",
-            "string.empty": "El RUT no puede estar vacío",
-            "any.required": "El RUT es obligatorio"
+            "string.empty": "El campo no puede estar vacío",
+            "any.required": "El RUT o rol es obligatorio"
         }),
     password: Joi.string()
         .min(8)

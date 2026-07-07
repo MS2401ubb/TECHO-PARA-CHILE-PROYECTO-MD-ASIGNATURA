@@ -15,7 +15,8 @@ import encargadoCentral from '../entities/encargadoCentral.entity.js';
 import Vivienda from '../entities/vivienda.entity.js';
 import Cuadrilla from '../entities/cuadrilla.entity.js';
 import Jornada from '../entities/jornada.entity.js';
-import Material from '../entities/material.entity.js';
+import Herramienta from '../entities/herramientas.entity.js';
+import CoberturaHerramienta from '../entities/coberturaHerramienta.entity.js';
 
 import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
 import CuadrillaTrabajaEnVivienda from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
@@ -451,6 +452,21 @@ export const createInitialUsuarios = async () => {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
     const countUsuarios = await usuarioRepository.count();
     if (countUsuarios === 0){
+      await usuarioRepository.save([
+        usuarioRepository.create({
+          rut: 'admin', 
+          password: await bcrypt.hash('admin123', 10), 
+          rol: 'admin',           
+          nombre: 'Administrador',
+          primerApellido: 'Super',
+          segundoApellido: 'Poderoso',
+          fechaNacimiento: '1111-01-01',
+          email: 'admin@admin.com',
+          telefono: '911111111',
+          ciudad: { codigo: null },
+        }),
+      ]);
+    
       // -------------------------------------------------------
       // VOLUNTARIOS
       const voluntarioRepository = AppDataSource.getRepository(Voluntario);
@@ -475,7 +491,7 @@ export const createInitialUsuarios = async () => {
         // A) Insertar Usuario Base
         await usuarioRepository.save({
           rut: item.rut,
-          password: await bcrypt.hash(item.nombre.toLowerCase()+"123vol", 10),
+          password: await bcrypt.hash("voluntario123", 10),
           nombre: item.nombre,
           primerApellido: item.primerApellido,
           segundoApellido: item.segundoApellido,
@@ -508,7 +524,7 @@ export const createInitialUsuarios = async () => {
         // A) Insertar Usuario Base
         await usuarioRepository.save({
           rut: item.rut,
-          password: await bcrypt.hash(item.nombre.toLowerCase()+"123jefcuad", 10),
+          password: await bcrypt.hash("jefe1234", 10),
           nombre: item.nombre,
           primerApellido: item.primerApellido,
           segundoApellido: item.segundoApellido,
@@ -534,7 +550,7 @@ export const createInitialUsuarios = async () => {
         // A) Insertar Usuario Base
         await usuarioRepository.save({
           rut: item.rut,
-          password: await bcrypt.hash(item.nombre.toLowerCase()+"123encargvol", 10),
+          password: await bcrypt.hash("encargado123", 10),
           nombre: item.nombre,
           primerApellido: item.primerApellido,
           segundoApellido: item.segundoApellido,
@@ -560,7 +576,7 @@ export const createInitialUsuarios = async () => {
         // A) Insertar Usuario Base
         await usuarioRepository.save({
           rut: item.rut,
-          password: await bcrypt.hash(item.nombre.toLowerCase()+"123encargcen", 10),
+          password: await bcrypt.hash("central123", 10),
           nombre: item.nombre,
           primerApellido: item.primerApellido,
           segundoApellido: item.segundoApellido,
@@ -589,10 +605,10 @@ export const createInitialViviendas = async () => {
     if (countViviendas === 0){
       const obras = [
         { codigo: 'CONC-001', direccion: 'Sector Palomares Pasaje Sur 45', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
-        { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Planificacion', ciudad: {codigo: 181}},
-        { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-002', direccion: 'Collao Avenida Ignacio Collao 2100', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
+        { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
+        { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
+        { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
         { codigo: 'PICA-006', direccion: 'San Isidro 462', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 10}}
       ]; 
       for (const obra of obras) {
@@ -665,27 +681,44 @@ export const createInitialJornadas = async () => {
 }
 export const createInitialMateriales = async () => {
   try {
-    const materialRepository = AppDataSource.getRepository(Material);
-    const countMateriales = await materialRepository.count();
-    if (countMateriales === 0) {
-      const materiales = [
-        { nombre: 'Madera 2x4', tipo: 'Material', stock_digital: 180 },
-        { nombre: 'Planchas OSB', tipo: 'Material', stock_digital: 95 },
-        { nombre: 'Clavos 3 pulgadas', tipo: 'Material', stock_digital: 1500 },
-        { nombre: 'Martillo carpintero', tipo: 'Herramienta', stock_digital: 40 },
-        { nombre: 'Taladro inalambrico', tipo: 'Herramienta', stock_digital: 18 },
-        { nombre: 'Sierra circular', tipo: 'Herramienta', stock_digital: 12 }
+    const herramientaRepository = AppDataSource.getRepository(Herramienta);
+    const coberturaRepository = AppDataSource.getRepository(CoberturaHerramienta);
+    const countHerramientas = await herramientaRepository.count();
+    if (countHerramientas === 0) {
+      const herramientas = [
+        { nombre: 'Martillo carpintero', stock_digital: 40 },
+        { nombre: 'Taladro inalambrico', stock_digital: 18 },
+        { nombre: 'Sierra circular', stock_digital: 12 }
       ];
 
-      await materialRepository.save(materiales);
+      await herramientaRepository.save(herramientas);
     }
-    console.log('🌱 Materiales ingresados a la base de datos.');
+
+    const countCoberturas = await coberturaRepository.count();
+    if (countCoberturas === 0) {
+      const herramientasRegistradas = await herramientaRepository.find({ order: { id: 'ASC' } });
+      const personasPorHerramienta = {
+        'Martillo carpintero': 2,
+        'Taladro inalambrico': 4,
+        'Sierra circular': 8,
+      };
+
+      const coberturas = herramientasRegistradas.map((herramienta, index) => ({
+        nombre_herramienta: herramienta.nombre,
+        orden_inscripcion: index + 1,
+        personas_cubiertas_por_unidad: personasPorHerramienta[herramienta.nombre] || 1,
+        herramienta: { id: herramienta.id },
+      }));
+
+      await coberturaRepository.save(coberturas);
+    }
+
+    console.log('🌱 Herramientas ingresadas a la base de datos.');
   } catch (error) {
-    console.log(`❌ Error al ingresar materiales a la base de datos, ${error}.`);
+    console.log(`❌ Error al ingresar herramientas a la base de datos, ${error}.`);
     process.exit(1);
   }
 }
-
 
 export const createInitialRelations = async () => {
   try {
@@ -755,27 +788,28 @@ export const createInitialRelations = async () => {
     const countInventario = await inventarioJornadaRepository.count();
     if (countInventario === 0) {
       const jornadaRepository = AppDataSource.getRepository(Jornada);
-      const materialRepository = AppDataSource.getRepository(Material);
+      const herramientaRepository = AppDataSource.getRepository(Herramienta);
 
       const jornadas = await jornadaRepository.find({ order: { id: 'ASC' } });
-      const materiales = await materialRepository.find();
-      const materialIdByNombre = new Map(materiales.map((m) => [m.nombre, m.id]));
+      const herramientas = await herramientaRepository.find();
+      const herramientaIdByNombre = new Map(herramientas.map((h) => [h.nombre, h.id]));
 
       if (jornadas.length > 0) {
         const consumos = [
-          { jornada: jornadas[0]?.id, material: materialIdByNombre.get('Madera 2x4'), cantidad: 24 },
-          { jornada: jornadas[0]?.id, material: materialIdByNombre.get('Clavos 3 pulgadas'), cantidad: 300 },
-          { jornada: jornadas[1]?.id, material: materialIdByNombre.get('Planchas OSB'), cantidad: 16 },
-          { jornada: jornadas[1]?.id, material: materialIdByNombre.get('Taladro inalambrico'), cantidad: 2 },
-          { jornada: jornadas[2]?.id, material: materialIdByNombre.get('Martillo carpintero'), cantidad: 4 },
-          { jornada: jornadas[3]?.id, material: materialIdByNombre.get('Sierra circular'), cantidad: 1 }
-        ].filter((item) => item.jornada && item.material);
+          { jornada: jornadas[0]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7' },
+          { jornada: jornadas[1]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 2, rut: '18181818-8' },
+          { jornada: jornadas[2]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7' },
+          { jornada: jornadas[3]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 2, rut: '18181818-8' }
+        ].filter((item) => item.jornada && item.herramienta);
 
         for (const consumo of consumos) {
           await inventarioJornadaRepository.save({
-            cantidad_fisica: consumo.cantidad,
+            cantidad_inicial: consumo.cantidad,
+            codigoCuadrilla: consumo.cuadrilla,
+            rutJefeQueRealizoSetup: consumo.rut,
+            estado_cierre: 'ACTIVO',
             jornada: { id: consumo.jornada },
-            material: { id: consumo.material }
+            herramienta: { id: consumo.herramienta }
           });
         }
       }

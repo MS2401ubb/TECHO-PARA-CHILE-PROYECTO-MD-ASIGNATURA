@@ -24,6 +24,11 @@ export default new EntitySchema({
       length: 250,
       nullable: true,
     },
+    comentarioPostulacion: {
+      type: 'varchar',
+      length: 1000,
+      nullable: true,
+    },
     solicitudActiva: {
       type: 'boolean',
       default: false,
@@ -41,6 +46,10 @@ export default new EntitySchema({
       length: 20,
       nullable: true,
     },
+    idToken: {
+      type: 'int',
+      nullable: true, //voluntarios tipo 'General' no tienen token
+    }
   },
   relations: {
     usuario: {
@@ -53,6 +62,11 @@ export default new EntitySchema({
       target: 'VoluntarioParticipaEnCuadrilla',
       type: 'one-to-many',
       inverseSide: 'voluntario'
+    },
+    tokenIngresado: {
+      target: 'TokenAsignacionCuadrilla',
+      type: 'many-to-one',
+      joinColumn: { name: 'idToken'}
     }
   },
 });
