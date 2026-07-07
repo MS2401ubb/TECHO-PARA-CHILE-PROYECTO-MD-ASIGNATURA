@@ -547,7 +547,7 @@ export async function getMiCuadrillaYViviendaService(rutUsuario, rolUsuario) {
 
   let codigoCuadrilla = null;
 
-  if (rolUsuario === "Voluntario") {
+  if (rolUsuario.includes("Voluntario")) {
     const participacionActiva = await participacionRepository.findOne({
       where: {
         rutVoluntario: rutUsuario,
