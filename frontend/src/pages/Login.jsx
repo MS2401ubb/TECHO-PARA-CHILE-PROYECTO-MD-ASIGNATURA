@@ -55,7 +55,8 @@ function Login() {
         </form>
 
         <p className="helper-text">
-          ¿Quieres postular como voluntario? <Link to="/postulacion-voluntario">Completa el formulario público</Link>.
+          ¿Quieres postular como voluntario? <Link to="/postulacion-voluntario">Completa el formulario público</Link>.<br></br>
+          ¿Estas entrando como voluntario espontaneo? <Link to="/ingresar-token">Canjea el token recibido aca</Link>.
         </p>
       </section>
     </div>
