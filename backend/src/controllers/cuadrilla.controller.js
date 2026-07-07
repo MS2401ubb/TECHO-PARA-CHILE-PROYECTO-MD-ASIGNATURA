@@ -133,7 +133,7 @@ export async function getTokenCuadrilla(req,res) {
 
     const data = await obtenerToken(rutJefeCuadrilla,codigo);
     handleSuccess(res,201,"Token creado exitosamente",data);//data muestra código, para que Jefe de Cuadrilla lo muestre a Voluntario
-  }catch (error){
+  }catch (error){//Revisar error messages
     if (error.message.includes("no encontrado") || error.message.includes("no encontrada")) {
       return handleErrorClient(res, 404, error.message);
     }
@@ -158,7 +158,7 @@ export async function getTokenVoluntario(req,res){
 
     const resultado = await canjearTokenExpress(tipoVoluntario,datosUsuarioNuevo,tokenEntregado);
     handleSuccess(res,200,resultado.message,resultado);
-  }catch(error){
+  }catch(error){//REVISAR ERROR MESSAGES
     if(error.message.includes("no es válido") || error.message.includes("expiró")){
       return handleErrorClient(res, 400, error.message);
     }
@@ -171,7 +171,24 @@ export async function getTokenVoluntario(req,res){
   }
 }
 
+export async function validarTokenExpress(req,res){
+  try{
+    const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
 
+    const tokenValido = await tokenRepository.findOne({
+      where: { valorToken: token, activo: true }
+    });
+
+    if (!tokenValido) {
+      return handleErrorClient(res, 400, "El token no es válido o ya expiró.");
+    }
+
+    // Si es válido, le mandamos al front la info de la cuadrilla a la que se va a unir
+    handleSuccess(res, 200, "Token válido", { codigoCuadrilla: tokenValido.codigoCuadrilla });
+  } catch (error) {
+    handleErrorServer(res, 500, "Error al validar token", error.message);
+  }
+}
 
 export async function getMiCuadrillaYVivienda(req, res) {
   try {

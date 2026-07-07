@@ -8,7 +8,8 @@ import {
 	asignarJefeCuadrillaACuadrilla,
 	getMiCuadrillaYVivienda,
 	getTokenCuadrilla,
-	getTokenVoluntario
+	getTokenVoluntario,
+	validarTokenExpress
 } from "../controllers/cuadrilla.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
@@ -29,6 +30,7 @@ router.get(
 	getCuadrillas
 );
 router.post("/token/canjear",getTokenVoluntario);
+router.post("token/validar/:token",validarTokenExpress);
 router.get(
 	"/:codigo",
 	authenticateJwt,
