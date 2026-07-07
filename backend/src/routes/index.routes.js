@@ -9,6 +9,7 @@ import reporteRoutes from './reporte.routes.js';
 import usuarioRoutes from './usuario.routes.js';
 import viviendaRoutes from './vivienda.routes.js';
 import voluntarioRoutes from './voluntario.routes.js';
+import ubicacionRoutes from './ubicacion.routes.js';
 
 export function routerApi(app) {
     const router = Router();
@@ -27,4 +28,5 @@ export function routerApi(app) {
     router.use('/usuario', usuarioRoutes);
     router.use('/vivienda', viviendaRoutes);
     router.use('/voluntario', voluntarioRoutes);
+    router.use('/ubicacion', ubicacionRoutes);
 }

@@ -25,3 +25,27 @@ export const aprobarPostulanteBodyValidation = Joi.object({
   abortEarly: false,
 });
 
+export const rechazarPostulanteBodyValidation = Joi.object({
+  motivo: Joi.string().trim().min(5).max(250).required().messages({
+    "string.empty": "El motivo de rechazo es obligatorio",
+    "string.min": "El motivo de rechazo debe tener al menos 5 caracteres",
+    "string.max": "El motivo de rechazo no puede exceder 250 caracteres",
+    "any.required": "El motivo de rechazo es obligatorio",
+  }),
+}).options({
+  stripUnknown: true,
+  abortEarly: false,
+});
+
+export const apelarPostulanteBodyValidation = Joi.object({
+  comentarioPostulacion: Joi.string().trim().min(5).max(1000).required().messages({
+    "string.empty": "El comentario de apelación es obligatorio",
+    "string.min": "El comentario de apelación debe tener al menos 5 caracteres",
+    "string.max": "El comentario de apelación no puede exceder 1000 caracteres",
+    "any.required": "El comentario de apelación es obligatorio",
+  }),
+}).options({
+  stripUnknown: true,
+  abortEarly: false,
+});
+

@@ -1,9 +1,22 @@
 import { Router } from "express";
-import { getViviendas, getViviendaByCodigo, editVivienda, deleteVivienda } from "../controllers/vivienda.controller.js";
+import {
+	getViviendas,
+	getViviendaByCodigo,
+	editVivienda,
+	deleteVivienda,
+	getViviendasPlanificables,
+} from "../controllers/vivienda.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
+
+router.get(
+	"/planificables",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central"]),
+	getViviendasPlanificables
+);
 
 router.get(
 	"/",

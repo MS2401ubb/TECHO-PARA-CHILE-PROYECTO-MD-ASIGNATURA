@@ -39,6 +39,7 @@ export const userRegisterBodyValidation = Joi.object({
         }),
     segundoApellido: Joi.string()
         .optional()
+        .allow("")
         .min(2)
         .max(100)
         .messages({
@@ -67,6 +68,29 @@ export const userRegisterBodyValidation = Joi.object({
             "string.pattern.base": "El teléfono debe tener 9 dígitos",
             "string.empty": "El teléfono no puede estar vacío",
             "any.required": "El teléfono es obligatorio"
+        }),
+    telefonoEmergencia: Joi.string()
+        .pattern(/^\d{9}$/)
+        .required()
+        .messages({
+            "string.pattern.base": "El teléfono de emergencia debe tener 9 dígitos",
+            "string.empty": "El teléfono de emergencia no puede estar vacío",
+            "any.required": "El teléfono de emergencia es obligatorio"
+        }),
+    codigoCiudad: Joi.number()
+        .integer()
+        .positive()
+        .required()
+        .messages({
+            "number.base": "El código de ciudad debe ser un número",
+            "any.required": "El código de ciudad es obligatorio"
+        }),
+    comentarioPostulacion: Joi.string()
+        .optional()
+        .allow("")
+        .max(1000)
+        .messages({
+            "string.max": "El comentario de postulación no puede exceder 1000 caracteres"
         }),
     rol: Joi.string()
         .valid("Voluntario")

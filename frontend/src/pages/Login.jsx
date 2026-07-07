@@ -18,7 +18,6 @@ function Login() {
     event.preventDefault()
     setError('')
     setLoading(true)
-    console.error('Login attempt:', { rut, password }); // Debugging line
     const result = await login(rut, password)
     setLoading(false)
 
@@ -34,7 +33,7 @@ function Login() {
     <div className="public-shell">
       <section className="auth-card">
         <h1>Ingreso Plataforma TECHO</h1>
-        <p>Inicia sesión para entrar al panel operativo según tu rol.</p>
+        <p>Inicia sesión para entrar al panel operativo.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-row">

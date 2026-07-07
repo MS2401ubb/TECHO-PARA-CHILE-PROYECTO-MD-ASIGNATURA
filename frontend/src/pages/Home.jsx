@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { apelarPostulante } from '../services/voluntario.service'
 
 const roleCards = {
   Voluntario: [
@@ -30,14 +31,79 @@ const roleCards = {
 
 function Home() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
+  const [comentarioApelacion, setComentarioApelacion] = useState('')
+  const [mensajeApelacion, setMensajeApelacion] = useState('')
+  const [errorApelacion, setErrorApelacion] = useState('')
 
   const cards = useMemo(() => roleCards[user?.rol] || [], [user?.rol])
+  const isVoluntarioRestringido = user?.rol === 'Voluntario' && user?.estadoVoluntario !== 'Activo'
+
+  const enviarApelacion = async () => {
+    setMensajeApelacion('')
+    setErrorApelacion('')
+
+    if (!comentarioApelacion.trim() || comentarioApelacion.trim().length < 5) {
+      setErrorApelacion('La apelación debe tener al menos 5 caracteres.')
+      return
+    }
+
+    const result = await apelarPostulante(user?.rut, comentarioApelacion.trim())
+    if (!result.success) {
+      setErrorApelacion(result.message || 'No fue posible enviar la apelación.')
+      return
+    }
+
+    updateUser({
+      estadoVoluntario: 'Postulante',
+      motivoRechazo: null,
+      comentarioPostulacion: comentarioApelacion.trim(),
+    })
+    setComentarioApelacion('')
+    setMensajeApelacion('Apelación enviada. Tu solicitud vuelve a estado Postulante.')
+  }
+
+  if (isVoluntarioRestringido && user?.estadoVoluntario === 'Postulante') {
+    return (
+      <section className="page-card">
+        <h1>Home</h1>
+        <p className="subtitle">Debes esperar a que un Encargado de Voluntarios revise tu solicitud. Te avisaremos pronto.</p>
+      </section>
+    )
+  }
+
+  if (isVoluntarioRestringido && user?.estadoVoluntario === 'Rechazado') {
+    return (
+      <section className="page-card">
+        <h1>Solicitud rechazada</h1>
+        <p className="subtitle">Tu solicitud fue rechazada por el siguiente motivo:</p>
+        <p><strong>{user?.motivoRechazo || 'Sin motivo informado'}</strong></p>
+
+        <div className="form-row">
+          <label htmlFor="apelacion">Apelar</label>
+          <textarea
+            id="apelacion"
+            name="apelacion"
+            rows="4"
+            value={comentarioApelacion}
+            onChange={(event) => setComentarioApelacion(event.target.value)}
+            placeholder="Escribe tu nueva experiencia/comentario para apelar"
+          />
+        </div>
+
+        <div className="form-actions">
+          <button type="button" className="btn-primary" onClick={enviarApelacion}>Apelar</button>
+          {mensajeApelacion && <span className="text-success">{mensajeApelacion}</span>}
+          {errorApelacion && <span className="text-error">{errorApelacion}</span>}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="page-card">
       <h1>Home</h1>
-      <p className="subtitle">Panel de inicio por rol. Bienvenido, {user?.nombre}.</p>
+      <p className="subtitle">Bienvenido/a, {user?.nombre}!!</p>
 
       <div className="cards-grid">
         {cards.map((card) => (

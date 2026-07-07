@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 const useLogin = () => {
-  const [errorRUT, setErrorRUT] = useState(""); //nose que va adentro del useState
+  const [errorRUT, setErrorRUT] = useState("");
   const [errorPassword, setErrorPassword] = useState("");
   const errorData = (dataMessage) => {
         if(dataMessage.includes('RUT') || dataMessage.includes('rut')) {

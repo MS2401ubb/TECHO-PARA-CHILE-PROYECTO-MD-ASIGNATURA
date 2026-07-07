@@ -6,6 +6,7 @@ import {
   obtenerDetallesVoluntario,
   aprobarPostulante,
   rechazarPostulante,
+  apelarPostulante,
   obtenerDisponiblesPorZona,
 } from "../controllers/voluntario.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
@@ -32,6 +33,13 @@ router.post(
   authenticateJwt,
   verifyRoles(["Encargado de Voluntarios"]),
   rechazarPostulante
+);
+
+router.post(
+  "/:rut/apelar",
+  authenticateJwt,
+  verifyRoles(["Voluntario"]),
+  apelarPostulante
 );
 
 router.get(

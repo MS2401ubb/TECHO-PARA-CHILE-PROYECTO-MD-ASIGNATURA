@@ -5,6 +5,7 @@ import {
   deleteCuadrillaService,
   asignarVoluntarioACuadrillaService,
   asignarJefeCuadrillaACuadrillaService,
+  getMiCuadrillaYViviendaService,
   obtenerToken,
   canjearTokenExpress
 } from "../services/cuadrilla.service.js";
@@ -170,3 +171,27 @@ export async function getTokenVoluntario(req,res){
   }
 }
 
+
+
+export async function getMiCuadrillaYVivienda(req, res) {
+  try {
+    const rutUsuario = req.user?.rut;
+    const rolUsuario = req.user?.rol;
+
+    if (!rutUsuario || !rolUsuario) {
+      return handleErrorClient(res, 401, "Usuario no autenticado");
+    }
+
+    const data = await getMiCuadrillaYViviendaService(rutUsuario, rolUsuario);
+    return handleSuccess(res, 200, "Datos de cuadrilla y vivienda obtenidos exitosamente", data);
+  } catch (error) {
+    if (
+      error.message.includes("No tienes una cuadrilla activa") ||
+      error.message.includes("No lideras una cuadrilla activa") ||
+      error.message.includes("solo está disponible")
+    ) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, "Error al obtener datos de cuadrilla y vivienda", error.message);
+  }
+}

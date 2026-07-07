@@ -53,3 +53,12 @@ export async function obtenerDisponiblesPorZona(codigoCiudad) {
     return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor', data: [] }
   }
 }
+
+export async function apelarPostulante(rut, comentarioPostulacion) {
+  try {
+    const response = await axios.post(`/voluntario/${rut}/apelar`, { comentarioPostulacion })
+    return { success: true, data: response.data.data, message: response.data.message }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor' }
+  }
+}

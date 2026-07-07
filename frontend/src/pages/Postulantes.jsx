@@ -7,6 +7,7 @@ function Postulantes() {
   const [postulantes, setPostulantes] = useState([])
   const [selected, setSelected] = useState(null)
   const [feedback, setFeedback] = useState('')
+  const [motivoRechazo, setMotivoRechazo] = useState('')
 
   useEffect(() => {
     const loadPostulantes = async () => {
@@ -19,6 +20,7 @@ function Postulantes() {
 
   const verPostulante = async (rut) => {
     setFeedback('')
+    setMotivoRechazo('')
     const result = await obtenerDetallesVoluntario(rut)
     if (result.success) setSelected(result.data)
   }
@@ -43,7 +45,12 @@ function Postulantes() {
 
   const rechazar = async () => {
     if (!selected?.rutVoluntario) return
-    const result = await rechazarPostulante(selected.rutVoluntario, 'Rechazado por evaluación interna')
+    if (!motivoRechazo.trim() || motivoRechazo.trim().length < 5) {
+      setFeedback('Debes ingresar un motivo de rechazo de al menos 5 caracteres.')
+      return
+    }
+
+    const result = await rechazarPostulante(selected.rutVoluntario, motivoRechazo.trim())
 
     if (!result.success) {
       setFeedback(result.message || 'No fue posible rechazar')
@@ -52,6 +59,7 @@ function Postulantes() {
 
     setFeedback('Postulante rechazado')
     setSelected(null)
+    setMotivoRechazo('')
     const refreshed = await obtenerPostulantes()
     if (refreshed.success) setPostulantes(refreshed.data)
   }
@@ -93,6 +101,18 @@ function Postulantes() {
           <p><strong>Nombre:</strong> {selected.usuario?.nombre} {selected.usuario?.primerApellido} {selected.usuario?.segundoApellido}</p>
           <p><strong>Email:</strong> {selected.usuario?.email}</p>
           <p><strong>Teléfono:</strong> {selected.usuario?.telefono}</p>
+          <p><strong>Experiencia/comentario:</strong> {selected.comentarioPostulacion || 'Sin comentario'}</p>
+          <div className="form-row">
+            <label htmlFor="motivoRechazo">Motivo de rechazo</label>
+            <textarea
+              id="motivoRechazo"
+              name="motivoRechazo"
+              value={motivoRechazo}
+              onChange={(event) => setMotivoRechazo(event.target.value)}
+              rows="3"
+              placeholder="Escribe el motivo específico del rechazo"
+            />
+          </div>
           <div className="inline-actions">
             <button type="button" className="btn-primary" onClick={aprobar}>Aceptar</button>
             <button type="button" className="btn-danger" onClick={rechazar}>Rechazar</button>
