@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { ROLES_VOLUNTARIOS } from '../constants/roles'
 
 function ProtectedRoute({ allowedRoles, children }) {
   const { user, loading, isAuthenticated } = useAuth()
@@ -15,7 +16,7 @@ function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to="/home" replace />
   }
 
-  const isVoluntario = ['Voluntario','Voluntario Espontáneo','Voluntario General'].includes(user?.rol);
+  const isVoluntario = ROLES_VOLUNTARIOS.includes(user?.rol);
 
   const isVoluntarioRestringido = isVoluntario && user?.estadoVoluntario !== 'Activo'
   const allowedRestrictedPaths = ['/home', '/mi-perfil', '/logout']

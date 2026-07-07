@@ -21,8 +21,8 @@ import IngresarToken from './pages/IngresarToken'
 import RegistroDatosEspontaneo from './pages/RegistroEspontaneo'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
+import { ROLES_VOLUNTARIOS } from './constants/roles' // en vez de 'Voluntario' para allowed roles específicos, este array para incluir voluntarios espontáneos, más que nada, para mantener orden en ProtectedRoutes
 import './styles/style.css'
-
 
 const router = createBrowserRouter([
   {
@@ -44,7 +44,7 @@ const router = createBrowserRouter([
           {
             path: '/mi-cuadrilla-vivienda',
             element: (
-              <ProtectedRoute allowedRoles={['Voluntario', 'Jefe de Cuadrilla']}>
+              <ProtectedRoute allowedRoles={[ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla']}>
                 <MiCuadrillaVivienda />
               </ProtectedRoute>
             ),
