@@ -17,19 +17,24 @@ import GestionarViviendas from './pages/GestionarViviendas'
 import Reportes from './pages/Reportes'
 import LogisticaTransporte from './pages/LogisticaTransporte'
 import LogisticaAlimentacion from './pages/LogisticaAlimentacion'
+import IngresarToken from './pages/IngresarToken'
+import RegistroDatosEspontaneo from './pages/RegistroEspontaneo'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
 import './styles/style.css'
 
+
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Root />,
+    element: <Root />,  
     errorElement: <Error404 />,
     children: [
       { index: true, element: <Navigate to="/login" replace /> },
       { path: '/login', element: <Login /> },
       { path: '/postulacion-voluntario', element: <EnrollVoluntario /> },
+      { path: '/ingresar-token',element: <IngresarToken/>},
+      { path: '/registro-datos-express',element: <RegistroDatosEspontaneo/>},
       {
         element: <ProtectedRoute><AppLayout /></ProtectedRoute>,
         children: [
