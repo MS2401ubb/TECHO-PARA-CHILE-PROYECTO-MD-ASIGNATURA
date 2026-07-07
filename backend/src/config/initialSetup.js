@@ -660,6 +660,9 @@ export const createInitialJornadas = async () => {
       const jornadas = [
         { fecha: '2026-06-16', estado: 'Activa', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
         { fecha: '2026-06-16', estado: 'Activa', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' },
+        { fecha: '2026-06-18', estado: 'Activa', rutJefe: '19191919-9', codigoVivienda: 'CONC-005' },
+        { fecha: '2026-06-19', estado: 'Activa', rutJefe: '17171717-7', codigoVivienda: 'CONC-004' },
+        { fecha: '2026-06-20', estado: 'Activa', rutJefe: '18181818-8', codigoVivienda: 'CONC-002' },
         { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
         { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' }
       ];

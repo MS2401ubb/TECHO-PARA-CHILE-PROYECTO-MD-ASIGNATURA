@@ -1,10 +1,4 @@
-import {
-  getViviendasService,
-  getViviendaByCodigoService,
-  editViviendaService,
-  deleteViviendaService,
-  getViviendasPlanificablesService,
-} from "../services/vivienda.service.js";
+import { getViviendasService, getViviendaByCodigoService, editViviendaService, deleteViviendaService, finalizarViviendaService } from "../services/vivienda.service.js";
 import { editViviendaBodyValidation } from "../validations/vivienda.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
@@ -76,16 +70,31 @@ export async function deleteVivienda(req, res) {
   }
 }
 
-export async function getViviendasPlanificables(req, res) {
+export async function finalizarVivienda(req, res) {
   try {
-    const viviendas = await getViviendasPlanificablesService();
+    const { codigo } = req.params;
+    const rutSolicitante = req.user?.rut || req.user?.documento || null;
+    const rolSolicitante = req.user?.rol || req.user?.role || null;
 
-    if (viviendas.length < 1) {
-      return handleSuccess(res, 200, "No hay viviendas en Planificación con cuadrilla completa", []);
+    if (!rutSolicitante || !rolSolicitante) {
+      return handleErrorClient(res, 401, "Token inválido o incompleto");
     }
 
-    return handleSuccess(res, 200, "Viviendas planificables obtenidas exitosamente", viviendas);
+    const resultado = await finalizarViviendaService(codigo, rutSolicitante, rolSolicitante);
+    return handleSuccess(res, 200, resultado.mensaje, resultado);
   } catch (error) {
-    return handleErrorServer(res, 500, "Error al obtener viviendas planificables", error.message);
+    if (error.message.includes("no encontrada")) {
+      return handleErrorClient(res, 404, error.message);
+    }
+
+    if (
+      error.message.includes("ya se encuentra finalizada") ||
+      error.message.includes("No se puede finalizar") ||
+      error.message.includes("no puede finalizarla")
+    ) {
+      return handleErrorClient(res, 409, error.message);
+    }
+
+    return handleErrorServer(res, 500, "Error al finalizar vivienda", error.message);
   }
 }
