@@ -1,4 +1,11 @@
-import { getViviendasService, getViviendaByCodigoService, editViviendaService, deleteViviendaService, finalizarViviendaService } from "../services/vivienda.service.js";
+import {
+  getViviendasService,
+  getViviendaByCodigoService,
+  editViviendaService,
+  deleteViviendaService,
+  getViviendasPlanificablesService,
+  finalizarViviendaService,
+} from "../services/vivienda.service.js";
 import { editViviendaBodyValidation } from "../validations/vivienda.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
@@ -96,5 +103,19 @@ export async function finalizarVivienda(req, res) {
     }
 
     return handleErrorServer(res, 500, "Error al finalizar vivienda", error.message);
+  }
+}
+
+export async function getViviendasPlanificables(req, res) {
+  try {
+    const viviendas = await getViviendasPlanificablesService();
+
+    if (viviendas.length < 1) {
+      return handleSuccess(res, 200, "No hay viviendas en Planificación con cuadrilla completa", []);
+    }
+
+    return handleSuccess(res, 200, "Viviendas planificables obtenidas exitosamente", viviendas);
+  } catch (error) {
+    return handleErrorServer(res, 500, "Error al obtener viviendas planificables", error.message);
   }
 }

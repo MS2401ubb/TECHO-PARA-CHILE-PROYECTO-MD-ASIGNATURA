@@ -5,6 +5,8 @@ const cuadrillaTrabajaRepository = db.getRepository('CuadrillaTrabajaEnVivienda'
 const voluntariosRepository = db.getRepository('Voluntario');
 const jefeCuadrillaLideraCuadrillaRepository = db.getRepository('JefeCuadrillaLideraCuadrilla');
 
+import voluntarioParticipa from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
+const voluntarioParticipaRepository = db.getRepository('VoluntarioParticipaEnCuadrilla');
 
 // TRANSPORTE
 const obtenerListaVoluntariosAndJefeCuadrillasTransporte = async (viviendasEnCiudad) => {

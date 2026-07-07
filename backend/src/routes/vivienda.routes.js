@@ -1,15 +1,22 @@
 import { Router } from "express";
-import { getViviendas, getViviendaByCodigo, editVivienda, deleteVivienda, finalizarVivienda } from "../controllers/vivienda.controller.js";
+import {
+	getViviendas,
+	getViviendaByCodigo,
+	editVivienda,
+	deleteVivienda,
+	getViviendasPlanificables,
+	finalizarVivienda,
+} from "../controllers/vivienda.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-router.post(
-	"/:codigo/finalizar",
+router.get(
+	"/planificables",
 	authenticateJwt,
-	verifyRoles(["Jefe de Cuadrilla", "Encargado de Central", "admin"]),
-	finalizarVivienda
+	verifyRoles(["Encargado de Voluntarios", "Encargado de Central", "admin"]),
+	getViviendasPlanificables
 );
 
 router.get(
@@ -35,6 +42,12 @@ router.delete(
 	authenticateJwt,
 	verifyRoles(["Encargado de Central", "admin"]),
 	deleteVivienda
+);
+router.post(
+	"/:codigo/finalizar",
+	authenticateJwt,
+	verifyRoles(["Jefe de Cuadrilla", "Encargado de Central", "admin"]),
+	finalizarVivienda
 );
 
 export default router;

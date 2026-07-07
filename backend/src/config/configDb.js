@@ -21,6 +21,9 @@ import CoberturaHerramienta from '../entities/coberturaHerramienta.entity.js';
 import ValidacionDespliegueHerramienta from '../entities/validacionDespliegueHerramienta.entity.js';
 import JornadaValidacion from '../entities/jornadaValidacion.entity.js';
 import TareasValidacionJornada from '../entities/tareasValidacionJornada.entity.js';
+import TokenAsignaCuadrilla from '../entities/tokenCuadrilla.entity.js';
+
+import { UsuarioSubscriber } from '../utils/usuario.subscriber.js';
 
 import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } from './configEnv.js';
 
@@ -54,8 +57,10 @@ const AppDataSource = new DataSource({
     JefeCuadrillaLideraCuadrilla,
     Reporte,
     JornadaValidacion,
-    TareasValidacionJornada
+    TareasValidacionJornada,
+    TokenAsignaCuadrilla,
   ],
+  subscribers:[ UsuarioSubscriber],
 });
 
 export { AppDataSource };
