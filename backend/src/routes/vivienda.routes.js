@@ -5,6 +5,7 @@ import {
 	editVivienda,
 	deleteVivienda,
 	getViviendasPlanificables,
+	finalizarVivienda,
 } from "../controllers/vivienda.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
@@ -41,6 +42,12 @@ router.delete(
 	authenticateJwt,
 	verifyRoles(["Encargado de Central", "admin"]),
 	deleteVivienda
+);
+router.post(
+	"/:codigo/finalizar",
+	authenticateJwt,
+	verifyRoles(["Jefe de Cuadrilla", "Encargado de Central", "admin"]),
+	finalizarVivienda
 );
 
 export default router;
