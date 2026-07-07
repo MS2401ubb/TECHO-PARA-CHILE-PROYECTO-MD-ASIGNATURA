@@ -35,7 +35,12 @@ router.get(
 	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
 	getCuadrillaByCodigo
 );
-router.post("/:codigo/token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),getTokenCuadrilla);
+router.post(
+	"/:codigo/token",
+	authenticateJwt,
+	verifyRoles(["Jefe de Cuadrilla"]),
+	getTokenCuadrilla
+);
 router.post(
 	"/:codigo/asignar-voluntario",
 	authenticateJwt,
