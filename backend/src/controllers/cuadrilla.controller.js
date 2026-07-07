@@ -7,7 +7,8 @@ import {
   asignarJefeCuadrillaACuadrillaService,
   getMiCuadrillaYViviendaService,
   obtenerToken,
-  canjearTokenExpress
+  canjearTokenExpress,
+  preValidacionToken
 } from "../services/cuadrilla.service.js";
 import {tokenCanjeoBodyValidation} from "../validations/token.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -173,11 +174,9 @@ export async function getTokenVoluntario(req,res){
 
 export async function validarTokenExpress(req,res){
   try{
-    const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+    const {token} = req.params;
 
-    const tokenValido = await tokenRepository.findOne({
-      where: { valorToken: token, activo: true }
-    });
+    const tokenValido = await preValidacionToken(token);
 
     if (!tokenValido) {
       return handleErrorClient(res, 400, "El token no es válido o ya expiró.");

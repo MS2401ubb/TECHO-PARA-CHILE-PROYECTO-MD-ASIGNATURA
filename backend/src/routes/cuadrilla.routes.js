@@ -30,7 +30,7 @@ router.get(
 	getCuadrillas
 );
 router.post("/token/canjear",getTokenVoluntario);
-router.post("token/validar/:token",validarTokenExpress);
+router.get("/token/validar/:token",validarTokenExpress);
 router.get(
 	"/:codigo",
 	authenticateJwt,

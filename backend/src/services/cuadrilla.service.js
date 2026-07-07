@@ -328,6 +328,21 @@ async function generarTokenUnicoString(tokenRepository,codigoCuadrillaNumero) {
   return codigoAleatorio;
 }
 
+
+export async function preValidacionToken(token){
+  const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  
+  const tokenValido = await tokenRepository.findOne({
+    where: {
+      valorToken: token,
+      activo: true
+    }
+  });
+  if (!tokenValido) throw new Error("El código de token ingresado no es válido o ya expiró.");
+
+  return tokenValido;
+}
+
 //Voluntario: "Unirme a Cuadrilla" (Invitado, solo tiene rut) -> POST /API/cuadrillas/token/canjear -> vinculación inmediata a cuadrilla.
 //asocia idToken a voluntario, crea Usuario y Voluntario (con mayoria de columnas NULL)
 //o si el voluntario ya existe y fue re-asignado, solo actualiza cuadrilla actual (le da fecha-fin, en entities asociadas, etc)
@@ -355,13 +370,7 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
   const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
   const usuarioRepository = AppDataSource.getRepository(Usuario);
 
-  const tokenValido = await tokenRepository.findOne({
-    where: {
-      valorToken: tokenEntregado,
-      activo: true
-    }
-  });
-  if (!tokenValido) throw new Error("El código de token ingresado no es válido o ya expiró.");
+  const tokenValido = await preValidacionToken(tokenEntregado);
 
   const idTokenTemp = tokenValido.id;
   const codigoCuadrillaAsociada = tokenValido.codigoCuadrilla;
