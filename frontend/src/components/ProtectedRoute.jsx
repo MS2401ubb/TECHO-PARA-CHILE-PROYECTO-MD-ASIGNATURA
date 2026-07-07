@@ -15,7 +15,9 @@ function ProtectedRoute({ allowedRoles, children }) {
     return <Navigate to="/home" replace />
   }
 
-  const isVoluntarioRestringido = user?.rol === 'Voluntario' && user?.estadoVoluntario !== 'Activo'
+  const isVoluntario = ['Voluntario','Voluntario Espontáneo','Voluntario General'].includes(user?.rol);
+
+  const isVoluntarioRestringido = isVoluntario && user?.estadoVoluntario !== 'Activo'
   const allowedRestrictedPaths = ['/home', '/mi-perfil', '/logout']
   if (isVoluntarioRestringido && !allowedRestrictedPaths.includes(location.pathname)) {
     return <Navigate to="/home" replace />
