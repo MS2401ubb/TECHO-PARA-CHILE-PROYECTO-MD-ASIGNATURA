@@ -1,5 +1,6 @@
 import { AppDataSource } from "../config/configDb.js";
 import Vivienda from "../entities/vivienda.entity.js";
+import { IsNull } from "typeorm";
 
 // ALL
 export async function getViviendasService() {
@@ -60,4 +61,73 @@ export async function deleteViviendaService(codigo) {
 
   await viviendaRepository.remove(vivienda);
   return true;
+}
+
+// FINALIZAR VIVIENDA
+export async function finalizarViviendaService(codigoVivienda, rutSolicitante, rolSolicitante) {
+  const viviendaRepository = AppDataSource.getRepository(Vivienda);
+  const jornadaRepository = AppDataSource.getRepository("Jornada");
+  const asignacionRepository = AppDataSource.getRepository("CuadrillaTrabajaEnVivienda");
+
+  const vivienda = await viviendaRepository.findOne({ where: { codigo: codigoVivienda } });
+
+  if (!vivienda) {
+    throw new Error("Vivienda no encontrada");
+  }
+
+  if (vivienda.estado === "Finalizada") {
+    throw new Error("La vivienda ya se encuentra finalizada.");
+  }
+
+  const jornadas = await jornadaRepository.find({
+    where: { vivienda: { codigo: codigoVivienda } },
+    relations: { jefeCuadrilla: true },
+    order: { fecha: "ASC" },
+  });
+
+  if (jornadas.length === 0) {
+    throw new Error("No se puede finalizar la vivienda porque no tiene jornadas asociadas.");
+  }
+
+  if (rolSolicitante === "Jefe de Cuadrilla") {
+    const jefeParticipa = jornadas.some((jornada) => jornada.jefeCuadrilla?.rutUsuario === rutSolicitante);
+
+    if (!jefeParticipa) {
+      throw new Error("El jefe no tiene jornadas asociadas a esta vivienda y no puede finalizarla.");
+    }
+  }
+
+  const jornadasNoFinalizadas = jornadas.filter((jornada) => jornada.estado !== "Finalizada");
+
+  if (jornadasNoFinalizadas.length > 0) {
+    throw new Error(
+      `No se puede finalizar la vivienda. Hay ${jornadasNoFinalizadas.length} jornada(s) aún no finalizada(s).`
+    );
+  }
+
+  const asignacionesActivas = await asignacionRepository.count({
+    where: {
+      codigoVivienda: codigoVivienda,
+      fechaFin: IsNull(),
+    },
+  });
+
+  if (asignacionesActivas > 0) {
+    throw new Error("No se puede finalizar la vivienda porque aún tiene cuadrillas activas asignadas.");
+  }
+
+  vivienda.estado = "Finalizada";
+  vivienda.fechaFinReal = new Date();
+  vivienda.porcentajeAvance = 100;
+
+  const viviendaFinalizada = await viviendaRepository.save(vivienda);
+
+  return {
+    codigoVivienda: viviendaFinalizada.codigo,
+    estado: viviendaFinalizada.estado,
+    fechaFinReal: viviendaFinalizada.fechaFinReal,
+    totalJornadas: jornadas.length,
+    jornadasFinalizadas: jornadas.length,
+    mensaje: "Vivienda finalizada exitosamente.",
+  };
 }
