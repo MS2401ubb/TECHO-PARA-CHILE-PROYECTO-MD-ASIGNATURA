@@ -148,44 +148,58 @@ if (
   }
 }
 
-//POST /api/cuadrillas/token/canjear
-//const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, orden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"
-export async function getTokenVoluntario(req,res){
-  try{
-    const {error, value} = tokenCanjeoBodyValidation.validate(req.body);
+//POST /api/cuadrilla/token/canjear
+//POST /api/cuadrilla/token/validar/:token/:rut
+//const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, oraden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"
+export async function validarTokenExpress(req, res) {
+  try {
+    const { token, rut } = req.params; 
 
-    if(error) return handleErrorClient(res,400,"parámetros de canje inválidos",error.message);
-    const {tipoVoluntario, tokenEntregado, datosUsuarioNuevo} = value;
-
-    const resultado = await canjearTokenExpress(tipoVoluntario,datosUsuarioNuevo,tokenEntregado);
-    handleSuccess(res,200,resultado.message,resultado);
-  }catch(error){//REVISAR ERROR MESSAGES
-    if(error.message.includes("no es válido") || error.message.includes("expiró")){
-      return handleErrorClient(res, 400, error.message);
-    }
-    if (error.message.includes("pertenece a un usuario pero no")) {
-      return handleErrorClient(res, 403, error.message); // Forbidden o Bad Request según prefieras
+    if (!rut) {
+      return handleErrorClient(res, 400, "El parámetro RUT es requerido para validar el proceso.");
     }
 
-    // Error crítico del servidor
-    handleErrorServer(res, 500, "Error al procesar el canje del token express", error.message);
-  }
-}
-
-export async function validarTokenExpress(req,res){
-  try{
-    const {token} = req.params;
-
-    const tokenValido = await preValidacionToken(token);
+    const { tokenValido, usuarioYaRegistrado } = await preValidacionToken(token, rut);
 
     if (!tokenValido) {
       return handleErrorClient(res, 400, "El token no es válido o ya expiró.");
     }
 
-    // Si es válido, le mandamos al front la info de la cuadrilla a la que se va a unir
-    handleSuccess(res, 200, "Token válido", { codigoCuadrilla: tokenValido.codigoCuadrilla });
+    handleSuccess(res, 200, "Token válido verificado con éxito", { 
+      codigoCuadrilla: tokenValido.codigoCuadrilla,
+      usuarioYaRegistrado: usuarioYaRegistrado 
+    });
+
   } catch (error) {
+    if (error.message.includes("no es válido") || error.message.includes("expiró")) {
+      return handleErrorClient(res, 400, error.message);
+    }
     handleErrorServer(res, 500, "Error al validar token", error.message);
+  }
+}
+
+export async function getTokenVoluntario(req, res) {
+  try {
+    const { error, value } = tokenCanjeoBodyValidation.validate(req.body);
+    if (error) return handleErrorClient(res, 400, "parámetros de canje inválidos", error.message);
+    
+    const { tipoVoluntario, tokenEntregado, datosUsuarioNuevo } = value;
+
+    const resultado = await canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tokenEntregado);
+    
+    handleSuccess(res, 200, resultado.message, resultado);
+  } catch (error) {
+    if (error.message.includes("no es válido") || error.message.includes("expiró")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    if (error.message.includes("no pertenece a un perfil de Voluntario")) {
+      return handleErrorClient(res, 403, error.message); 
+    }
+    if (error.message.includes("Datos incompletos")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+
+    handleErrorServer(res, 500, "Error al procesar el canje del token express", error.message);
   }
 }
 
