@@ -53,9 +53,9 @@ export async function registerVoluntario(data) {
 		}
 	}
 }
-export async function validarTokenExpress(token) {
+export async function validarTokenExpress(token,rut) {
   try {
-    const response = await axios.get(`/cuadrilla/token/validar/${token}`);
+    const response = await axios.get(`/cuadrilla/token/validar/${token}/${rut}`);
     
     return {
       success: true,
