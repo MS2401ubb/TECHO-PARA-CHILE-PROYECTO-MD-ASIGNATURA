@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { descargarDocumentoAlimentacion, obtenerDetalleProvisionAlimentos } from '../services/logistica.service'
 import { obtenerDashboardCentral } from '../services/vivienda.service'
 
 function Dashboard() {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dashboard, setDashboard] = useState(null)
@@ -9,6 +12,11 @@ function Dashboard() {
   const [codigoCuadrillaSeleccionada, setCodigoCuadrillaSeleccionada] = useState('')
   const [regionSeleccionada, setRegionSeleccionada] = useState('')
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState('')
+  const [provisionAlimentos, setProvisionAlimentos] = useState(null)
+  const [provisionAlimentosLoading, setProvisionAlimentosLoading] = useState(false)
+  const [provisionAlimentosError, setProvisionAlimentosError] = useState('')
+  const [documentoAlimentosMessage, setDocumentoAlimentosMessage] = useState('')
+  const [documentoAlimentosLoading, setDocumentoAlimentosLoading] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -82,15 +90,64 @@ function Dashboard() {
     )
   }, [codigoCuadrillaSeleccionada, viviendaSeleccionada])
 
-  const seleccionarVivienda = (codigoVivienda) => {
+  const seleccionarVivienda = async (codigoVivienda) => {
     const siguienteVivienda = viviendasFiltradas.find((item) => item.codigo === codigoVivienda)
     setCodigoViviendaSeleccionada(codigoVivienda)
     setCodigoCuadrillaSeleccionada(String(siguienteVivienda?.cuadrillas?.[0]?.codigoCuadrilla || ''))
+
+    if (!codigoVivienda) {
+      setProvisionAlimentos(null)
+      setProvisionAlimentosError('')
+      return
+    }
+
+    setProvisionAlimentosLoading(true)
+    setProvisionAlimentosError('')
+    setProvisionAlimentos(null)
+    setDocumentoAlimentosMessage('')
+
+    const result = await obtenerDetalleProvisionAlimentos({
+      codigoVivienda,
+      rutEncargado: user?.rut || '',
+    })
+
+    setProvisionAlimentosLoading(false)
+
+    if (result.success) {
+      setProvisionAlimentos(result.data)
+      return
+    }
+
+    setProvisionAlimentosError(result.message || 'No fue posible calcular la provisión de alimentos.')
+  }
+
+  const handleGenerarDocumentoAlimentos = async () => {
+    if (!viviendaSeleccionada?.codigo) return
+
+    setDocumentoAlimentosLoading(true)
+    setDocumentoAlimentosMessage('')
+
+    const result = await descargarDocumentoAlimentacion({
+      codigoVivienda: viviendaSeleccionada.codigo,
+      rutEncargado: user?.rut || '',
+    })
+
+    setDocumentoAlimentosLoading(false)
+
+    if (result.success) {
+      setDocumentoAlimentosMessage('Documento de provisión de alimentos generado y descargado.')
+      return
+    }
+
+    setDocumentoAlimentosMessage(result.message || 'No fue posible generar el documento.')
   }
 
   const handleRegionChange = (region) => {
     setRegionSeleccionada(region)
     setCiudadSeleccionada('')
+    setProvisionAlimentos(null)
+    setProvisionAlimentosError('')
+    setDocumentoAlimentosMessage('')
 
     const viviendasRegion = region
       ? viviendas.filter((vivienda) => vivienda.region === region)
@@ -103,6 +160,9 @@ function Dashboard() {
 
   const handleCiudadChange = (ciudad) => {
     setCiudadSeleccionada(ciudad)
+    setProvisionAlimentos(null)
+    setProvisionAlimentosError('')
+    setDocumentoAlimentosMessage('')
 
     const viviendasCiudad = ciudad
       ? viviendas.filter((vivienda) => vivienda.ciudad === ciudad)
@@ -238,6 +298,47 @@ function Dashboard() {
               <p>
                 <strong>Avance:</strong> {viviendaSeleccionada.porcentajeAvance ?? 0}%
               </p>
+
+              <div className="detail-panel provision-panel">
+                <h3>Provisión de alimentos</h3>
+                {provisionAlimentosLoading && <p>Cargando cálculo de raciones...</p>}
+                {provisionAlimentosError && <p className="text-error">{provisionAlimentosError}</p>}
+                {!provisionAlimentosLoading && provisionAlimentos && (
+                  <>
+                    <p>
+                      <strong>Cuadrilla/Dirección:</strong> {provisionAlimentos.detalleZona?.codigoVivienda} - {provisionAlimentos.detalleZona?.descripcion}
+                    </p>
+                    <p>
+                      <strong>Jornada:</strong> Planificación logística
+                    </p>
+                    <p>
+                      <strong>Días de estancia:</strong> {provisionAlimentos.detalleZona?.diasEstancia}
+                    </p>
+                    <p>
+                      <strong>Voluntarios activos:</strong> {provisionAlimentos.calculoLogistico?.voluntariosActivos}
+                    </p>
+                    <p>
+                      <strong>Raciones por persona al día:</strong> {provisionAlimentos.calculoLogistico?.racionesPorPersonaAlDia}
+                    </p>
+                    <p>
+                      <strong>Total de raciones:</strong> {provisionAlimentos.calculoLogistico?.totalRacionesDeterminadas}
+                    </p>
+                  </>
+                )}
+
+                <div className="form-actions" style={{ marginTop: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleGenerarDocumentoAlimentos}
+                    disabled={documentoAlimentosLoading || !viviendaSeleccionada?.codigo}
+                  >
+                    {documentoAlimentosLoading ? 'Generando...' : 'Generar documento PDF'}
+                  </button>
+                </div>
+
+                {documentoAlimentosMessage && <p className="helper-text">{documentoAlimentosMessage}</p>}
+              </div>
 
               <div className="form-row">
                 <label htmlFor="dashboard-cuadrilla-select">Cuadrilla activa de la vivienda</label>
