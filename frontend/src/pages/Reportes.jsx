@@ -7,6 +7,28 @@ function Reportes() {
   const [reportes, setReportes] = useState([])
   const [message, setMessage] = useState('')
 
+  const prioridadEstado = (estado = '') => {
+    const normalizado = estado === 'En Revision' ? 'En revisión' : estado
+    const orden = { Recibido: 0, 'En revisión': 1, Resuelto: 2 }
+    return orden[normalizado] ?? 99
+  }
+
+  const estiloEstado = (estado = '') => {
+    const normalizado = estado === 'En Revision' ? 'En revisión' : estado
+    const estilos = {
+      Recibido: 'estado-badge estado-recibido',
+      'En revisión': 'estado-badge estado-revision',
+      Resuelto: 'estado-badge estado-resuelto',
+    }
+    return estilos[normalizado] || 'estado-badge'
+  }
+
+  const reportesOrdenados = [...reportes].sort((a, b) => {
+    const diferencia = prioridadEstado(a.estado) - prioridadEstado(b.estado)
+    if (diferencia !== 0) return diferencia
+    return new Date(b.fechaEnvio) - new Date(a.fechaEnvio)
+  })
+
   useEffect(() => {
     const loadReportes = async () => {
       const result = await listarReportes()
@@ -43,12 +65,12 @@ function Reportes() {
             </tr>
           </thead>
           <tbody>
-            {reportes.map((item) => (
+            {reportesOrdenados.map((item) => (
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>{item.titulo}</td>
                 <td>{item.urgencia}</td>
-                <td>{item.estado}</td>
+                <td><span className={estiloEstado(item.estado)}>{item.estado}</span></td>
                 <td>
                   <select defaultValue={item.estado} onChange={(e) => cambiarEstado(item.id, e.target.value)}>
                     <option>Recibido</option>
