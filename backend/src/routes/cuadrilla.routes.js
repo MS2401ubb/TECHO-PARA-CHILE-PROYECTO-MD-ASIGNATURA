@@ -10,10 +10,13 @@ import {
 	asignarJefeCuadrillaACuadrilla,
 	getMiCuadrillaYVivienda,
 	getTokenCuadrilla,
-	getTokenVoluntario
+	getTokenVoluntario,
+	validarTokenExpress,
+	isTokenExist
 } from "../controllers/cuadrilla.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
+import { verificarTokenExistente } from "../services/cuadrilla.service.js";
 
 const router = Router();
 
@@ -37,6 +40,7 @@ router.post(
 	createCuadrilla
 );
 router.post("/token/canjear",getTokenVoluntario);
+router.get("/token/validar/:token/:rut",validarTokenExpress);
 router.get(
 	"/:codigo",
 	authenticateJwt,
@@ -55,6 +59,7 @@ router.post(
 	verifyRoles(["Encargado de Voluntarios", "Encargado de Central"]),
 	asignarCuadrillaAVivienda
 );
+router.get("/:codigo/existe-token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),isTokenExist);
 router.post(
 	"/:codigo/asignar-voluntario",
 	authenticateJwt,

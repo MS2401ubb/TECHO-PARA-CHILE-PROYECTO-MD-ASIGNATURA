@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generarDocumentoTransporte, generarDocumentoProvisionAlimentos } from "../controllers/documentoLogistico.controller.js";
+import { generarDocumentoTransporte, generarDocumentoProvisionAlimentos, obtenerVistaProvisionAlimentos } from "../controllers/documentoLogistico.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
@@ -21,6 +21,13 @@ router.post(
     // "codigoVivienda": "CONC-001",
     // "rutEncargado": "24242424-4"
     //}
+router.post(
+	"/provision-alimentos/preview",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	obtenerVistaProvisionAlimentos
+);
+
 router.post(
 	"/documento-provision-alimentos",
 	authenticateJwt,

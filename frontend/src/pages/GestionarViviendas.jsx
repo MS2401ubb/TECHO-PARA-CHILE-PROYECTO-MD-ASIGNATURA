@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { obtenerCiudadesPorRegion, obtenerRegiones } from '../services/ubicacion.service'
 import {
   descargarDocumentoAlimentacion,
   descargarDocumentoTransporte,
-  obtenerCatalogoHerramientas,
-  validarSuficienciaHerramientas,
 } from '../services/logistica.service'
 import { editarVivienda, obtenerViviendasPlanificables } from '../services/vivienda.service'
 
 function GestionarViviendas() {
+  const navigate = useNavigate()
   const { user } = useAuth()
-  const [   viviendas, setViviendas] = useState([])
+  const [viviendas, setViviendas] = useState([])
   const [message, setMessage] = useState('')
   const [regiones, setRegiones] = useState([])
   const [ciudades, setCiudades] = useState([])
@@ -21,20 +21,15 @@ function GestionarViviendas() {
     regionCode: '',
     cityCode: '',
   })
-  const [viviendaSeleccionada, setViviendaSeleccionada] = useState(null)
-  const [herramientasCatalogo, setHerramientasCatalogo] = useState([])
-  const [cuadrillaSeleccionada, setCuadrillaSeleccionada] = useState('')
-  const [herramientasInput, setHerramientasInput] = useState([{ id_herramienta: '', cantidad_asignada: 1 }])
   const [actualizandoVivienda, setActualizandoVivienda] = useState('')
 
   useEffect(() => {
     if (user?.rol !== 'Encargado de Central') return
 
     const loadData = async () => {
-      const [viviendasResult, regionesResult, herramientasResult] = await Promise.all([
+      const [viviendasResult, regionesResult] = await Promise.all([
         obtenerViviendasPlanificables(),
         obtenerRegiones(),
-        obtenerCatalogoHerramientas(),
       ])
 
       if (viviendasResult.success) {
@@ -43,10 +38,6 @@ function GestionarViviendas() {
 
       if (regionesResult.success) {
         setRegiones(regionesResult.data)
-      }
-
-      if (herramientasResult.success) {
-        setHerramientasCatalogo(herramientasResult.data)
       }
     }
 
@@ -71,21 +62,13 @@ function GestionarViviendas() {
     }
   }
 
-  const abrirPanelHerramientas = (vivienda) => {
-    setViviendaSeleccionada(vivienda)
-    setCuadrillaSeleccionada(String(vivienda.cuadrillas[0]?.codigoCuadrilla || ''))
-    setHerramientasInput([{ id_herramienta: '', cantidad_asignada: 1 }])
-    setMessage('')
-  }
+  const irACalculoHerramientas = (vivienda) => {
+    const params = new URLSearchParams({
+      codigoVivienda: vivienda.codigoVivienda,
+      codigoCuadrilla: String(vivienda.cuadrillas?.[0]?.codigoCuadrilla || ''),
+    })
 
-  const agregarFilaHerramienta = () => {
-    setHerramientasInput((current) => [...current, { id_herramienta: '', cantidad_asignada: 1 }])
-  }
-
-  const actualizarFilaHerramienta = (index, field, value) => {
-    setHerramientasInput((current) =>
-      current.map((item, idx) => (idx === index ? { ...item, [field]: value } : item))
-    )
+    navigate(`/calculo-herramientas?${params.toString()}`)
   }
 
   const descargarAlimentacion = async (codigoVivienda) => {
@@ -100,39 +83,6 @@ function GestionarViviendas() {
     }
 
     window.alert('Documento de alimentación descargado correctamente.')
-  }
-
-  const validarHerramientas = async () => {
-    if (!viviendaSeleccionada) return
-    if (!cuadrillaSeleccionada) {
-      window.alert('Debes seleccionar una cuadrilla.')
-      return
-    }
-
-    const herramientasLimpias = herramientasInput
-      .filter((item) => item.id_herramienta)
-      .map((item) => ({
-        id_herramienta: Number(item.id_herramienta),
-        cantidad_asignada: Number(item.cantidad_asignada),
-      }))
-
-    if (herramientasLimpias.length === 0) {
-      window.alert('Debes ingresar al menos una herramienta.')
-      return
-    }
-
-    const result = await validarSuficienciaHerramientas({
-      codigo_cuadrilla: Number(cuadrillaSeleccionada),
-      codigo_vivienda: viviendaSeleccionada.codigoVivienda,
-      herramientas: herramientasLimpias,
-    })
-
-    if (result.success) {
-      window.alert('Hay suficientes herramientas para la cuadrilla seleccionada.')
-      return
-    }
-
-    window.alert(result.message || 'No hay suficientes herramientas para la cuadrilla seleccionada.')
   }
 
   const descargarTransporte = async () => {
@@ -276,7 +226,7 @@ function GestionarViviendas() {
                     <button
                       type="button"
                       className="btn-primary"
-                      onClick={() => abrirPanelHerramientas(item)}
+                      onClick={() => irACalculoHerramientas(item)}
                     >
                       Asignación de herramientas
                     </button>
@@ -295,60 +245,6 @@ function GestionarViviendas() {
           </tbody>
         </table>
       </div>
-
-      {viviendaSeleccionada && (
-        <article className="detail-panel">
-          <h2>Asignación de herramientas - {viviendaSeleccionada.codigoVivienda}</h2>
-          <div className="form-row">
-            <label htmlFor="codigoCuadrilla">Cuadrilla</label>
-            <select
-              id="codigoCuadrilla"
-              value={cuadrillaSeleccionada}
-              onChange={(event) => setCuadrillaSeleccionada(event.target.value)}
-            >
-              {viviendaSeleccionada.cuadrillas.map((cuadrilla) => (
-                <option key={cuadrilla.codigoCuadrilla} value={cuadrilla.codigoCuadrilla}>
-                  Cuadrilla {cuadrilla.codigoCuadrilla}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {herramientasInput.map((fila, index) => (
-            <div key={`herramienta-${index}`} className="form-row split-2">
-              <div>
-                <label htmlFor={`herramienta-${index}`}>Herramienta</label>
-                <select
-                  id={`herramienta-${index}`}
-                  value={fila.id_herramienta}
-                  onChange={(event) => actualizarFilaHerramienta(index, 'id_herramienta', event.target.value)}
-                >
-                  <option value="">Selecciona una herramienta</option>
-                  {herramientasCatalogo.map((herramienta) => (
-                    <option key={herramienta.id} value={herramienta.id}>{herramienta.nombre}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor={`cantidad-${index}`}>Cantidad asignada</label>
-                <input
-                  id={`cantidad-${index}`}
-                  type="number"
-                  min="1"
-                  value={fila.cantidad_asignada}
-                  onChange={(event) => actualizarFilaHerramienta(index, 'cantidad_asignada', event.target.value)}
-                />
-              </div>
-            </div>
-          ))}
-
-          <div className="inline-actions">
-            <button type="button" className="btn-outline" onClick={agregarFilaHerramienta}>Agregar herramienta</button>
-            <button type="button" className="btn-primary" onClick={validarHerramientas}>Validar asignación</button>
-            <button type="button" className="btn-danger" onClick={() => setViviendaSeleccionada(null)}>Cerrar panel</button>
-          </div>
-        </article>
-      )}
 
       {message && <p className="helper-text">{message}</p>}
     </section>

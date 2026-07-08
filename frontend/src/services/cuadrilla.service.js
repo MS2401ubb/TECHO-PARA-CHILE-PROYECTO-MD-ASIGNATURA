@@ -75,3 +75,31 @@ export async function obtenerMiCuadrillaYVivienda() {
     }
   }
 }
+
+export async function canjearTokenExpress(body){
+  try{
+    const response = await axios.post('/cuadrilla/token/canjear',body);
+    return{ success: true, data:response.data.data,message:response.data.message}
+  }catch(error){
+    return {success:false, message: error.response?.data?.message || "Error al conectar con el servidor"}
+  }
+
+}
+
+export async function verificarTokenExistente(codigoCuadrilla){
+  try{
+    const response = await axios.get(`cuadrilla/${codigoCuadrilla}/existe-token`);
+    return response.data;
+  }catch(error){
+    return error.response?.data || {success: false};
+  }
+}
+
+export async function crearTokenJornada(codigoCuadrilla){
+  try{
+    const response = await axios.post(`/cuadrilla/${codigoCuadrilla}/token`);
+    return { success: true, data:response.data.data, message:response.data.message}
+  }catch(error){
+    return {success:false,message:error.response?.data?.message || "Error al conectar con el servidor "}
+  }
+}

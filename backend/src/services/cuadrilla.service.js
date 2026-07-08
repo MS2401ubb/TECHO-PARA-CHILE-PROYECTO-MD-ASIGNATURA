@@ -412,6 +412,38 @@ export async function obtenerToken(rutJefe,codigoCuadrilla){
   }
 }
 
+export async function verificarTokenExistente(codigoCuadrilla){
+  const codigoCuadrillaNumero = Number(codigoCuadrilla);
+
+  if (!Number.isInteger(codigoCuadrillaNumero) || codigoCuadrillaNumero <= 0) {
+    throw new Error("El codigo de cuadrilla debe ser un número entero positivo.");
+  }
+
+  const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+
+  const cuadrilla = await cuadrillaRepository.findOne({
+    where: { codigo: codigoCuadrillaNumero },
+  });
+  if(!cuadrilla) {
+    throw new Error("Cuadrilla no encontrada.");
+  }
+  const tokenExistente = await tokenRepository.findOne({
+    where: {
+      codigoCuadrilla: codigoCuadrillaNumero,
+      activo: true,
+    }
+  });
+  if(!tokenExistente){
+    throw new Error("Token no encontrado.");
+  }
+
+  return {
+    instanceToken: tokenExistente,
+    tokenEncontrado: true
+  };
+}
+
 /**
  * Auxiliar que garantiza string generado sea único, sin repetirse en generarTokenCuadrillaExpress 
  * 
@@ -434,19 +466,30 @@ async function generarTokenUnicoString(tokenRepository,codigoCuadrillaNumero) {
   return codigoAleatorio;
 }
 
+
+export async function preValidacionToken(token, rut){
+  const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  const usuarioRepository = AppDataSource.getRepository(Usuario);
+  
+  const tokenValido = await tokenRepository.findOne({
+    where: {
+      valorToken: token,
+      activo: true
+    }
+  });
+  if (!tokenValido) throw new Error("El código de token ingresado no es válido o ya expiró.");
+
+  const usuarioExistente = await usuarioRepository.findOne({ where: { rut } });
+
+  return {
+    tokenValido,
+    usuarioYaRegistrado: !!usuarioExistente
+  };
+}
+
 //Voluntario: "Unirme a Cuadrilla" (Invitado, solo tiene rut) -> POST /API/cuadrillas/token/canjear -> vinculación inmediata a cuadrilla.
 //asocia idToken a voluntario, crea Usuario y Voluntario (con mayoria de columnas NULL)
 //o si el voluntario ya existe y fue re-asignado, solo actualiza cuadrilla actual (le da fecha-fin, en entities asociadas, etc)
-/**
- * rutVoluntario 
- * @param {string} tipoVoluntario - 'General' o 'Espontáneo'
- * @param {Object} datosUsuarioNuevo
- * @param {string} datosUsuarioNuevo.rut
- * @param {string} datosUsuarioNuevo.nombre
- * @param {string} datosUsuarioNuevo.primerApellido
- * @param {string} datosUsuarioNuevo.telefono
- * @param {string} tokenEntregado
- */
 /**
  * @param {string} tipoVoluntario - 'General' o 'Espontáneo'
  * @param {Object} datosUsuarioNuevo
@@ -457,44 +500,36 @@ async function generarTokenUnicoString(tokenRepository,codigoCuadrillaNumero) {
  * @param {string} tokenEntregado
  */
 export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tokenEntregado) {
-  // 1. VALIDACIONES PREVIAS (Fuera de la transacción)
   const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
   const usuarioRepository = AppDataSource.getRepository(Usuario);
 
-  const tokenValido = await tokenRepository.findOne({
-    where: {
-      valorToken: tokenEntregado,
-      activo: true
-    }
-  });
-  if (!tokenValido) throw new Error("El código de token ingresado no es válido o ya expiró.");
+  //Pasamos tokenEntregado Y datosUsuarioNuevo.rut a la pre-validación
+  const { tokenValido, usuarioYaRegistrado } = await preValidacionToken(tokenEntregado, datosUsuarioNuevo.rut);
 
   const idTokenTemp = tokenValido.id;
   const codigoCuadrillaAsociada = tokenValido.codigoCuadrilla;
 
-  // Validación de seguridad de duplicados
-  const usuarioExistente = await usuarioRepository.findOne({
-    where: { rut: datosUsuarioNuevo.rut }
-  });
-
+  // El flujo se determina directamente usando el booleano que ya calculó preValidacionToken
   let tipoRealFlujo = tipoVoluntario;
-  if (usuarioExistente) {
+  if (usuarioYaRegistrado) {
     tipoRealFlujo = "General"; 
   }
 
-  // 2. INICIAR TRANSACCIÓN CON QUERYRUNNER
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
   
   try {
-    // Repositorios enlazados directamente a esta transacción
     const txUsuarioRepository = queryRunner.manager.getRepository(Usuario);
     const txVoluntarioRepository = queryRunner.manager.getRepository(Voluntario);
     const txParticipacionRepository = queryRunner.manager.getRepository(VoluntarioParticipaEnCuadrilla);
 
     switch (tipoRealFlujo) {
       case "Espontáneo": {
+        if (!datosUsuarioNuevo.nombre || !datosUsuarioNuevo.primerApellido) {
+          throw new Error("Datos incompletos para el registro de un nuevo voluntario espontáneo.");
+        }
+
         const nuevoUsuario = txUsuarioRepository.create({
           rut: datosUsuarioNuevo.rut,
           password: await bcrypt.hash(datosUsuarioNuevo.nombre.toLowerCase() + "123vol", 10),
@@ -503,7 +538,6 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
           rol: "Voluntario Espontáneo",
           telefono: datosUsuarioNuevo.telefono
         });
-        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
         await queryRunner.manager.save(Usuario, nuevoUsuario);
 
         const nuevoVoluntario = txVoluntarioRepository.create({
@@ -513,7 +547,6 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
           solicitudActiva: false,
           idToken: idTokenTemp
         });
-        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
         await queryRunner.manager.save(Voluntario, nuevoVoluntario);
 
         break;
@@ -523,23 +556,31 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
         const voluntarioExistente = await txVoluntarioRepository.findOne({
           where: { rutUsuario: datosUsuarioNuevo.rut }
         });
+        //Usuario existente? pero No-Voluntario
         if (!voluntarioExistente) {
-          throw new Error("El RUT ya existe en el sistema pero no pertenece a un perfil de Voluntario.");
+          const nuevoVoluntario = txVoluntarioRepository.create({
+            rutUsuario: datosUsuarioNuevo.rut,
+            tipo: "General",
+            estado: "Activo",
+            solicitudActiva: false,
+            idToken: idTokenTemp
+          });
+          await queryRunner.manager.save(Voluntario, nuevoVoluntario);
+        } else {
+          // Si ya era voluntario, solo le actualizamos su token actual
+          voluntarioExistente.idToken = idTokenTemp;
+          await queryRunner.manager.save(Voluntario, voluntarioExistente);
         }
 
+        //FechaFin de voluntarioParticipaEnVivienda
         const participacionActiva = await txParticipacionRepository.findOne({
           where: { rutVoluntario: datosUsuarioNuevo.rut, fechaFin: IsNull() }
         });
 
         if (participacionActiva) {
           participacionActiva.fechaFin = new Date();
-          // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
           await queryRunner.manager.save(VoluntarioParticipaEnCuadrilla, participacionActiva);
         }
-
-        voluntarioExistente.idToken = idTokenTemp;
-        // SOLUCIÓN: Pasamos la clase de la entidad en el primer parámetro
-        await queryRunner.manager.save(Voluntario, voluntarioExistente);
 
         break;
       }
@@ -549,7 +590,6 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
       }
     }
 
-    // 3. REGISTRAR LA NUEVA ASIGNACIÓN (Paso común definitivo)
     const nuevaParticipacion = txParticipacionRepository.create({
       rutVoluntario: datosUsuarioNuevo.rut,
       codigoCuadrilla: codigoCuadrillaAsociada,
@@ -557,10 +597,8 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
       fechaFin: null
     });
     
-    // SOLUCIÓN CRÍTICA: Forzamos el Entity Target (VoluntarioParticipaEnCuadrilla) antes del objeto
     await queryRunner.manager.save(VoluntarioParticipaEnCuadrilla, nuevaParticipacion);
 
-    // Confirmamos la transacción
     await queryRunner.commitTransaction();
 
     return {
@@ -644,7 +682,7 @@ export async function getMiCuadrillaYViviendaService(rutUsuario, rolUsuario) {
 
   let codigoCuadrilla = null;
 
-  if (rolUsuario === "Voluntario") {
+  if (rolUsuario.includes("Voluntario") && rolUsuario !== "Encargado de Voluntarios") {
     const participacionActiva = await participacionRepository.findOne({
       where: {
         rutVoluntario: rutUsuario,

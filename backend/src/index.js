@@ -10,7 +10,7 @@ import {  createInitialRegionesAndCiudades,
           createInitialCuadrillas,
           createInitialJornadas,
           createInitialMateriales,
-    createInitialReportes,
+          createInitialReportes,
           createInitialRelations
         } from './config/initialSetup.js';
 import { PORT } from './config/configEnv.js';

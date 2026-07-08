@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getHerramientas, getHerramientaByCodigo, editHerramienta, deleteHerramienta, validarSuficienciaHerramientas, confirmarRecepcionController, finalizarJornadaController, autorizarCierreController, setupJornadaController, crearTareaController, obtenerTareasController, obtenerTareaController, marcarTareaController, confirmarValidacionTecnicaController } from "../controllers/herramientas.controller.js";
-import { validarCalculoSuficiencia, validarConfirmarRecepcion, validarFinalizarJornada, validarAutorizarCierre, validarCrearTarea, validarMarcarTarea, validarConfirmarValidacionTecnica } from "../validations/herramientas.validation.js";
+import { getHerramientas, getHerramientaByCodigo, editHerramienta, deleteHerramienta, validarSuficienciaHerramientas, iniciarJornadaController, confirmarRecepcionController, obtenerHerramientasAutorizadasRecepcionController, obtenerInventarioJornadaController, obtenerViviendasBloqueadasController, finalizarJornadaController, autorizarCierreController, setupJornadaController, crearTareaController, obtenerTareasController, obtenerTareaController, marcarTareaController, confirmarValidacionTecnicaController } from "../controllers/herramientas.controller.js";
+import { validarCalculoSuficiencia, validarIniciarJornada, validarConfirmarRecepcion, validarFinalizarJornada, validarAutorizarCierre, validarCrearTarea, validarMarcarTarea, validarConfirmarValidacionTecnica } from "../validations/herramientas.validation.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
@@ -10,6 +10,12 @@ const router = Router();
 // RUTAS CRUD DE HERRAMIENTAS
 // ============================================================
 
+router.get(
+    "/viviendas-bloqueadas",
+    authenticateJwt,
+    verifyRoles(["Encargado de Central", "admin"]),
+    obtenerViviendasBloqueadasController
+);
 router.get("/", getHerramientas);
 router.get("/:codigo", getHerramientaByCodigo);
 router.patch("/:codigo", editHerramienta);
@@ -26,6 +32,15 @@ router.post(
 // RUTAS DE JORNADA
 // ============================================================
 
+// PASO 0: Jefe inicia jornada
+router.post(
+    "/iniciar-jornada",
+    authenticateJwt,
+    verifyRoles(["Jefe de Cuadrilla"]),
+    validarIniciarJornada,
+    iniciarJornadaController
+);
+
 // PASO 1: Jefe confirma recepción (Mañana)
 router.post(
     "/:id/confirmar-recepcion",
@@ -33,6 +48,22 @@ router.post(
     verifyRoles(["Jefe de Cuadrilla"]),
     validarConfirmarRecepcion,
     confirmarRecepcionController
+);
+
+// Consulta de herramientas autorizadas por Central para recepción de una jornada
+router.get(
+    "/:id/herramientas-autorizadas-recepcion",
+    authenticateJwt,
+    verifyRoles(["Jefe de Cuadrilla"]),
+    obtenerHerramientasAutorizadasRecepcionController
+);
+
+// Consulta de inventario inicial registrado para una jornada
+router.get(
+    "/:id/inventario",
+    authenticateJwt,
+    verifyRoles(["Jefe de Cuadrilla", "Encargado de Central", "admin"]),
+    obtenerInventarioJornadaController
 );
 
 // PASO 1 (Deprecated): Endpoint antiguo setupJornada redirige a confirmar-recepcion

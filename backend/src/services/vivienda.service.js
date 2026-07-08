@@ -108,15 +108,17 @@ export async function finalizarViviendaService(codigoVivienda, rutSolicitante, r
     );
   }
 
-  const asignacionesActivas = await asignacionRepository.count({
+  const asignacionesActivas = await asignacionRepository.find({
     where: {
       codigoVivienda: codigoVivienda,
       fechaFin: IsNull(),
     },
   });
 
-  if (asignacionesActivas > 0) {
-    throw new Error("No se puede finalizar la vivienda porque aún tiene cuadrillas activas asignadas.");
+  // Al finalizar la vivienda se cierran las asignaciones activas de cuadrilla-vivienda.
+  for (const asignacion of asignacionesActivas) {
+    asignacion.fechaFin = new Date();
+    await asignacionRepository.save(asignacion);
   }
 
   vivienda.estado = "Finalizada";

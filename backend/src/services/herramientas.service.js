@@ -153,13 +153,35 @@ export async function validarSuficienciaHerramientasService(codigoCuadrilla, cod
     });
 
     registro.estado = resultado.puedeAsignarse ? 'APROBADO' : 'BLOQUEADO';
-    registro.alertaDetalle = resultado.alertas.length > 0 ? JSON.stringify(resultado.alertas) : null;
+    registro.alertaDetalle = JSON.stringify(resultado.detalle);
     registro.rutCentral = rutCentral || null;
     registro.utilizada = false;
 
     await validacionRepository.save(registro);
 
     return resultado;
+}
+
+function obtenerDetalleAsignacionCentral(validacionPrevia) {
+    let detalleCentral = [];
+    try {
+        detalleCentral = JSON.parse(validacionPrevia.alertaDetalle || '[]');
+    } catch {
+        detalleCentral = [];
+    }
+
+    return (Array.isArray(detalleCentral) ? detalleCentral : [])
+        .map((item) => ({
+            id_herramienta: Number(item.id_herramienta),
+            nombre_herramienta: item.nombre_herramienta || 'Herramienta',
+            cantidad_asignada: Number(item.cantidad_asignada),
+        }))
+        .filter((item) =>
+            Number.isInteger(item.id_herramienta) &&
+            item.id_herramienta > 0 &&
+            Number.isInteger(item.cantidad_asignada) &&
+            item.cantidad_asignada > 0
+        );
 }
 
 // ============================================================
@@ -221,11 +243,42 @@ export async function confirmarRecepcionService(idJornada, codigoCuadrilla, herr
         throw new Error('El despliegue está bloqueado por déficit de herramientas. Central debe corregir y revalidar.');
     }
 
+    const herramientasAsignadasPorCentral = obtenerDetalleAsignacionCentral(validacionPrevia);
+    if (herramientasAsignadasPorCentral.length === 0) {
+        throw new Error('La Central no ha proporcionado cantidades iniciales de herramientas para esta cuadrilla.');
+    }
+
+    const herramientasRecibidas = (Array.isArray(herramientasAutorizadas) ? herramientasAutorizadas : [])
+        .map((item) => ({
+            id_herramienta: Number(item.id_herramienta),
+            cantidad_inicial: Number(item.cantidad_inicial),
+        }))
+        .filter((item) =>
+            Number.isInteger(item.id_herramienta) &&
+            item.id_herramienta > 0 &&
+            Number.isInteger(item.cantidad_inicial) &&
+            item.cantidad_inicial > 0
+        );
+
+    const esperadas = new Map(herramientasAsignadasPorCentral.map((item) => [item.id_herramienta, item.cantidad_asignada]));
+    const recibidas = new Map(herramientasRecibidas.map((item) => [item.id_herramienta, item.cantidad_inicial]));
+
+    if (esperadas.size !== recibidas.size) {
+        throw new Error('La recepción debe coincidir exactamente con las cantidades enviadas por Central.');
+    }
+
+    for (const [idHerramienta, cantidadEsperada] of esperadas.entries()) {
+        const cantidadRecibida = recibidas.get(idHerramienta);
+        if (cantidadRecibida !== cantidadEsperada) {
+            throw new Error('La recepción debe coincidir exactamente con las cantidades enviadas por Central.');
+        }
+    }
+
     // 3.5. LIMPIAR REGISTROS VIEJOS DE ESTA JORNADA (si existen del seed o anterior confirmación)
     await inventarioRepository.delete({ jornada: { id: jornada.id } });
 
     // 4. Registrar cada herramienta con cantidad_inicial confirmada
-    for (const item of herramientasAutorizadas) {
+    for (const item of herramientasRecibidas) {
         const herramientaDB = await herramientaRepository.findOne({ 
             where: { id: item.id_herramienta } 
         });
@@ -254,6 +307,95 @@ export async function confirmarRecepcionService(idJornada, codigoCuadrilla, herr
     };
 }
 
+export async function obtenerInventarioJornadaService(idJornada) {
+    const jornadaRepository = AppDataSource.getRepository('Jornada');
+    const inventarioRepository = AppDataSource.getRepository(InventarioJornada);
+
+    const jornada = await jornadaRepository.findOne({ where: { id: idJornada } });
+    if (!jornada) throw new Error('Jornada no encontrada.');
+
+    const inventario = await inventarioRepository.find({
+        where: { jornada: { id: idJornada } },
+        relations: { herramienta: true },
+        order: { id: 'ASC' }
+    });
+
+    if (inventario.length === 0) {
+        throw new Error('La jornada no tiene inventario inicial registrado. Debes confirmar recepción primero.');
+    }
+
+    return {
+        jornadaId: idJornada,
+        estadoJornada: jornada.estado,
+        herramientas: inventario.map((item) => ({
+            id_herramienta: item.herramienta?.id,
+            nombre_herramienta: item.herramienta?.nombre || 'Herramienta',
+            cantidad_inicial: item.cantidad_inicial,
+            cantidad_fisica_final: item.cantidad_fisica_final,
+            incidencia: item.incidencia,
+            estado_cierre: item.estado_cierre
+        }))
+    };
+}
+
+export async function obtenerViviendasBloqueadasService() {
+    const inventarioRepository = AppDataSource.getRepository(InventarioJornada);
+    const validacionRepository = AppDataSource.getRepository('JornadaValidacion');
+
+    const registrosBloqueados = await inventarioRepository.find({
+        where: { estado_cierre: 'BLOQUEADO' },
+        relations: { jornada: { vivienda: true }, herramienta: true },
+        order: { id: 'ASC' }
+    });
+
+    if (registrosBloqueados.length === 0) {
+        return [];
+    }
+
+    const bloqueosPorJornada = new Map();
+
+    for (const registro of registrosBloqueados) {
+        const jornadaId = registro.jornada?.id;
+        if (!jornadaId) {
+            continue;
+        }
+
+        let bloqueo = bloqueosPorJornada.get(jornadaId);
+
+        if (!bloqueo) {
+            const validacion = await validacionRepository.findOne({
+                where: { jornada: { id: jornadaId } },
+                relations: { jornada: true }
+            });
+
+            bloqueo = {
+                jornadaId,
+                codigoVivienda: registro.jornada?.vivienda?.codigo || registro.codigo_vivienda,
+                direccionVivienda: registro.jornada?.vivienda?.direccion || 'Sin dirección registrada',
+                observacionJefe: validacion?.observaciones || 'Sin observaciones registradas',
+                herramientasPerdidas: []
+            };
+
+            bloqueosPorJornada.set(jornadaId, bloqueo);
+        }
+
+        const cantidadFinal = Number(registro.cantidad_fisica_final ?? 0);
+        const cantidadInicial = Number(registro.cantidad_inicial ?? 0);
+        const cantidadPerdida = Math.max(cantidadInicial - cantidadFinal, 0);
+
+        bloqueo.herramientasPerdidas.push({
+            id_herramienta: registro.herramienta?.id,
+            nombre_herramienta: registro.herramienta?.nombre || 'Herramienta',
+            cantidad_inicial: cantidadInicial,
+            cantidad_fisica_final: cantidadFinal,
+            cantidad_perdida: cantidadPerdida,
+            incidencia: registro.incidencia || 'Sin incidencia registrada'
+        });
+    }
+
+    return Array.from(bloqueosPorJornada.values());
+}
+
 /**
  * PASO 2: Jefe de Cuadrilla finaliza jornada con conteo físico y validaciones técnicas
  * Si hay descuadre: BLOQUEA hasta autorización de Central
@@ -268,7 +410,6 @@ export async function finalizarJornadaService(idJornada, herramientasContadas, m
         const jornadaRepository = queryRunner.manager.getRepository('Jornada');
         const inventarioRepository = queryRunner.manager.getRepository(InventarioJornada);
         const validacionRepository = queryRunner.manager.getRepository('JornadaValidacion');
-        const asignacionRepository = queryRunner.manager.getRepository('CuadrillaTrabajaEnVivienda');
         const tareasRepository = queryRunner.manager.getRepository('TareasValidacionJornada');
 
         // 1. Obtener jornada
@@ -374,20 +515,7 @@ export async function finalizarJornadaService(idJornada, herramientasContadas, m
         jornada.estado = 'Finalizada';
         await jornadaRepository.save(jornada);
 
-        // 7. Cerrar asignación de cuadrilla
-        const asignacionActiva = await asignacionRepository.findOne({
-            where: { 
-                codigoVivienda: jornada.vivienda.codigo, 
-                fechaFin: IsNull() 
-            }
-        });
-
-        if (asignacionActiva) {
-            asignacionActiva.fechaFin = new Date();
-            await asignacionRepository.save(asignacionActiva);
-        }
-
-        // 8. Confirmar transacción
+        // 7. Confirmar transacción
         await queryRunner.commitTransaction();
 
         return { 
@@ -422,7 +550,6 @@ export async function autorizarCierreService(idJornada, autorizado, motivo, rutC
     try {
         const jornadaRepository = queryRunner.manager.getRepository('Jornada');
         const inventarioRepository = queryRunner.manager.getRepository(InventarioJornada);
-        const asignacionRepository = queryRunner.manager.getRepository('CuadrillaTrabajaEnVivienda');
 
         // 1. Obtener jornada
         const jornada = await jornadaRepository.findOne({ 
@@ -454,19 +581,6 @@ export async function autorizarCierreService(idJornada, autorizado, motivo, rutC
 
             jornada.estado = 'Finalizada';
             await jornadaRepository.save(jornada);
-
-            // Cerrar asignación de cuadrilla
-            const asignacionActiva = await asignacionRepository.findOne({
-                where: { 
-                    codigoVivienda: jornada.vivienda.codigo, 
-                    fechaFin: IsNull() 
-                }
-            });
-
-            if (asignacionActiva) {
-                asignacionActiva.fechaFin = new Date();
-                await asignacionRepository.save(asignacionActiva);
-            }
 
             await queryRunner.commitTransaction();
             return {
@@ -635,5 +749,137 @@ export async function confirmarValidacionTecnicaService(idJornada, rutJefe) {
         mensaje: 'Validación técnica confirmada exitosamente.',
         tareas_confirmadas: tareas.length,
         jornadaId: idJornada
+    };
+}
+
+/**
+ * PASO 0: Jefe de Cuadrilla crea una nueva jornada
+ * Crea la jornada en estado Activa
+ */
+export async function iniciarJornadaService(codigoCuadrilla, rutJefe) {
+    const jornadaRepository = AppDataSource.getRepository('Jornada');
+    const cuadrillaRepository = AppDataSource.getRepository('Cuadrilla');
+    const jefeLideraRepository = AppDataSource.getRepository('JefeCuadrillaLideraCuadrilla');
+    const asignacionRepository = AppDataSource.getRepository('CuadrillaTrabajaEnVivienda');
+
+    const codigoCuadrillaTexto = String(codigoCuadrilla ?? '').trim();
+    if (!/^\d+$/.test(codigoCuadrillaTexto)) {
+        throw new Error('El codigo de cuadrilla debe contener solo dígitos.');
+    }
+    const codigoCuadrillaNumero = Number(codigoCuadrillaTexto);
+
+    const cuadrilla = await cuadrillaRepository.findOne({ where: { codigo: codigoCuadrillaNumero } });
+    if (!cuadrilla) throw new Error('Cuadrilla no encontrada.');
+
+    const liderazgoActivo = await jefeLideraRepository.findOne({
+        where: {
+            codigoCuadrilla: codigoCuadrillaNumero,
+            rutJefeCuadrilla: rutJefe,
+            fechaFin: IsNull()
+        },
+        order: { fechaInicio: 'DESC' }
+    });
+
+    if (!liderazgoActivo) {
+        throw new Error('No eres jefe activo de esta cuadrilla.');
+    }
+
+    const asignacionActiva = await asignacionRepository.findOne({
+        where: {
+            codigoCuadrilla: codigoCuadrillaNumero,
+            fechaFin: IsNull()
+        },
+        order: { fechaInicio: 'DESC' }
+    });
+
+    if (!asignacionActiva) {
+        throw new Error('Esta cuadrilla no tiene una asignación activa a vivienda.');
+    }
+
+    const jornadaActivaExistente = await jornadaRepository.findOne({
+        where: {
+            vivienda: { codigo: asignacionActiva.codigoVivienda },
+            estado: 'Activa'
+        },
+        order: { fecha: 'DESC' }
+    });
+
+    if (jornadaActivaExistente) {
+        throw new Error('Ya existe una jornada activa para esta vivienda.');
+    }
+
+    const jornadaNueva = jornadaRepository.create({
+        fecha: new Date(),
+        estado: 'Activa',
+        jefeCuadrilla: { rutUsuario: rutJefe },
+        vivienda: { codigo: asignacionActiva.codigoVivienda }
+    });
+
+    const jornadaGuardada = await jornadaRepository.save(jornadaNueva);
+
+    return {
+        mensaje: 'Jornada creada e iniciada exitosamente.',
+        jornadaId: jornadaGuardada.id,
+        codigoCuadrilla: codigoCuadrillaNumero,
+        codigoVivienda: asignacionActiva.codigoVivienda,
+        rutJefeInicio: rutJefe
+    };
+}
+
+export async function obtenerHerramientasAutorizadasRecepcionService(idJornada, codigoCuadrilla) {
+    const jornadaRepository = AppDataSource.getRepository('Jornada');
+    const cuadrillaRepository = AppDataSource.getRepository('Cuadrilla');
+    const asignacionRepository = AppDataSource.getRepository('CuadrillaTrabajaEnVivienda');
+    const validacionRepository = AppDataSource.getRepository(ValidacionDespliegueHerramienta);
+
+    const jornada = await jornadaRepository.findOne({
+        where: { id: idJornada },
+        relations: { vivienda: true },
+    });
+    if (!jornada) throw new Error('Jornada no encontrada.');
+    if (jornada.estado === 'Finalizada') throw new Error('No se puede hacer recepción en una jornada finalizada.');
+
+    const codigoVivienda = jornada.vivienda?.codigo;
+    if (!codigoVivienda) throw new Error('La jornada no tiene una vivienda asociada.');
+
+    const cuadrilla = await cuadrillaRepository.findOne({ where: { codigo: codigoCuadrilla } });
+    if (!cuadrilla) throw new Error('Cuadrilla no encontrada.');
+
+    const asignacion = await asignacionRepository.findOne({
+        where: {
+            codigoCuadrilla,
+            codigoVivienda,
+            fechaFin: IsNull(),
+        },
+    });
+    if (!asignacion) throw new Error('Esta cuadrilla no está asignada a esta vivienda o la asignación ya finalizó.');
+
+    const validacionPrevia = await validacionRepository.findOne({
+        where: {
+            codigoCuadrilla,
+            codigoVivienda,
+            utilizada: false,
+        },
+        order: { fechaValidacion: 'DESC' },
+    });
+
+    if (!validacionPrevia) {
+        throw new Error('La Central no ha hecho el envío de herramientas para esta cuadrilla todavía.');
+    }
+
+    if (validacionPrevia.estado !== 'APROBADO') {
+        throw new Error('El despliegue está bloqueado por déficit de herramientas. Central debe corregir y reenviar.');
+    }
+
+    const herramientasAutorizadas = obtenerDetalleAsignacionCentral(validacionPrevia);
+    if (herramientasAutorizadas.length === 0) {
+        throw new Error('La Central no ha proporcionado cantidades iniciales de herramientas para esta cuadrilla.');
+    }
+
+    return {
+        jornadaId: idJornada,
+        codigoCuadrilla,
+        codigoVivienda,
+        herramientas: herramientasAutorizadas,
     };
 }

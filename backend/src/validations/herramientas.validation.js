@@ -59,6 +59,13 @@ const confirmarRecepcionSchema = Joi.object({
     })
 });
 
+const iniciarJornadaSchema = Joi.object({
+    codigo_cuadrilla: Joi.number().integer().positive().required().messages({
+        "number.positive": "El código de cuadrilla debe ser un número positivo",
+        "any.required": "El código de cuadrilla es requerido"
+    })
+});
+
 const finalizarJornadaSchema = Joi.object({
     montajeEstructural: Joi.boolean().required().messages({
         "any.required": "Debe indicar si el montaje estructural está completo"
@@ -95,6 +102,17 @@ const autorizarCierreSchema = Joi.object({
 export const validarConfirmarRecepcion = (req, res, next) => {
     const { error } = confirmarRecepcionSchema.validate(req.body);
     if (error) return res.status(400).json({ error: 'Datos inválidos para confirmar recepción', detalle: error.details[0].message });
+    next();
+};
+
+export const validarIniciarJornada = (req, res, next) => {
+    const { error, value } = iniciarJornadaSchema.validate(req.body, {
+        abortEarly: false,
+        convert: true,
+        stripUnknown: true
+    });
+    if (error) return res.status(400).json({ error: 'Datos inválidos para iniciar jornada', detalle: error.details[0].message });
+    req.body = value;
     next();
 };
 

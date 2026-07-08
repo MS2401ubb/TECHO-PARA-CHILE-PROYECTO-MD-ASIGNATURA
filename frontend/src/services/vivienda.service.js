@@ -27,6 +27,23 @@ export async function obtenerViviendasPlanificables() {
   }
 }
 
+export async function cerrarVivienda(codigoVivienda) {
+  try {
+    const response = await axios.post(`/vivienda/${codigoVivienda}/finalizar`)
+    return {
+      success: true,
+      message: response.data?.message || 'Vivienda finalizada exitosamente',
+      data: response.data?.data || null,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'No se pudo finalizar la vivienda',
+      data: error.response?.data?.errorDetails || null,
+    }
+  }
+}
+
 export async function obtenerDashboardCentral() {
   try {
     const response = await axios.get('/vivienda/dashboard/central')

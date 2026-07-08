@@ -21,6 +21,7 @@ const roleCards = {
     { title: 'Gestionar Distribucion Laboral', text: 'Gestionar cuadrillas, voluntarios y jefes de cuadrillas.', to: '/gestionar-voluntarios' },
     { title: 'Gestionar Personal', text: 'Administra usuarios y roles.', to: '/gestionar-personal' },
     { title: 'Gestionar Viviendas', text: 'Configura despliegues y estado logístico.', to: '/gestionar-viviendas' },
+    { title: 'Viviendas Bloqueadas', text: 'Revisa cierres bloqueados por pérdida de herramientas y autorízalos.', to: '/viviendas-bloqueadas' },
     { title: 'Ver reportes', text: 'Monitorea reportes y su estado de atención.', to: '/reportes' },
   ],
   admin: [
@@ -36,8 +37,18 @@ function Home() {
   const [mensajeApelacion, setMensajeApelacion] = useState('')
   const [errorApelacion, setErrorApelacion] = useState('')
 
-  const cards = useMemo(() => roleCards[user?.rol] || [], [user?.rol])
-  const isVoluntarioRestringido = user?.rol === 'Voluntario' && user?.estadoVoluntario !== 'Activo'
+  //const cards = useMemo(() => roleCards[user?.rol] || [], [user?.rol])
+  const cards = useMemo(() => {
+    if (!user?.rol) return [];
+    
+    //incluye Voluntario pero NO es Encargado de Voluntarios
+    if (user.rol.includes('Voluntario') && !user.rol.includes('Encargado')) {
+      return roleCards['Voluntario'];
+    }
+    
+    return roleCards[user.rol] || [];
+  }, [user?.rol]);
+  const isVoluntarioRestringido = user?.rol.includes('Voluntario') && user?.estadoVoluntario !== 'Activo'
 
   const enviarApelacion = async () => {
     setMensajeApelacion('')
@@ -110,7 +121,10 @@ function Home() {
           <article key={card.to} className="card">
             <h2>{card.title}</h2>
             <p>{card.text}</p>
-            <button type="button" className="btn-primary" onClick={() => navigate(card.to)}>
+            <button type="button" className="btn-primary" onClick={() => {
+                console.log("Intentando ir a:", card.to);
+                navigate(card.to);
+              }}>
               Ir
             </button>
           </article>

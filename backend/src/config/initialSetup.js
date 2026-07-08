@@ -23,6 +23,7 @@ import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCua
 import CuadrillaTrabajaEnVivienda from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
 import InventarioJornada from '../entities/inventarioJornada.entity.js';
 import JefeCuadrillaLideraCuadrilla from '../entities/jefeCuadrillaLideraCuadrilla.entity.js';
+import TareasValidacionJornada from '../entities/tareasValidacionJornada.entity.js';
 
 
 
@@ -954,6 +955,41 @@ export const createInitialRelations = async () => {
             estado_cierre: consumo.estado,
             jornada: { id: consumo.jornada },
             herramienta: { id: consumo.herramienta }
+          });
+        }
+      }
+    }
+
+    const tareasValidacionRepository = AppDataSource.getRepository(TareasValidacionJornada);
+    const countTareasValidacion = await tareasValidacionRepository.count();
+    if (countTareasValidacion === 0) {
+      const jornadaRepository = AppDataSource.getRepository(Jornada);
+      const jornadasActivas = await jornadaRepository.find({
+        where: { estado: 'Activa' },
+        order: { id: 'ASC' }
+      });
+
+      const tareasPorJornada = [
+        [
+          { descripcion: 'Revisar estructura base', observaciones: 'Validar anclajes y nivelación inicial.' },
+          { descripcion: 'Verificar nivelación', observaciones: 'Confirmar ajuste correcto antes del cierre.' }
+        ],
+        [
+          { descripcion: 'Inspeccionar fijaciones principales', observaciones: 'Revisar apriete y estabilidad general.' },
+          { descripcion: 'Comprobar terminaciones de montaje', observaciones: 'Verificar uniones y ajustes visibles.' }
+        ]
+      ];
+
+      for (const [index, jornada] of jornadasActivas.entries()) {
+        const tareas = tareasPorJornada[index] || tareasPorJornada[tareasPorJornada.length - 1];
+
+        for (const tarea of tareas) {
+          await tareasValidacionRepository.save({
+            descripcion: tarea.descripcion,
+            observaciones: tarea.observaciones,
+            estado: 'PENDIENTE',
+            confirmado: false,
+            jornada: { id: jornada.id }
           });
         }
       }
