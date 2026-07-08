@@ -1,4 +1,4 @@
-import { getHerramientasService, getHerramientaByCodigoService, editHerramientaService, deleteHerramientaService, validarSuficienciaHerramientasService, confirmarRecepcionService, finalizarJornadaService, autorizarCierreService, crearTareaValidacionService, obtenerTareasValidacionService, obtenerTareaValidacionService, marcarTareaValidacionService, confirmarValidacionTecnicaService } from "../services/herramientas.service.js";
+import { getHerramientasService, getHerramientaByCodigoService, editHerramientaService, deleteHerramientaService, validarSuficienciaHerramientasService, iniciarJornadaService, confirmarRecepcionService, obtenerHerramientasAutorizadasRecepcionService, obtenerInventarioJornadaService, obtenerViviendasBloqueadasService, finalizarJornadaService, autorizarCierreService, crearTareaValidacionService, obtenerTareasValidacionService, obtenerTareaValidacionService, marcarTareaValidacionService, confirmarValidacionTecnicaService } from "../services/herramientas.service.js";
 import { editHerramientaBodyValidation } from "../validations/herramientas.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 
@@ -111,6 +111,44 @@ export async function validarSuficienciaHerramientas(req, res) {
 // ============================================================
 
 /**
+ * PASO 0: Jefe inicia jornada
+ */
+export async function iniciarJornadaController(req, res) {
+    try {
+        const { codigo_cuadrilla } = req.body;
+        const rutJefe = req.user.rut || req.user.documento;
+
+        if (!rutJefe) {
+            return handleErrorClient(res, 401, "No se encontró identificación de usuario en el token");
+        }
+
+        const resultado = await iniciarJornadaService(codigo_cuadrilla, rutJefe);
+        return handleSuccess(res, 201, resultado.mensaje, resultado);
+    } catch (error) {
+        const mensaje = String(error.message || '');
+        const mensajeLower = mensaje.toLowerCase();
+
+        if (
+            mensajeLower.includes("no encontrada") ||
+            mensajeLower.includes("no está asignada") ||
+            mensajeLower.includes("no existe")
+        ) {
+            return handleErrorClient(res, 404, error.message);
+        }
+        if (
+            mensajeLower.includes("ya existe") ||
+            mensajeLower.includes("no eres jefe") ||
+            mensajeLower.includes("asignación activa") ||
+            mensajeLower.includes("codigo de cuadrilla") ||
+            mensajeLower.includes("código de cuadrilla")
+        ) {
+            return handleErrorClient(res, 409, error.message);
+        }
+        return handleErrorServer(res, 500, "Error al iniciar jornada", error.message);
+    }
+}
+
+/**
  * PASO 1: Jefe confirma recepción de herramientas autorizadas por Central
  */
 export async function confirmarRecepcionController(req, res) {
@@ -129,10 +167,76 @@ export async function confirmarRecepcionController(req, res) {
         if (error.message.includes("no encontrada") || error.message.includes("no está asignada")) {
             return handleErrorClient(res, 404, error.message);
         }
-        if (error.message.includes("validación previa") || error.message.includes("bloqueado")) {
+        if (
+            error.message.includes("validación previa") ||
+            error.message.includes("bloqueado") ||
+            error.message.includes("coincidir exactamente") ||
+            error.message.includes("proporcionado cantidades iniciales")
+        ) {
             return handleErrorClient(res, 409, error.message);
         }
         return handleErrorServer(res, 500, "Error al confirmar recepción", error.message);
+    }
+}
+
+export async function obtenerHerramientasAutorizadasRecepcionController(req, res) {
+    try {
+        const idJornada = parseInt(req.params.id);
+        const codigoCuadrilla = Number(req.query.codigo_cuadrilla);
+
+        if (!Number.isInteger(idJornada) || idJornada <= 0) {
+            return handleErrorClient(res, 400, "Parámetros inválidos", "El id de jornada debe ser un número entero positivo");
+        }
+
+        if (!Number.isInteger(codigoCuadrilla) || codigoCuadrilla <= 0) {
+            return handleErrorClient(res, 400, "Parámetros inválidos", "El codigo_cuadrilla debe ser un número entero positivo");
+        }
+
+        const resultado = await obtenerHerramientasAutorizadasRecepcionService(idJornada, codigoCuadrilla);
+        return handleSuccess(res, 200, "Herramientas autorizadas para recepción obtenidas exitosamente", resultado);
+    } catch (error) {
+        if (error.message.includes("no encontrada") || error.message.includes("no está asignada")) {
+            return handleErrorClient(res, 404, error.message);
+        }
+        if (
+            error.message.includes("no ha") ||
+            error.message.includes("bloqueado") ||
+            error.message.includes("jornada finalizada") ||
+            error.message.includes("proporcionado")
+        ) {
+            return handleErrorClient(res, 409, error.message);
+        }
+        return handleErrorServer(res, 500, "Error al obtener herramientas autorizadas para recepción", error.message);
+    }
+}
+
+export async function obtenerInventarioJornadaController(req, res) {
+    try {
+        const idJornada = parseInt(req.params.id);
+
+        if (!Number.isInteger(idJornada) || idJornada <= 0) {
+            return handleErrorClient(res, 400, "Parámetros inválidos", "El id de jornada debe ser un número entero positivo");
+        }
+
+        const resultado = await obtenerInventarioJornadaService(idJornada);
+        return handleSuccess(res, 200, "Inventario de jornada obtenido exitosamente", resultado);
+    } catch (error) {
+        if (error.message.includes("no encontrada")) {
+            return handleErrorClient(res, 404, error.message);
+        }
+        if (error.message.includes("no tiene inventario")) {
+            return handleErrorClient(res, 409, error.message);
+        }
+        return handleErrorServer(res, 500, "Error al obtener inventario de jornada", error.message);
+    }
+}
+
+export async function obtenerViviendasBloqueadasController(req, res) {
+    try {
+        const resultado = await obtenerViviendasBloqueadasService();
+        return handleSuccess(res, 200, "Viviendas bloqueadas obtenidas exitosamente", resultado);
+    } catch (error) {
+        return handleErrorServer(res, 500, "Error al obtener viviendas bloqueadas", error.message);
     }
 }
 

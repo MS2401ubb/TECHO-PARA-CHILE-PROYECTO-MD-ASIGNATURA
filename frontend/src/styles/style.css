@@ -230,6 +230,16 @@ textarea {
   flex-wrap: wrap;
 }
 
+.inline-actions.aligned-bottom {
+  align-items: end;
+}
+
+.section-divider {
+  margin: 24px 0;
+  border: 0;
+  border-top: 1px solid #d9e3ee;
+}
+
 .table-wrapper {
   overflow: auto;
   border: 1px solid #d9e3ee;
@@ -300,6 +310,49 @@ th {
 .form-success {
   color: #166534;
   margin: 0;
+}
+
+.calc-tools-row {
+  margin-bottom: 8px;
+}
+
+.calc-tools-actions {
+  margin-top: 0;
+}
+
+.calc-status {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.calc-status.approved {
+  background: #ecfdf3;
+  border-color: #b7ebc9;
+}
+
+.calc-status.rejected {
+  background: #fef2f2;
+  border-color: #f3c6c6;
+}
+
+.result-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.result-pill.ok {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.result-pill.warn {
+  color: #991b1b;
+  background: #fee2e2;
 }
 
 .center-message {

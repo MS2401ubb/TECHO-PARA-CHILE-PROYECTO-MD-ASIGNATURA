@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { obtenerMiCuadrillaYVivienda } from '../services/cuadrilla.service'
 
@@ -8,6 +9,7 @@ function formatDate(value) {
 }
 
 function MiCuadrillaVivienda() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -79,9 +81,23 @@ function MiCuadrillaVivienda() {
         <>
           <h2>Opciones de jefatura</h2>
           <div className="inline-actions">
-            <button type="button" className="btn-outline" disabled>Iniciar / cerrar jornada</button>
-            <button type="button" className="btn-outline" disabled>Conteo de herramientas</button>
-            <button type="button" className="btn-outline" disabled>Validaciones de terreno</button>
+            <button type="button" className="btn-primary" onClick={() => navigate(`/recepcion-inventario?codigoCuadrilla=${data?.codigoCuadrilla || ''}`)}>
+              Recepcion de inventario
+            </button>
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={() => navigate(`/iniciar-cerrar-jornada?codigoCuadrilla=${data?.codigoCuadrilla || ''}`)}
+            >
+              Iniciar / cerrar jornada
+            </button>
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={() => navigate('/cerrar-vivienda')}
+            >
+              Cerrar vivienda
+            </button>
           </div>
         </>
       )}

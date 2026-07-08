@@ -9,11 +9,16 @@ import Logout from './pages/Logout'
 import Profile from './pages/Profile'
 import Dashboard from './pages/Dashboard'
 import MiCuadrillaVivienda from './pages/MiCuadrillaVivienda'
+import RecepcionInventario from './pages/RecepcionInventario'
+import IniciarCerrarJornada from './pages/IniciarCerrarJornada'
+import CerrarVivienda from './pages/CerrarVivienda'
 import EnviarReporte from './pages/EnviarReporte'
 import Postulantes from './pages/Postulantes'
 import GestionVoluntarios from './pages/GestionVoluntarios'
 import GestionarPersonal from './pages/GestionarPersonal'
 import GestionarViviendas from './pages/GestionarViviendas'
+import CalculoHerramientas from './pages/CalculoHerramientas'
+import ViviendasBloqueadas from './pages/ViviendasBloqueadas'
 import Reportes from './pages/Reportes'
 import LogisticaTransporte from './pages/LogisticaTransporte'
 import LogisticaAlimentacion from './pages/LogisticaAlimentacion'
@@ -41,6 +46,30 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['Voluntario', 'Jefe de Cuadrilla']}>
                 <MiCuadrillaVivienda />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/recepcion-inventario',
+            element: (
+              <ProtectedRoute allowedRoles={['Jefe de Cuadrilla']}>
+                <RecepcionInventario />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/iniciar-cerrar-jornada',
+            element: (
+              <ProtectedRoute allowedRoles={['Jefe de Cuadrilla']}>
+                <IniciarCerrarJornada />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/cerrar-vivienda',
+            element: (
+              <ProtectedRoute allowedRoles={['Jefe de Cuadrilla']}>
+                <CerrarVivienda />
               </ProtectedRoute>
             ),
           },
@@ -89,6 +118,22 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['Encargado de Central', 'admin']}>
                 <GestionarViviendas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/viviendas-bloqueadas',
+            element: (
+              <ProtectedRoute allowedRoles={['Encargado de Central', 'admin']}>
+                <ViviendasBloqueadas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/calculo-herramientas',
+            element: (
+              <ProtectedRoute allowedRoles={['Encargado de Central', 'admin']}>
+                <CalculoHerramientas />
               </ProtectedRoute>
             ),
           },

@@ -21,6 +21,7 @@ const roleCards = {
     { title: 'Gestionar Voluntarios', text: 'Distribuye voluntarios y cuadrillas por vivienda.', to: '/gestionar-voluntarios' },
     { title: 'Gestionar Personal', text: 'Administra usuarios y roles.', to: '/gestionar-personal' },
     { title: 'Gestionar Viviendas', text: 'Configura despliegues y estado logístico.', to: '/gestionar-viviendas' },
+    { title: 'Viviendas Bloqueadas', text: 'Revisa cierres bloqueados por pérdida de herramientas y autorízalos.', to: '/viviendas-bloqueadas' },
     { title: 'Ver reportes', text: 'Monitorea reportes y su estado de atención.', to: '/reportes' },
   ],
   admin: [

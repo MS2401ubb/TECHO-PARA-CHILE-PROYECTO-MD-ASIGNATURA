@@ -10,6 +10,7 @@ const menuItems = [
   { label: 'Dashboard', to: '/dashboard', roles: ['Encargado de Central', 'admin'] },
   { label: 'Gestionar Personal', to: '/gestionar-personal', roles: ['Encargado de Central', 'admin'] },
   { label: 'Gestionar Viviendas', to: '/gestionar-viviendas', roles: ['Encargado de Central', 'admin'] },
+  { label: 'Viviendas Bloqueadas', to: '/viviendas-bloqueadas', roles: ['Encargado de Central', 'admin'] },
   { label: 'Ver reportes', to: '/reportes', roles: ['Encargado de Central', 'admin'] },
   { label: 'Logística transporte', to: '/logistica-transporte', roles: ['Encargado de Central', 'admin'] },
   { label: 'Logística alimentación', to: '/logistica-alimentacion', roles: ['Encargado de Central', 'admin'] },
