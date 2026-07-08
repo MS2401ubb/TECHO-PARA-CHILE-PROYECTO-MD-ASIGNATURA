@@ -285,6 +285,15 @@ th {
   margin-top: 18px;
 }
 
+.provision-panel {
+  margin: 14px 0 18px;
+  background: #f7fbff;
+}
+
+.provision-panel h3 {
+  margin-top: 0;
+}
+
 .dashboard-top-grid {
   display: grid;
   gap: 14px;

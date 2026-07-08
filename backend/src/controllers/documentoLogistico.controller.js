@@ -38,3 +38,20 @@ export const generarDocumentoProvisionAlimentos = async (req, res) => {
         return handleErrorServer(res, 500, "Error del servidor al generar documento de provisión de alimentos", error.message);
     }
 };
+
+export const obtenerVistaProvisionAlimentos = async (req, res) => {
+    try {
+        const { body } = req;
+        const { error } = validarDatosProvisionAlimentos.validate(body);
+
+        if (error) {
+            console.log('Error de validación al obtener vista de provisión de alimentos:', error);
+            return handleErrorClient(res, 400, "Datos de provisión de alimentos inválidos", error.message);
+        }
+
+        const provisionAlimentos = await transporteAlimentoService.generarDocumentoProvisionAlimentos(body);
+        return handleSuccess(res, 200, "Vista de provisión de alimentos generada correctamente", provisionAlimentos);
+    } catch (error) {
+        return handleErrorServer(res, 500, "Error del servidor al obtener la vista de provisión de alimentos", error.message);
+    }
+};

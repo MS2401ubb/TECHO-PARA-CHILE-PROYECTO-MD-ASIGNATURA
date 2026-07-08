@@ -53,6 +53,15 @@ export async function descargarDocumentoAlimentacion(body) {
   }
 }
 
+export async function obtenerDetalleProvisionAlimentos(body) {
+  try {
+    const response = await axios.post('/documento-logistico/provision-alimentos/preview', body)
+    return { success: true, data: response.data.data || null }
+  } catch (error) {
+    return { success: false, message: await extraerMensajeError(error, 'No fue posible calcular la provisión de alimentos') }
+  }
+}
+
 export async function obtenerCatalogoHerramientas() {
   try {
     const response = await axios.get('/herramientas')
