@@ -40,7 +40,7 @@ function Home() {
   const cards = useMemo(() => {
     if (!user?.rol) return [];
     
-    // Tu validación es perfecta: incluye Voluntario pero NO es Encargado
+    //incluye Voluntario pero NO es Encargado de Voluntarios
     if (user.rol.includes('Voluntario') && !user.rol.includes('Encargado')) {
       return roleCards['Voluntario'];
     }
