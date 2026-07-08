@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { obtenerMiCuadrillaYVivienda } from '../services/cuadrilla.service'
+import { obtenerMiCuadrillaYVivienda, verificarTokenExistente } from '../services/cuadrilla.service'
 
 function formatDate(value) {
   if (!value) return 'Sin información'
@@ -10,7 +10,23 @@ function formatDate(value) {
 function MiCuadrillaVivienda() {
   const { user } = useAuth()
   const [data, setData] = useState(null)
+  const [tokenDia,setTokenDia] = useState('')
   const [error, setError] = useState('')
+  const [loadingToken,setLoadingToken] = useState(false)
+
+  const cargarToken = async (codigoCuadrilla) =>{
+    if(user?.rol !== 'Jefe de Cuadrilla') return;
+
+    const result = await verificarTokenExistente(codigoCuadrilla);
+
+    const tokenData = result?.data?.instanceToken || result?.instanceToken;
+
+    if(tokenData?.valorToken){
+      setTokenDia(tokenData.valorToken);
+    }else{
+      setTokenDia('');
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -20,9 +36,13 @@ function MiCuadrillaVivienda() {
         return
       }
       setData(result.data)
+
+      if(result.data?.codigoCuadrilla){
+        await cargarToken(result.data.codigoCuadrilla);
+      }
     }
     load()
-  }, [])
+  }, [])//REVISAR
 
   const integrantes = data?.integrantes || []
   const vivienda = data?.vivienda || null
@@ -68,6 +88,24 @@ function MiCuadrillaVivienda() {
               <p><strong>Ciudad:</strong> {vivienda.ciudad || 'Sin información'}</p>
               <p><strong>Fecha de comienzo estimada:</strong> {formatDate(vivienda.fechaInicioEstimada)}</p>
               <p><strong>Fecha de fin estimada:</strong> {formatDate(vivienda.fechaFinEstimada)}</p>
+              {user?.rol === 'Jefe de Cuadrilla' && (
+                <p>
+                  <strong>Token del Día: </strong> 
+                  {/* 💡 Comprobamos si tokenDia tiene un valor real y si no es el string de error 'No existe...' */}
+                  {tokenDia ? (
+                    <span style={{ fontWeight: 'bold', color: '#2ecc71', backgroundColor: '#e8f8f5', padding: '2px 6px', borderRadius: '4px' }}>
+                      {tokenDia}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#e74c3c', fontStyle: 'italic' }}>
+                      No se ha generado un token para hoy.
+                    </span>
+                  )}
+                  <span style={{ display: 'block', fontSize: '0.85rem', color: '#7f8c8d', marginTop: '4px' }}>
+                    (Se entrega para asignar Voluntarios Espontáneos o de Otras Cuadrillas rápidamente)
+                  </span>
+                </p>
+              )}
             </div>
           ) : (
             <p className="helper-text">No hay vivienda activa asociada a tu cuadrilla.</p>
