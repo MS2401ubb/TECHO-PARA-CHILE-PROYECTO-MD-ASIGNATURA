@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { validarTokenExpress } from '../services/auth.service'
 
 function IngresarToken() {
@@ -32,8 +32,8 @@ function IngresarToken() {
   return (
     <div className="public-shell">
       <section className="auth-card">
-        <h1>Ingreso Plataforma TECHO</h1>
-        <p>Inicia sesión para entrar al panel operativo.</p>
+        <h1>Ingreso en Terreno a Plataforma TECHO</h1>
+        <p>Canjea token para entrar al panel operativo.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-row">
@@ -53,6 +53,9 @@ function IngresarToken() {
             </button>
           </div>
         </form>
+        <p className="helper-text">
+          ¿Quieres volver a página Login? <Link to="/login">Apreta aca</Link>.
+        </p>
       </section>
     </div>
   )
