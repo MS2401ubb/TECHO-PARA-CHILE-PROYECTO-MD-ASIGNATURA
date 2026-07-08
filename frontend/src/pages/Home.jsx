@@ -25,7 +25,7 @@ const roleCards = {
   ],
   admin: [
     { title: 'Dashboard', text: 'Acceso completo a panel de Central.', to: '/dashboard' },
-    { title: 'Gestionar Usuarios', text: 'Administra usuarios y permisos del sistema.', to: '/gestionar-personal' },
+    { title: 'Gestión', text: 'Centraliza el acceso a Viviendas, Usuarios y Cuadrillas.', to: '/gestion' },
   ],
 }
 

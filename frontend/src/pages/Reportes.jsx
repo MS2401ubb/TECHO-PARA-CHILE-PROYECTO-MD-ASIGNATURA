@@ -74,7 +74,7 @@ function Reportes() {
                 <td>
                   <select defaultValue={item.estado} onChange={(e) => cambiarEstado(item.id, e.target.value)}>
                     <option>Recibido</option>
-                    <option>En revisión</option>
+                    <option>En Revision</option>
                     <option>Resuelto</option>
                   </select>
                 </td>

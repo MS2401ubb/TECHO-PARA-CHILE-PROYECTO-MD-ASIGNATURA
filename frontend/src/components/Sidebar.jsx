@@ -8,6 +8,7 @@ const menuItems = [
   { label: 'Mi cuadrilla y vivienda', to: '/mi-cuadrilla-vivienda', roles: ['Voluntario', 'Jefe de Cuadrilla'] },
   { label: 'Postulantes', to: '/postulantes', roles: ['Encargado de Voluntarios'] },
   { label: 'Gestionar Distribucion Laboral', to: '/gestionar-voluntarios', roles: ['Encargado de Voluntarios', 'Encargado de Central', 'admin'] },
+  { label: 'Gestión', to: '/gestion', roles: ['admin'] },
   { label: 'Gestionar Personal', to: '/gestionar-personal', roles: ['Encargado de Central', 'admin'] },
   { label: 'Gestionar Viviendas', to: '/gestionar-viviendas', roles: ['Encargado de Central', 'admin'] },
   { label: 'Enviar reporte', to: '/enviar-reporte', roles: ['Jefe de Cuadrilla', 'Encargado de Voluntarios'] },

@@ -1,5 +1,6 @@
 import {
   getCuadrillasService,
+  createCuadrillaService,
   getCuadrillaByCodigoService,
   editCuadrillaService,
   deleteCuadrillaService,
@@ -25,6 +26,24 @@ export async function getCuadrillas(req, res) {
     handleSuccess(res, 200, "Cuadrillas obtenidas exitosamente", cuadrillas);
   } catch (error) {
     handleErrorServer(res, 500, "Error al obtener cuadrillas", error.message);
+  }
+}
+
+export async function createCuadrilla(req, res) {
+  try {
+    const { descripcion } = req.body;
+
+    if (!descripcion || !String(descripcion).trim()) {
+      return handleErrorClient(res, 400, 'La descripcion es obligatoria');
+    }
+
+    const nuevaCuadrilla = await createCuadrillaService({ descripcion });
+    return handleSuccess(res, 201, 'Cuadrilla creada exitosamente', nuevaCuadrilla);
+  } catch (error) {
+    if (error.message.includes('obligatoria')) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, 'Error al crear cuadrilla', error.message);
   }
 }
 

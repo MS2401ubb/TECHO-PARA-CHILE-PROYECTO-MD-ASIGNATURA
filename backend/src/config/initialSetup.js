@@ -781,7 +781,7 @@ export const createInitialReportes = async () => {
           urgencia: 'Baja',
           categoria: 'Fin de Jornada',
           periodo: '2026-07-08',
-          estado: 'Revisado',
+          estado: 'Recibido',
         },
         {
           titulo: 'Estado de participación voluntaria',

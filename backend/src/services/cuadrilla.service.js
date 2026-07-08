@@ -18,6 +18,18 @@ export async function getCuadrillasService() {
   return await cuadrillaRepository.find();
 }
 
+export async function createCuadrillaService(data) {
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+  const descripcion = String(data?.descripcion || '').trim();
+
+  if (!descripcion) {
+    throw new Error('La descripcion es obligatoria.');
+  }
+
+  const nuevaCuadrilla = cuadrillaRepository.create({ descripcion });
+  return await cuadrillaRepository.save(nuevaCuadrilla);
+}
+
 // ESPECIFICO
 export async function getCuadrillaByCodigoService(codigo) {
   const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);

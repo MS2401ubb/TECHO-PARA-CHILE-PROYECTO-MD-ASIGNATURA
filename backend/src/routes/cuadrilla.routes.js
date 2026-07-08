@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
 	getCuadrillas,
+	createCuadrilla,
 	getCuadrillaByCodigo,
 	editCuadrilla,
 	deleteCuadrilla,
@@ -28,6 +29,12 @@ router.get(
 	authenticateJwt,
 	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
 	getCuadrillas
+);
+router.post(
+	"/",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	createCuadrilla
 );
 router.post("/token/canjear",getTokenVoluntario);
 router.get(

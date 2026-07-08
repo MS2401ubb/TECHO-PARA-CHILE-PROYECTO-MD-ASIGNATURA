@@ -9,6 +9,33 @@ export async function obtenerCuadrillas() {
   }
 }
 
+export async function crearCuadrilla(body) {
+  try {
+    const response = await axios.post('/cuadrilla', body)
+    return { success: true, data: response.data.data, message: response.data.message }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor' }
+  }
+}
+
+export async function editarCuadrilla(codigo, body) {
+  try {
+    const response = await axios.patch(`/cuadrilla/${codigo}`, body)
+    return { success: true, data: response.data.data, message: response.data.message }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor' }
+  }
+}
+
+export async function eliminarCuadrilla(codigo) {
+  try {
+    const response = await axios.delete(`/cuadrilla/${codigo}`)
+    return { success: true, data: response.data.data, message: response.data.message }
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor' }
+  }
+}
+
 export async function asignarVoluntario(codigoCuadrilla, body) {
   try {
     const response = await axios.post(`/cuadrilla/${codigoCuadrilla}/asignar-voluntario`, body)
