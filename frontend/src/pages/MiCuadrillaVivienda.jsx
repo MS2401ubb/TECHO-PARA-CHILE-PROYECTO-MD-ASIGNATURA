@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { obtenerMiCuadrillaYVivienda, verificarTokenExistente } from '../services/cuadrilla.service'
+import { obtenerMiCuadrillaYVivienda, verificarTokenExistente, crearTokenJornada} from '../services/cuadrilla.service'
 
 function formatDate(value) {
   if (!value) return 'Sin información'
@@ -28,6 +28,36 @@ function MiCuadrillaVivienda() {
     }
   }
 
+  /*useEffect(() => {
+    if(user?.rol !== 'Jefe de Cuadrilla') return;
+
+    const result = await crearTokenJornada(codigoCuadrilla)
+    if(!result.success){
+      setError(result.message || 'No fue posible crear el token')
+      return
+    }
+
+    const tokenNuevo = result?.data?.tokenNuevo ||
+
+  },[loadingToken]);*/
+  const handleCrearToken = async () => {
+    if(!data?.codigoCuadrilla) return;
+
+    setLoadingToken(true);
+    setError('');
+
+    const result = await crearTokenJornada(data.codigoCuadrilla);
+    setLoadingToken(false);
+
+    if(result.success){
+      alert(result.message || 'Token generado con exito! Solo para el día de hoy.');
+      await cargarToken(data.codigoCuadrilla);
+    }else{
+      setError(result.message || 'No fue posible crear el token de asignación');
+    }
+
+  }
+  
   useEffect(() => {
     const load = async () => {
       const result = await obtenerMiCuadrillaYVivienda()
@@ -91,7 +121,6 @@ function MiCuadrillaVivienda() {
               {user?.rol === 'Jefe de Cuadrilla' && (
                 <p>
                   <strong>Token del Día: </strong> 
-                  {/* 💡 Comprobamos si tokenDia tiene un valor real y si no es el string de error 'No existe...' */}
                   {tokenDia ? (
                     <span style={{ fontWeight: 'bold', color: '#2ecc71', backgroundColor: '#e8f8f5', padding: '2px 6px', borderRadius: '4px' }}>
                       {tokenDia}
@@ -120,6 +149,7 @@ function MiCuadrillaVivienda() {
             <button type="button" className="btn-outline" disabled>Iniciar / cerrar jornada</button>
             <button type="button" className="btn-outline" disabled>Conteo de herramientas</button>
             <button type="button" className="btn-outline" disabled>Validaciones de terreno</button>
+            <button type="button" className="btn-outline" onClick={handleCrearToken} disabled={loadingToken}> Creacion de Token Asignación Express</button>
           </div>
         </>
       )}
