@@ -9,6 +9,15 @@ export async function obtenerUsuarios() {
 	}
 }
 
+export async function obtenerJefesCuadrilla() {
+	try {
+		const response = await axios.get('/usuario/jefes-cuadrilla')
+		return { success: true, data: response.data.data || [] }
+	} catch (error) {
+		return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor', data: [] }
+	}
+}
+
 export async function editarUsuario(rut, body) {
 	try {
 		const response = await axios.patch(`/usuario/${rut}`, body)

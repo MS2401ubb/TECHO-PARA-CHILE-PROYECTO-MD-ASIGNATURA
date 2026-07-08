@@ -1,13 +1,17 @@
 import {
   getCuadrillasService,
+  createCuadrillaService,
   getCuadrillaByCodigoService,
   editCuadrillaService,
   deleteCuadrillaService,
+  asignarCuadrillaAViviendaService,
   asignarVoluntarioACuadrillaService,
   asignarJefeCuadrillaACuadrillaService,
   getMiCuadrillaYViviendaService,
   obtenerToken,
-  canjearTokenExpress
+  canjearTokenExpress,
+  preValidacionToken,
+  verificarTokenExistente
 } from "../services/cuadrilla.service.js";
 import {tokenCanjeoBodyValidation} from "../validations/token.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -24,6 +28,24 @@ export async function getCuadrillas(req, res) {
     handleSuccess(res, 200, "Cuadrillas obtenidas exitosamente", cuadrillas);
   } catch (error) {
     handleErrorServer(res, 500, "Error al obtener cuadrillas", error.message);
+  }
+}
+
+export async function createCuadrilla(req, res) {
+  try {
+    const { descripcion } = req.body;
+
+    if (!descripcion || !String(descripcion).trim()) {
+      return handleErrorClient(res, 400, 'La descripcion es obligatoria');
+    }
+
+    const nuevaCuadrilla = await createCuadrillaService({ descripcion });
+    return handleSuccess(res, 201, 'Cuadrilla creada exitosamente', nuevaCuadrilla);
+  } catch (error) {
+    if (error.message.includes('obligatoria')) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, 'Error al crear cuadrilla', error.message);
   }
 }
 
@@ -98,6 +120,35 @@ export async function asignarVoluntarioACuadrilla(req, res) {
   }
 }
 
+export async function asignarCuadrillaAVivienda(req, res) {
+  try {
+    const { codigo } = req.params;
+    const { codigoVivienda, fechaInicio } = req.body;
+
+    if (!codigoVivienda) {
+      return handleErrorClient(res, 400, 'El codigoVivienda es obligatorio');
+    }
+
+    const data = await asignarCuadrillaAViviendaService(codigo, codigoVivienda, fechaInicio);
+    return handleSuccess(res, 201, 'Cuadrilla asignada a vivienda exitosamente', data);
+  } catch (error) {
+    if (error.message.includes('no encontrada') || error.message.includes('no encontrado')) {
+      return handleErrorClient(res, 404, error.message);
+    }
+    if (
+      error.message.includes('obligatorio') ||
+      error.message.includes('fechaInicio') ||
+      error.message.includes('entero positivo') ||
+      error.message.includes('finalizada') ||
+      error.message.includes('ya tiene') ||
+      error.message.includes('ya se encuentra asignada')
+    ) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, 'Error al asignar cuadrilla a vivienda', error.message);
+  }
+}
+
 export async function asignarJefeCuadrillaACuadrilla(req, res) {
   try {
     const { codigo } = req.params;
@@ -133,7 +184,7 @@ export async function getTokenCuadrilla(req,res) {
 
     const data = await obtenerToken(rutJefeCuadrilla,codigo);
     handleSuccess(res,201,"Token creado exitosamente",data);//data muestra código, para que Jefe de Cuadrilla lo muestre a Voluntario
-  }catch (error){
+  }catch (error){//Revisar error messages
     if (error.message.includes("no encontrado") || error.message.includes("no encontrada")) {
       return handleErrorClient(res, 404, error.message);
     }
@@ -146,32 +197,81 @@ if (
     handleErrorServer(res,500,"Error al generar Token de asignación a cuadrilla",error.message);
   }
 }
-
-//POST /api/cuadrillas/token/canjear
-//const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, orden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"
-export async function getTokenVoluntario(req,res){
+export async function isTokenExist(req,res){
   try{
-    const {error, value} = tokenCanjeoBodyValidation.validate(req.body);
+    const {codigo} = req.params;
+    const codigoNum = parseInt(codigo,10);
 
-    if(error) return handleErrorClient(res,400,"parámetros de canje inválidos",error.message);
-    const {tipoVoluntario, tokenEntregado, datosUsuarioNuevo} = value;
+    const rutJefeCUadrilla = req.user.rut;
 
-    const resultado = await canjearTokenExpress(tipoVoluntario,datosUsuarioNuevo,tokenEntregado);
-    handleSuccess(res,200,resultado.message,resultado);
+    const data = await verificarTokenExistente(codigoNum);
+    handleSuccess(res,201,"Token activo existente",data);
   }catch(error){
-    if(error.message.includes("no es válido") || error.message.includes("expiró")){
-      return handleErrorClient(res, 400, error.message);
+    if(error.message.includes("no encontrado") || error.message.includes("no encontrada")){
+      return handleErrorClient(res,404,error.message);
     }
-    if (error.message.includes("pertenece a un usuario pero no")) {
-      return handleErrorClient(res, 403, error.message); // Forbidden o Bad Request según prefieras
+    if(error.message.includes("entero positivo")){
+      return handleErrorClient(res,400,error.message);
     }
 
-    // Error crítico del servidor
-    handleErrorServer(res, 500, "Error al procesar el canje del token express", error.message);
+    return handleErrorServer(res,500,"Error interno al verificar token",error.message);
   }
 }
 
+//POST /api/cuadrilla/token/canjear
+//POST /api/cuadrilla/token/validar/:token/:rut
+//const {tipoVoluntario,datosUsuarioNuevo,tokenEntregado} = req.body //en frontend, oraden debería ser: token --> datos usuario? y "tipoVoluntario" viene "asumido"
+export async function validarTokenExpress(req, res) {
+  try {
+    const { token, rut } = req.params; 
 
+    if (!rut) {
+      return handleErrorClient(res, 400, "El parámetro RUT es requerido para validar el proceso.");
+    }
+
+    const { tokenValido, usuarioYaRegistrado } = await preValidacionToken(token, rut);
+
+    if (!tokenValido) {
+      return handleErrorClient(res, 400, "El token no es válido o ya expiró.");
+    }
+
+    handleSuccess(res, 200, "Token válido verificado con éxito", { 
+      codigoCuadrilla: tokenValido.codigoCuadrilla,
+      usuarioYaRegistrado: usuarioYaRegistrado 
+    });
+
+  } catch (error) {
+    if (error.message.includes("no es válido") || error.message.includes("expiró")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    handleErrorServer(res, 500, "Error al validar token", error.message);
+  }
+}
+
+export async function getTokenVoluntario(req, res) {
+  try {
+    const { error, value } = tokenCanjeoBodyValidation.validate(req.body);
+    if (error) return handleErrorClient(res, 400, "parámetros de canje inválidos", error.message);
+    
+    const { tipoVoluntario, tokenEntregado, datosUsuarioNuevo } = value;
+
+    const resultado = await canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tokenEntregado);
+    
+    handleSuccess(res, 200, resultado.message, resultado);
+  } catch (error) {
+    if (error.message.includes("no es válido") || error.message.includes("expiró")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    if (error.message.includes("no pertenece a un perfil de Voluntario")) {
+      return handleErrorClient(res, 403, error.message); 
+    }
+    if (error.message.includes("Datos incompletos")) {
+      return handleErrorClient(res, 400, error.message);
+    }
+
+    handleErrorServer(res, 500, "Error al procesar el canje del token express", error.message);
+  }
+}
 
 export async function getMiCuadrillaYVivienda(req, res) {
   try {

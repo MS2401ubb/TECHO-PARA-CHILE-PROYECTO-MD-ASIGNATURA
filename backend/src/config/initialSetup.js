@@ -17,6 +17,7 @@ import Cuadrilla from '../entities/cuadrilla.entity.js';
 import Jornada from '../entities/jornada.entity.js';
 import Herramienta from '../entities/herramientas.entity.js';
 import CoberturaHerramienta from '../entities/coberturaHerramienta.entity.js';
+import Reporte from '../entities/reporte.entity.js';
 
 import VoluntarioParticipaEnCuadrilla from '../entities/voluntarioParticipaEnCuadrilla.entity.js';
 import CuadrillaTrabajaEnVivienda from '../entities/cuadrillaTrabajaEnVivienda.entity.js';
@@ -486,7 +487,19 @@ export const createInitialUsuarios = async () => {
         { rut: '13131313-3', nombre: 'Valentina', primerApellido: 'Miranda', segundoApellido: 'Jara', fechaNacimiento: '1995-05-15', email: 'vale@gmail.com', telefono: '988887777', ciudad: { codigo: 14 }, telEmergencia: '913131313' },
         { rut: '14141414-4', nombre: 'Andrés', primerApellido: 'Salinas', segundoApellido: 'Ríos', fechaNacimiento: '1995-05-15', email: 'andres@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '914141414' },
         { rut: '15151515-5', nombre: 'Bárbara', primerApellido: 'Pinto', segundoApellido: 'Navarro', fechaNacimiento: '1995-05-15', email: 'barbara@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '915151515' },
-        { rut: '16161616-6', nombre: 'Cristóbal', primerApellido: 'Muñoz', segundoApellido: 'Henríquez', fechaNacimiento: '1995-05-15', email:'cristobal@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '916161616' }
+        { rut: '16161616-6', nombre: 'Cristóbal', primerApellido: 'Muñoz', segundoApellido: 'Henríquez', fechaNacimiento: '1995-05-15', email:'cristobal@gmail.com', telefono: '988887777', ciudad: { codigo: 244 }, telEmergencia: '916161616' },
+        { rut: '25252525-5', nombre: 'Martina', primerApellido: 'Campos', segundoApellido: 'Lagos', fechaNacimiento: '1999-02-10', email: 'martina.campos@gmail.com', telefono: '925252525', ciudad: { codigo: 181 }, telEmergencia: '935252525' },
+        { rut: '26262626-6', nombre: 'Tomás', primerApellido: 'Leiva', segundoApellido: 'Cifuentes', fechaNacimiento: '1998-11-08', email: 'tomas.leiva@gmail.com', telefono: '926262626', ciudad: { codigo: 181 }, telEmergencia: '936262626' },
+        { rut: '27272727-7', nombre: 'Josefa', primerApellido: 'Mella', segundoApellido: 'Saavedra', fechaNacimiento: '1997-07-19', email: 'josefa.mella@gmail.com', telefono: '927272727', ciudad: { codigo: 181 }, telEmergencia: '937272727' },
+        { rut: '28282828-8', nombre: 'Benjamín', primerApellido: 'Valdés', segundoApellido: 'Inostroza', fechaNacimiento: '1996-09-25', email: 'benjamin.valdes@gmail.com', telefono: '928282828', ciudad: { codigo: 181 }, telEmergencia: '938282828' },
+        { rut: '29292929-9', nombre: 'Ignacia', primerApellido: 'Espina', segundoApellido: 'Olivares', fechaNacimiento: '1998-01-05', email: 'ignacia.espina@gmail.com', telefono: '929292929', ciudad: { codigo: 10 }, telEmergencia: '939292929' },
+        { rut: '30303030-0', nombre: 'Vicente', primerApellido: 'Arcos', segundoApellido: 'Riquelme', fechaNacimiento: '1995-04-14', email: 'vicente.arcos@gmail.com', telefono: '930303030', ciudad: { codigo: 10 }, telEmergencia: '940303030' },
+        { rut: '31313131-1', nombre: 'Florencia', primerApellido: 'Urrutia', segundoApellido: 'Fierro', fechaNacimiento: '1999-10-21', email: 'florencia.urrutia@gmail.com', telefono: '931313131', ciudad: { codigo: 10 }, telEmergencia: '941313131' },
+        { rut: '32323232-2', nombre: 'Sebastián', primerApellido: 'Parra', segundoApellido: 'Gaete', fechaNacimiento: '1994-12-02', email: 'sebastian.parra@gmail.com', telefono: '932323232', ciudad: { codigo: 10 }, telEmergencia: '942323232' },
+        { rut: '33334444-5', nombre: 'Antonia', primerApellido: 'Sanhueza', segundoApellido: 'Abarca', fechaNacimiento: '1997-06-16', email: 'antonia.sanhueza@gmail.com', telefono: '933344445', ciudad: { codigo: 222 }, telEmergencia: '943344445' },
+        { rut: '34445555-6', nombre: 'Matías', primerApellido: 'Barrera', segundoApellido: 'Pino', fechaNacimiento: '1996-03-11', email: 'matias.barrera@gmail.com', telefono: '934445556', ciudad: { codigo: 222 }, telEmergencia: '944445556' },
+        { rut: '35556666-7', nombre: 'Constanza', primerApellido: 'Mora', segundoApellido: 'León', fechaNacimiento: '1998-08-30', email: 'constanza.mora@gmail.com', telefono: '935556667', ciudad: { codigo: 222 }, telEmergencia: '945556667' },
+        { rut: '36667777-8', nombre: 'Gabriel', primerApellido: 'Fuenzalida', segundoApellido: 'Bustos', fechaNacimiento: '1995-01-27', email: 'gabriel.fuenzalida@gmail.com', telefono: '936667778', ciudad: { codigo: 222 }, telEmergencia: '946667778' }
       ];
       for (const item of listadoPlanaVoluntarios) {
         // A) Insertar Usuario Base
@@ -519,7 +532,10 @@ export const createInitialUsuarios = async () => {
       const listaPlanaJefeCuadrilla = [
         { rut: '17171717-7', nombre: 'Nicolás', primerApellido: 'Tapia', segundoApellido: 'Vargas', fechaNacimiento: '1996-08-20', email: 'nicolas@gmail.com', telefono: '917171717', ciudad: { codigo: 181 } },
         { rut: '18181818-8', nombre: 'Catalina', primerApellido: 'Cárcamo', segundoApellido: 'Maldonado', fechaNacimiento: '1994-03-12', email: 'cata@gmail.com', telefono: '918181818', ciudad: { codigo: 14 } },
-        { rut: '19191919-9', nombre: 'Javier', primerApellido: 'Gutiérrez', segundoApellido: 'Poblete', fechaNacimiento: '1997-11-05', email: 'javier@gmail.com', telefono: '919191919', ciudad: { codigo: 244 } }
+        { rut: '19191919-9', nombre: 'Javier', primerApellido: 'Gutiérrez', segundoApellido: 'Poblete', fechaNacimiento: '1997-11-05', email: 'javier@gmail.com', telefono: '919191919', ciudad: { codigo: 244 } },
+        { rut: '37373737-7', nombre: 'Renato', primerApellido: 'Carrillo', segundoApellido: 'Rojas', fechaNacimiento: '1992-05-09', email: 'renato.carrillo@gmail.com', telefono: '937373737', ciudad: { codigo: 181 } },
+        { rut: '38383838-8', nombre: 'Paula', primerApellido: 'Méndez', segundoApellido: 'Araya', fechaNacimiento: '1991-09-13', email: 'paula.mendez@gmail.com', telefono: '938383838', ciudad: { codigo: 10 } },
+        { rut: '39393939-9', nombre: 'Rodrigo', primerApellido: 'Navarrete', segundoApellido: 'Silva', fechaNacimiento: '1990-12-01', email: 'rodrigo.navarrete@gmail.com', telefono: '939393939', ciudad: { codigo: 222 } }
       ]
       for (const item of listaPlanaJefeCuadrilla) {
         // A) Insertar Usuario Base
@@ -599,6 +615,7 @@ export const createInitialUsuarios = async () => {
     process.exit(1);
   }
 }
+
 export const createInitialViviendas = async () => {
   try{
     const viviendasRepository = AppDataSource.getRepository(Vivienda);
@@ -610,7 +627,10 @@ export const createInitialViviendas = async () => {
         { codigo: 'CONC-003', direccion: 'Agüita de la Perdiz Calle Central 89', tipo: 'Módulo Habitacional Completo', estado: 'Planificacion', ciudad: {codigo: 181}},
         { codigo: 'CONC-004', direccion: 'Barrio Norte Calle Manuel Rodríguez 412', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
         { codigo: 'CONC-005', direccion: 'Lorenzo Arenas Pasaje Los Tilos 72', tipo: 'Módulo Habitacional Completo', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 181}},
-        { codigo: 'PICA-006', direccion: 'San Isidro 462', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 10}}
+        { codigo: 'PICA-006', direccion: 'San Isidro 462', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Distribuyendo Fuerza Laboral', ciudad: {codigo: 10}},
+        { codigo: 'CONC-101', direccion: 'Villa Nonguén Pasaje Los Canelos 118', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Construyendo', ciudad: {codigo: 181}, avance: 35, inicio: '2026-07-01', fin: '2026-07-20' },
+        { codigo: 'PICA-102', direccion: 'Población San Andrés Calle Tamarugal 74', tipo: 'Módulo Habitacional Completo', estado: 'Construyendo', ciudad: {codigo: 10}, avance: 50, inicio: '2026-07-02', fin: '2026-07-24' },
+        { codigo: 'PITR-103', direccion: 'Comuna de Quilicura Avenida Lo Cruzat 280', tipo: 'Vivienda de Emergencia Provisoria', estado: 'Construyendo', ciudad: {codigo: 222}, avance: 70, inicio: '2026-07-03', fin: '2026-07-26' }
       ]; 
       for (const obra of obras) {
         await viviendasRepository.save({
@@ -618,9 +638,9 @@ export const createInitialViviendas = async () => {
           direccion: obra.direccion,
           tipoObra: obra.tipo,
           estado: obra.estado,
-          porcentajeAvance: 0,
-          fechaInicioEstimada: '2026-06-15',
-          fechaFinEstimada: '2026-06-22',
+          porcentajeAvance: obra.avance || 0,
+          fechaInicioEstimada: obra.inicio || '2026-06-15',
+          fechaFinEstimada: obra.fin || '2026-06-22',
           fechaFinReal: null,
           montajeEstructural: false,
           habilidadTecnica: false,
@@ -644,6 +664,9 @@ export const createInitialCuadrillas = async () => {
       const cuadrillas = [
         { descripcion: 'Cuadrilla para vivienda en Concepción'},
         { descripcion: 'Cuadrilla para obra en Concepción'},
+        { descripcion: 'Cuadrilla para CONC-101'},
+        { descripcion: 'Cuadrilla para PICA-102'},
+        { descripcion: 'Cuadrilla para PITR-103'},
       ]
       await cuadrillaRepository.save(cuadrillas);
     }
@@ -662,7 +685,13 @@ export const createInitialJornadas = async () => {
         { fecha: '2026-06-16', estado: 'Activa', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
         { fecha: '2026-06-16', estado: 'Activa', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' },
         { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '17171717-7', codigoVivienda: 'CONC-001' },
-        { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' }
+        { fecha: '2026-06-17', estado: 'Finalizada', rutJefe: '18181818-8', codigoVivienda: 'CONC-003' },
+        { fecha: '2026-07-04', estado: 'Finalizada', rutJefe: '37373737-7', codigoVivienda: 'CONC-101' },
+        { fecha: '2026-07-05', estado: 'Finalizada', rutJefe: '37373737-7', codigoVivienda: 'CONC-101' },
+        { fecha: '2026-07-06', estado: 'Finalizada', rutJefe: '38383838-8', codigoVivienda: 'PICA-102' },
+        { fecha: '2026-07-07', estado: 'Finalizada', rutJefe: '38383838-8', codigoVivienda: 'PICA-102' },
+        { fecha: '2026-07-08', estado: 'Finalizada', rutJefe: '39393939-9', codigoVivienda: 'PITR-103' },
+        { fecha: '2026-07-09', estado: 'Finalizada', rutJefe: '39393939-9', codigoVivienda: 'PITR-103' }
       ];
 
       for (const jornada of jornadas) {
@@ -721,6 +750,79 @@ export const createInitialMateriales = async () => {
   }
 }
 
+export const createInitialReportes = async () => {
+  try {
+    const reporteRepository = AppDataSource.getRepository(Reporte);
+    const countReportes = await reporteRepository.count();
+
+    if (countReportes === 0) {
+      const reportes = [
+        {
+          titulo: 'Avance semanal cuadrilla CONC-101',
+          contenido: 'Se completa montaje estructural inicial y se detecta atraso menor por lluvia.',
+          areaOrganizacion: 'Viviendas',
+          urgencia: 'Media',
+          categoria: 'Mensual',
+          periodo: '2026-07 Semana 1',
+          estado: 'Recibido',
+        },
+        {
+          titulo: 'Incidente de herramienta en PICA-102',
+          contenido: 'Taladro inalámbrico con falla intermitente. Se solicita reposición preventiva.',
+          areaOrganizacion: 'Materiales',
+          urgencia: 'Alta',
+          categoria: 'Incidente',
+          periodo: null,
+          estado: 'Recibido',
+        },
+        {
+          titulo: 'Cierre de jornada STGO-103',
+          contenido: 'Jornada finalizada sin descuadres. Validaciones técnicas confirmadas por jefatura.',
+          areaOrganizacion: 'Jornadas',
+          urgencia: 'Baja',
+          categoria: 'Fin de Jornada',
+          periodo: '2026-07-08',
+          estado: 'Recibido',
+        },
+        {
+          titulo: 'Estado de participación voluntaria',
+          contenido: 'Asistencia sobre el 95% en las 3 cuadrillas activas de construcción.',
+          areaOrganizacion: 'Voluntarios',
+          urgencia: 'Baja',
+          categoria: 'Mensual',
+          periodo: '2026-07',
+          estado: 'Recibido',
+        },
+        {
+          titulo: 'Bloqueo logístico de transporte',
+          contenido: 'Retraso por congestión de ruta. Se sugiere salida anticipada para próxima jornada.',
+          areaOrganizacion: 'Logistica',
+          urgencia: 'Alta',
+          categoria: 'Incidente',
+          periodo: '2026-07-07',
+          estado: 'Recibido',
+        },
+        {
+          titulo: 'Reporte ejecutivo central',
+          contenido: 'Consolidado nacional muestra 3 viviendas en Construyendo con progreso sostenido.',
+          areaOrganizacion: 'Otro',
+          urgencia: 'Media',
+          categoria: 'Otro',
+          periodo: '2026-07',
+          estado: 'Recibido',
+        },
+      ];
+
+      await reporteRepository.save(reportes);
+    }
+
+    console.log('🌱 Reportes ingresados a la base de datos.');
+  } catch (error) {
+    console.log(`❌ Error al ingresar reportes a la base de datos, ${error}.`);
+    process.exit(1);
+  }
+}
+
 export const createInitialRelations = async () => {
   try {
     const voluntarioParticipaRepository = AppDataSource.getRepository(VoluntarioParticipaEnCuadrilla);
@@ -738,6 +840,24 @@ export const createInitialRelations = async () => {
         { rut: '66666666-6', cuad: 2 },
         { rut: '77777777-7', cuad: 2 },
         { rut: '88888888-8', cuad: 2 },
+
+        // CUADRILLA 3
+        { rut: '25252525-5', cuad: 3 },
+        { rut: '26262626-6', cuad: 3 },
+        { rut: '27272727-7', cuad: 3 },
+        { rut: '28282828-8', cuad: 3 },
+
+        // CUADRILLA 4
+        { rut: '29292929-9', cuad: 4 },
+        { rut: '30303030-0', cuad: 4 },
+        { rut: '31313131-1', cuad: 4 },
+        { rut: '32323232-2', cuad: 4 },
+
+        // CUADRILLA 5
+        { rut: '33334444-5', cuad: 5 },
+        { rut: '34445555-6', cuad: 5 },
+        { rut: '35556666-7', cuad: 5 },
+        { rut: '36667777-8', cuad: 5 },
       ]
       for (const asig of asignaciones) {
         await voluntarioParticipaRepository.save({
@@ -754,7 +874,10 @@ export const createInitialRelations = async () => {
     if (countCuaTra === 0){
       const despliegues = [
         { cuad: 1, viv: 'CONC-001' },
-        { cuad: 2, viv: 'CONC-003' }
+        { cuad: 2, viv: 'CONC-003' },
+        { cuad: 3, viv: 'CONC-101' },
+        { cuad: 4, viv: 'PICA-102' },
+        { cuad: 5, viv: 'PITR-103' }
       ];
 
       for (const despliegue of despliegues) {
@@ -772,7 +895,10 @@ export const createInitialRelations = async () => {
     if (countJefesLideran === 0) {
       const liderazgos = [
         { rut: '17171717-7', cuad: 1, inicio: '2026-03-15' },
-        { rut: '18181818-8', cuad: 2, inicio: '2026-03-15' }
+        { rut: '18181818-8', cuad: 2, inicio: '2026-03-15' },
+        { rut: '37373737-7', cuad: 3, inicio: '2026-07-01' },
+        { rut: '38383838-8', cuad: 4, inicio: '2026-07-01' },
+        { rut: '39393939-9', cuad: 5, inicio: '2026-07-01' }
       ];
 
       for (const liderazgo of liderazgos) {
@@ -797,18 +923,36 @@ export const createInitialRelations = async () => {
 
       if (jornadas.length > 0) {
         const consumos = [
-          { jornada: jornadas[0]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7' },
-          { jornada: jornadas[1]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 2, rut: '18181818-8' },
-          { jornada: jornadas[2]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7' },
-          { jornada: jornadas[3]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 2, rut: '18181818-8' }
+          { jornada: jornadas[0]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7', vivienda: 'CONC-001', estado: 'ACTIVO' },
+          { jornada: jornadas[1]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 2, rut: '18181818-8', vivienda: 'CONC-003', estado: 'ACTIVO' },
+          { jornada: jornadas[2]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 1, rut: '17171717-7', vivienda: 'CONC-001', estado: 'ACTIVO' },
+          { jornada: jornadas[3]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 2, rut: '18181818-8', vivienda: 'CONC-003', estado: 'ACTIVO' },
+
+          { jornada: jornadas[4]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 3, cuadrilla: 3, rut: '37373737-7', vivienda: 'CONC-101', estado: 'CERRADO' },
+          { jornada: jornadas[4]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 3, rut: '37373737-7', vivienda: 'CONC-101', estado: 'CERRADO' },
+          { jornada: jornadas[5]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 3, cuadrilla: 3, rut: '37373737-7', vivienda: 'CONC-101', estado: 'CERRADO' },
+          { jornada: jornadas[5]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 3, rut: '37373737-7', vivienda: 'CONC-101', estado: 'CERRADO' },
+
+          { jornada: jornadas[6]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 4, rut: '38383838-8', vivienda: 'PICA-102', estado: 'CERRADO' },
+          { jornada: jornadas[6]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 4, rut: '38383838-8', vivienda: 'PICA-102', estado: 'CERRADO' },
+          { jornada: jornadas[7]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 4, cuadrilla: 4, rut: '38383838-8', vivienda: 'PICA-102', estado: 'CERRADO' },
+          { jornada: jornadas[7]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 4, rut: '38383838-8', vivienda: 'PICA-102', estado: 'CERRADO' },
+
+          { jornada: jornadas[8]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 3, cuadrilla: 5, rut: '39393939-9', vivienda: 'PITR-103', estado: 'CERRADO' },
+          { jornada: jornadas[8]?.id, herramienta: herramientaIdByNombre.get('Taladro inalambrico'), cantidad: 2, cuadrilla: 5, rut: '39393939-9', vivienda: 'PITR-103', estado: 'CERRADO' },
+          { jornada: jornadas[9]?.id, herramienta: herramientaIdByNombre.get('Martillo carpintero'), cantidad: 3, cuadrilla: 5, rut: '39393939-9', vivienda: 'PITR-103', estado: 'CERRADO' },
+          { jornada: jornadas[9]?.id, herramienta: herramientaIdByNombre.get('Sierra circular'), cantidad: 1, cuadrilla: 5, rut: '39393939-9', vivienda: 'PITR-103', estado: 'CERRADO' }
         ].filter((item) => item.jornada && item.herramienta);
 
         for (const consumo of consumos) {
           await inventarioJornadaRepository.save({
             cantidad_inicial: consumo.cantidad,
+            cantidad_fisica_final: consumo.cantidad,
+            codigo_vivienda: consumo.vivienda,
             codigoCuadrilla: consumo.cuadrilla,
             rutJefeQueRealizoSetup: consumo.rut,
-            estado_cierre: 'ACTIVO',
+            rutJefeQueRealizoConteo: consumo.rut,
+            estado_cierre: consumo.estado,
             jornada: { id: consumo.jornada },
             herramienta: { id: consumo.herramienta }
           });
@@ -848,6 +992,32 @@ export const createInitialRelations = async () => {
             jornada: { id: jornada.id }
           });
         }
+      }
+    }
+
+    const reporteRepository = AppDataSource.getRepository(Reporte);
+    const reportesExistentes = await reporteRepository.find({
+      relations: { remitente: true },
+      order: { id: 'ASC' },
+    });
+
+    if (reportesExistentes.length > 0) {
+      const rutRemitentes = [
+        '17171717-7',
+        '18181818-8',
+        '37373737-7',
+        '20202020-0',
+        '21212121-1',
+        '23232323-3',
+      ];
+
+      for (let index = 0; index < reportesExistentes.length; index += 1) {
+        const reporte = reportesExistentes[index];
+        if (reporte.remitente) continue;
+
+        const rutAsignado = rutRemitentes[index % rutRemitentes.length];
+        reporte.remitente = { rut: rutAsignado };
+        await reporteRepository.save(reporte);
       }
     }
 

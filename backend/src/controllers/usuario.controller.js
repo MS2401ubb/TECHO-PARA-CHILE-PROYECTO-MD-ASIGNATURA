@@ -1,5 +1,6 @@
 import {
   getUsersService,
+  getJefesCuadrillaService,
   getUserByRutService,
   editUserService,
   deleteUserService,
@@ -19,6 +20,20 @@ export async function getUsers(req, res) {
     handleSuccess(res, 200, "Usuarios obtenidos exitosamente", users);
   } catch (error) {
     handleErrorServer(res, 500, "Error al obtener usuarios", error.message);
+  }
+}
+
+export async function getJefesCuadrilla(req, res) {
+  try {
+    const jefes = await getJefesCuadrillaService();
+
+    if (jefes.length < 1) {
+      return handleSuccess(res, 200, "No hay jefes de cuadrilla registrados", []);
+    }
+
+    return handleSuccess(res, 200, "Jefes de cuadrilla obtenidos exitosamente", jefes);
+  } catch (error) {
+    return handleErrorServer(res, 500, "Error al obtener jefes de cuadrilla", error.message);
   }
 }
 
@@ -52,6 +67,10 @@ export async function editUser(req, res) {
 
     handleSuccess(res, 200, "Usuario actualizado exitosamente", updatedUser);
   } catch (error) {
+    if (error.message === "Usuario no encontrado") {
+      return handleErrorClient(res, 404, error.message);
+    }
+
     if (error.code === "23505") {
       if (error.detail?.includes("rut")) {
         return handleErrorClient(res, 409, "El RUT ya está registrado");

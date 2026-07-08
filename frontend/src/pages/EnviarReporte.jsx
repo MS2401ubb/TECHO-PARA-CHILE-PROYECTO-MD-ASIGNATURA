@@ -9,7 +9,7 @@ function EnviarReporte() {
     contenido: '',
     areaOrganizacion: 'Voluntarios',
     urgencia: 'Media',
-    categoria: 'Operativo',
+    categoria: 'Incidente',
     periodo: '',
   })
   const [message, setMessage] = useState('')
@@ -25,7 +25,7 @@ function EnviarReporte() {
     setMessage('')
     setError('')
 
-    const result = await crearReporte(token, form)
+    const result = await crearReporte(form, token)
     if (!result.success) {
       setError(result.message || 'No fue posible enviar el reporte')
       return
@@ -37,7 +37,7 @@ function EnviarReporte() {
       contenido: '',
       areaOrganizacion: 'Voluntarios',
       urgencia: 'Media',
-      categoria: 'Operativo',
+      categoria: 'Incidente',
       periodo: '',
     })
   }
@@ -62,22 +62,31 @@ function EnviarReporte() {
             <select name="areaOrganizacion" value={form.areaOrganizacion} onChange={onChange}>
               <option>Voluntarios</option>
               <option>Materiales</option>
-              <option>Logística</option>
+              <option>Logistica</option>
+              <option>Viviendas</option>
+              <option>Jornadas</option>
+              <option>Otro</option>
             </select>
           </div>
           <div>
             <label>Urgencia</label>
             <select name="urgencia" value={form.urgencia} onChange={onChange}>
-              <option>Alta</option>
-              <option>Media</option>
               <option>Baja</option>
+              <option>Media</option>
+              <option>Alta</option>
+              <option>Critica</option>
             </select>
           </div>
         </div>
         <div className="form-row split-2">
           <div>
             <label>Categoría</label>
-            <input name="categoria" value={form.categoria} onChange={onChange} required />
+            <select name="categoria" value={form.categoria} onChange={onChange} required>
+              <option>Fin de Jornada</option>
+              <option>Mensual</option>
+              <option>Incidente</option>
+              <option>Otro</option>
+            </select>
           </div>
           <div>
             <label>Periodo (opcional)</label>

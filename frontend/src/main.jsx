@@ -8,6 +8,7 @@ import EnrollVoluntario from './pages/EnrollVoluntario'
 import Logout from './pages/Logout'
 import Profile from './pages/Profile'
 import Dashboard from './pages/Dashboard'
+import Gestion from './pages/Gestion'
 import MiCuadrillaVivienda from './pages/MiCuadrillaVivienda'
 import RecepcionInventario from './pages/RecepcionInventario'
 import IniciarCerrarJornada from './pages/IniciarCerrarJornada'
@@ -19,22 +20,28 @@ import GestionarPersonal from './pages/GestionarPersonal'
 import GestionarViviendas from './pages/GestionarViviendas'
 import CalculoHerramientas from './pages/CalculoHerramientas'
 import ViviendasBloqueadas from './pages/ViviendasBloqueadas'
+import GestionarCuadrillas from './pages/GestionarCuadrillas'
 import Reportes from './pages/Reportes'
 import LogisticaTransporte from './pages/LogisticaTransporte'
 import LogisticaAlimentacion from './pages/LogisticaAlimentacion'
+import IngresarToken from './pages/IngresarToken'
+import RegistroDatosEspontaneo from './pages/RegistroEspontaneo'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
+import { ROLES_VOLUNTARIOS } from './constants/roles' // en vez de 'Voluntario' para allowed roles específicos, este array para incluir voluntarios espontáneos, más que nada, para mantener orden en ProtectedRoutes
 import './styles/style.css'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Root />,
+    element: <Root />,  
     errorElement: <Error404 />,
     children: [
       { index: true, element: <Navigate to="/login" replace /> },
       { path: '/login', element: <Login /> },
       { path: '/postulacion-voluntario', element: <EnrollVoluntario /> },
+      { path: '/ingresar-token',element: <IngresarToken/>},
+      { path: '/registro-datos-express',element: <RegistroDatosEspontaneo/>},
       {
         element: <ProtectedRoute><AppLayout /></ProtectedRoute>,
         children: [
@@ -44,7 +51,7 @@ const router = createBrowserRouter([
           {
             path: '/mi-cuadrilla-vivienda',
             element: (
-              <ProtectedRoute allowedRoles={['Voluntario', 'Jefe de Cuadrilla']}>
+              <ProtectedRoute allowedRoles={[...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla']}>
                 <MiCuadrillaVivienda />
               </ProtectedRoute>
             ),
@@ -118,6 +125,22 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['Encargado de Central', 'admin']}>
                 <GestionarViviendas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/gestionar-cuadrillas',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <GestionarCuadrillas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/gestion',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Gestion />
               </ProtectedRoute>
             ),
           },

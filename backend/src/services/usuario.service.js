@@ -17,6 +17,14 @@ export async function getUsersService() {
   const userRepository = AppDataSource.getRepository(User);
   return await userRepository.find();
 }
+
+export async function getJefesCuadrillaService() {
+  const jefeRepository = AppDataSource.getRepository('JefeCuadrilla');
+  return await jefeRepository.find({
+    relations: { usuario: true },
+    order: { rutUsuario: 'ASC' },
+  });
+}
 // ESPECIFICO
 export async function getUserByRutService(rut) {
   const userRepository = AppDataSource.getRepository(User);
@@ -35,7 +43,6 @@ export async function getUserByRutService(rut) {
 export async function editUserService(rut, data) {
   const userRepository = AppDataSource.getRepository(User);
   const { password, nombre, primerApellido, segundoApellido, fechaNacimiento, email, telefono, rol, codigoCiudad } = data;
-  const hashedPassword = await bcrypt.hash(password, 10);
   const user = await userRepository.findOne({
     where: { rut },
   });
@@ -44,7 +51,10 @@ export async function editUserService(rut, data) {
     throw new Error("Usuario no encontrado");
   }
 
-  if (password) user.password = hashedPassword;
+  if (password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+  }
   if (nombre) user.nombre = nombre;
   if (primerApellido) user.primerApellido = primerApellido;
   if (segundoApellido) user.segundoApellido = segundoApellido;

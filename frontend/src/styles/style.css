@@ -163,7 +163,8 @@ textarea {
 
 .btn-primary,
 .btn-outline,
-.btn-danger {
+.btn-danger,
+.btn-success {
   border-radius: 999px;
   padding: 10px 16px;
   border: 1px solid transparent;
@@ -185,6 +186,11 @@ textarea {
 
 .btn-danger {
   background: #b42318;
+  color: #fff;
+}
+
+.btn-success {
+  background: #2f9e44;
   color: #fff;
 }
 
@@ -275,6 +281,58 @@ th {
   margin: 6px 0;
 }
 
+.dashboard-detail h3 {
+  margin-top: 18px;
+}
+
+.dashboard-top-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.dashboard-city-summary {
+  margin-top: 0;
+}
+
+.city-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.city-bar-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.city-label {
+  font-weight: 600;
+  color: #223247;
+}
+
+.city-bar-track {
+  width: 100%;
+  height: 28px;
+  border-radius: 999px;
+  background: #e8eef7;
+  overflow: hidden;
+}
+
+.city-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f4c81 0%, #2f7ebf 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-weight: 600;
+  padding-right: 10px;
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -298,6 +356,33 @@ th {
 .helper-text {
   color: #4b5563;
   margin-top: 14px;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.estado-recibido {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.estado-revision {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.estado-resuelto {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .text-error,
@@ -389,6 +474,14 @@ th {
 @media (max-width: 720px) {
   .split-2,
   .split-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-bar-row {
     grid-template-columns: 1fr;
   }
 }

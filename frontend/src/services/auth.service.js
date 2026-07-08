@@ -53,3 +53,18 @@ export async function registerVoluntario(data) {
 		}
 	}
 }
+export async function validarTokenExpress(token,rut) {
+  try {
+    const response = await axios.get(`/cuadrilla/token/validar/${token}/${rut}`);
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'El token no es válido o ya expiró.'
+    };
+  }
+}

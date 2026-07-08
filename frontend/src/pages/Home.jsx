@@ -13,12 +13,12 @@ const roleCards = {
   ],
   'Encargado de Voluntarios': [
     { title: 'Postulantes', text: 'Revisa y valida postulaciones en orden de llegada.', to: '/postulantes' },
-    { title: 'Gestionar Voluntarios', text: 'Asigna voluntarios y jefes a cuadrillas.', to: '/gestionar-voluntarios' },
+    { title: 'Gestionar Distribucion Laboral', text: 'Gestionar cuadrillas, voluntarios y jefes de cuadrillas.', to: '/gestionar-voluntarios' },
     { title: 'Enviar reporte', text: 'Comunica incidentes o estado operativo a Central.', to: '/enviar-reporte' },
   ],
   'Encargado de Central': [
     { title: 'Dashboard', text: 'Tablero nacional de viviendas activas y avance.', to: '/dashboard' },
-    { title: 'Gestionar Voluntarios', text: 'Distribuye voluntarios y cuadrillas por vivienda.', to: '/gestionar-voluntarios' },
+    { title: 'Gestionar Distribucion Laboral', text: 'Gestionar cuadrillas, voluntarios y jefes de cuadrillas.', to: '/gestionar-voluntarios' },
     { title: 'Gestionar Personal', text: 'Administra usuarios y roles.', to: '/gestionar-personal' },
     { title: 'Gestionar Viviendas', text: 'Configura despliegues y estado logístico.', to: '/gestionar-viviendas' },
     { title: 'Viviendas Bloqueadas', text: 'Revisa cierres bloqueados por pérdida de herramientas y autorízalos.', to: '/viviendas-bloqueadas' },
@@ -26,7 +26,7 @@ const roleCards = {
   ],
   admin: [
     { title: 'Dashboard', text: 'Acceso completo a panel de Central.', to: '/dashboard' },
-    { title: 'Gestionar Personal', text: 'Administra usuarios y permisos del sistema.', to: '/gestionar-personal' },
+    { title: 'Gestión', text: 'Centraliza el acceso a Viviendas, Usuarios y Cuadrillas.', to: '/gestion' },
   ],
 }
 
@@ -37,8 +37,18 @@ function Home() {
   const [mensajeApelacion, setMensajeApelacion] = useState('')
   const [errorApelacion, setErrorApelacion] = useState('')
 
-  const cards = useMemo(() => roleCards[user?.rol] || [], [user?.rol])
-  const isVoluntarioRestringido = user?.rol === 'Voluntario' && user?.estadoVoluntario !== 'Activo'
+  //const cards = useMemo(() => roleCards[user?.rol] || [], [user?.rol])
+  const cards = useMemo(() => {
+    if (!user?.rol) return [];
+    
+    //incluye Voluntario pero NO es Encargado de Voluntarios
+    if (user.rol.includes('Voluntario') && !user.rol.includes('Encargado')) {
+      return roleCards['Voluntario'];
+    }
+    
+    return roleCards[user.rol] || [];
+  }, [user?.rol]);
+  const isVoluntarioRestringido = user?.rol.includes('Voluntario') && user?.estadoVoluntario !== 'Activo'
 
   const enviarApelacion = async () => {
     setMensajeApelacion('')
@@ -111,7 +121,10 @@ function Home() {
           <article key={card.to} className="card">
             <h2>{card.title}</h2>
             <p>{card.text}</p>
-            <button type="button" className="btn-primary" onClick={() => navigate(card.to)}>
+            <button type="button" className="btn-primary" onClick={() => {
+                console.log("Intentando ir a:", card.to);
+                navigate(card.to);
+              }}>
               Ir
             </button>
           </article>
