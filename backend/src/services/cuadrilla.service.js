@@ -365,14 +365,17 @@ export async function canjearTokenExpress(tipoVoluntario, datosUsuarioNuevo, tok
   const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
   const usuarioRepository = AppDataSource.getRepository(Usuario);
 
-  // 🔗 CONEXIÓN CORREGIDA: Pasamos tokenEntregado Y datosUsuarioNuevo.rut a la pre-validación
+  //Pasamos tokenEntregado Y datosUsuarioNuevo.rut a la pre-validación
   const { tokenValido, usuarioYaRegistrado } = await preValidacionToken(tokenEntregado, datosUsuarioNuevo.rut);
 
   const idTokenTemp = tokenValido.id;
   const codigoCuadrillaAsociada = tokenValido.codigoCuadrilla;
 
   // El flujo se determina directamente usando el booleano que ya calculó preValidacionToken
-  let tipoRealFlujo = usuarioYaRegistrado ? "General" : tipoVoluntario;
+  let tipoRealFlujo = tipoVoluntario;
+  if (usuarioYaRegistrado) {
+    tipoRealFlujo = "General"; 
+  }
 
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
