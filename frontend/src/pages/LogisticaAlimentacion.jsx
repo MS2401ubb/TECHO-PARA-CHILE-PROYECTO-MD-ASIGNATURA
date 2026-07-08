@@ -3,14 +3,14 @@ import { useAuth } from '../context/AuthContext'
 import { descargarDocumentoAlimentacion } from '../services/logistica.service'
 
 function LogisticaAlimentacion() {
-  const { token, user } = useAuth()
+  const { user } = useAuth()
   const [form, setForm] = useState({ codigoVivienda: '', rutEncargado: user?.rut || '' })
   const [message, setMessage] = useState('')
 
   const onSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
-    const result = await descargarDocumentoAlimentacion(token, form)
+    const result = await descargarDocumentoAlimentacion(form)
     setMessage(result.success ? 'Documento generado y descargado.' : result.message)
   }
 

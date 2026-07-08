@@ -318,17 +318,6 @@ function Dashboard() {
                   </>
                 )}
 
-                <div className="form-actions" style={{ marginTop: '12px' }}>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={handleGenerarDocumentoAlimentos}
-                    disabled={documentoAlimentosLoading || !viviendaSeleccionada?.codigo}
-                  >
-                    {documentoAlimentosLoading ? 'Generando...' : 'Generar documento PDF'}
-                  </button>
-                </div>
-
                 {documentoAlimentosMessage && <p className="helper-text">{documentoAlimentosMessage}</p>}
               </div>
 

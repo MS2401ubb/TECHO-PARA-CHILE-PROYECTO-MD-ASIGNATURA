@@ -25,8 +25,8 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
     doc.fontSize(8).font('Helvetica').text('Central de Planificación Logística y Despliegue', { align: 'left' });
     doc.moveDown(1);
 
-    // Línea divisoria decorativa superior (Color naranja para diferenciarlo del transporte azul)
-    doc.moveTo(50, doc.y).lineTo(562, doc.y).stroke('#e67e22'); 
+    // Línea divisoria decorativa superior
+    doc.moveTo(50, doc.y).lineTo(562, doc.y).stroke('#0275d8'); 
     doc.moveDown(1.5);
 
     // Título Principal
@@ -37,7 +37,7 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
     // =========================================================================
     // BLOQUE 1: INFORMACIÓN DE LA ZONA DE CONSTRUCCIÓN
     // =========================================================================
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#e67e22').text('1. INFORMACIÓN DE LA ZONA DE CONSTRUCCIÓN');
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#0275d8').text('1. INFORMACIÓN DE LA ZONA DE CONSTRUCCIÓN');
     doc.moveDown(0.5);
     
     doc.fontSize(10).font('Helvetica').fillColor('#333333');
@@ -52,15 +52,15 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
     // =========================================================================
     // BLOQUE 2: CÁLCULO LOGÍSTICO (TABLA DE CUANTIFICACIÓN)
     // =========================================================================
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#e67e22').text('2. CUANTIFICACIÓN DE RACIONES REQUERIDAS');
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#0275d8').text('2. CUANTIFICACIÓN DE RACIONES REQUERIDAS');
     doc.moveDown(0.5);
 
     // Dibujar Encabezado de la Tabla
     const tableTop = doc.y;
     doc.fontSize(9).font('Helvetica-Bold').fillColor('#ffffff');
     
-    // Rectángulo de fondo para el encabezado de la tabla (Color naranja)
-    doc.rect(50, tableTop, 512, 18).fill('#e67e22');
+    // Rectángulo de fondo para el encabezado de la tabla
+    doc.rect(50, tableTop, 512, 18).fill('#0275d8');
     
     // Textos de la cabecera emulando columnas fijas
     doc.text('Concepto / Factor Logístico', 65, tableTop + 5);
@@ -93,7 +93,7 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
 
     // Fila Destacada: Total General
     doc.rect(50, currentY, 512, 22).fill('#f3f3f3');
-    doc.fontSize(11).font('Helvetica-Bold').fillColor('#e67e22').text('TOTAL PORCIONES DETERMINADAS', 65, currentY + 6);
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#0275d8').text('TOTAL PORCIONES DETERMINADAS', 65, currentY + 6);
     doc.text(`${calculoLogistico.totalRacionesDeterminadas} Raciones`, 450, currentY + 6, { width: 100, align: 'right' });
     
     doc.moveDown(3);
@@ -104,7 +104,7 @@ export const crearPdfProvisionAlimentacion = (data, res) => {
     const boxY = doc.y;
     doc.rect(50, boxY + 20, 512, 70).fill('#f5f5f5');
 
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#e67e22')
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#0275d8')
        .text('3. RESPALDO Y AUTORIZACIÓN DE GASTO', 55, boxY - 15);
 
     doc.fontSize(10).font('Helvetica').fillColor('#333333')
