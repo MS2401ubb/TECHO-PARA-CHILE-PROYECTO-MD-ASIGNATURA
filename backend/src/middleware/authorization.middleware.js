@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import { handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 import { JWT_SECRET } from "../config/configEnv.js";
 
+import {ROLES_VOLUNTARIOS} from "../../../frontend/src/constants/roles.js"
+
 export function getUserRole(req) {
   if (req.user) {
     return req.user.rol || req.user.role || null;
@@ -29,24 +31,30 @@ export function getUserRole(req) {
 const roleNames = {
   "admin": "admin",
   "Voluntario": "Voluntario",
+  "Voluntario Espontáneo": "Voluntario Espontáneo",
+  "Voluntario General": "Voluntario General",
   "Jefe de Cuadrilla": "Jefe de Cuadrilla",
   "Encargado de Voluntarios": "Encargado de Voluntarios",
   "Encargado de Central": "Encargado de Central",
 };
 
-export function verifyRoles(roles) {
+export function verifyRoles(rolesOriginales) {
   return (req, res, next) => {
     try {
       const userRole = getUserRole(req);
 
       if (!userRole) return handleErrorClient(res, 401, "Token inválido o expirado");
 
-      if (!roles.includes(userRole)) {
-        const validRolesNames = roles
+      const rolesPermitidos = rolesOriginales.includes("Voluntario")
+        ? [...rolesOriginales, ...ROLES_VOLUNTARIOS]
+        : rolesOriginales;
+
+      if (!rolesPermitidos.includes(userRole)) {
+        const validRolesNames = rolesOriginales
           .map((role) => roleNames[role] || role)
           .join(", ");
 
-        return handleErrorClient(res, 403, `Acceso denegado: se necesitan privilegios de ${validRolesNames}`)
+        return handleErrorClient(res, 403, `Acceso denegado: se necesitan privilegios de ${validRolesNames}`);
       }
 
       next();

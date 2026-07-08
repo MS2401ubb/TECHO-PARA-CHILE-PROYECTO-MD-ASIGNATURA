@@ -4,6 +4,8 @@ import { AppDataSource } from "../config/configDb.js";
 import { JWT_SECRET } from "../config/configEnv.js";
 import User from "../entities/usuario.entity.js";
 import Voluntario from "../entities/voluntario.entity.js";
+import {ROLES_VOLUNTARIOS} from "../../../frontend/src/constants/roles.js"
+
 
 export async function loginService(data) {
     const userRepository = AppDataSource.getRepository(User);
@@ -31,7 +33,9 @@ export async function loginService(data) {
         { expiresIn: "24h" }
     );
 
-    const voluntario = user.rol === 'Voluntario'
+    const isCualquierVoluntario = ROLES_VOLUNTARIOS.includes(user.rol);
+
+    const voluntario = isCualquierVoluntario
         ? await voluntarioRepository.findOne({ where: { rutUsuario: user.rut } })
         : null;
     
