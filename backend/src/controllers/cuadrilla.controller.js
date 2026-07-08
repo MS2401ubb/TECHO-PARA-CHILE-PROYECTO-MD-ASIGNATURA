@@ -3,6 +3,7 @@ import {
   getCuadrillaByCodigoService,
   editCuadrillaService,
   deleteCuadrillaService,
+  asignarCuadrillaAViviendaService,
   asignarVoluntarioACuadrillaService,
   asignarJefeCuadrillaACuadrillaService,
   getMiCuadrillaYViviendaService,
@@ -95,6 +96,35 @@ export async function asignarVoluntarioACuadrilla(req, res) {
       return handleErrorClient(res, 400, error.message);
     }
     handleErrorServer(res, 500, "Error al asignar voluntario a cuadrilla", error.message);
+  }
+}
+
+export async function asignarCuadrillaAVivienda(req, res) {
+  try {
+    const { codigo } = req.params;
+    const { codigoVivienda, fechaInicio } = req.body;
+
+    if (!codigoVivienda) {
+      return handleErrorClient(res, 400, 'El codigoVivienda es obligatorio');
+    }
+
+    const data = await asignarCuadrillaAViviendaService(codigo, codigoVivienda, fechaInicio);
+    return handleSuccess(res, 201, 'Cuadrilla asignada a vivienda exitosamente', data);
+  } catch (error) {
+    if (error.message.includes('no encontrada') || error.message.includes('no encontrado')) {
+      return handleErrorClient(res, 404, error.message);
+    }
+    if (
+      error.message.includes('obligatorio') ||
+      error.message.includes('fechaInicio') ||
+      error.message.includes('entero positivo') ||
+      error.message.includes('finalizada') ||
+      error.message.includes('ya tiene') ||
+      error.message.includes('ya se encuentra asignada')
+    ) {
+      return handleErrorClient(res, 400, error.message);
+    }
+    return handleErrorServer(res, 500, 'Error al asignar cuadrilla a vivienda', error.message);
   }
 }
 

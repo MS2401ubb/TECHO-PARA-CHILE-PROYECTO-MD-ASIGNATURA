@@ -26,3 +26,16 @@ export async function obtenerViviendasPlanificables() {
     return { success: false, message: error.response?.data?.message || 'Error al conectar con el servidor', data: [] }
   }
 }
+
+export async function obtenerDashboardCentral() {
+  try {
+    const response = await axios.get('/vivienda/dashboard/central')
+    return { success: true, data: response.data.data || null }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al conectar con el servidor',
+      data: null,
+    }
+  }
+}

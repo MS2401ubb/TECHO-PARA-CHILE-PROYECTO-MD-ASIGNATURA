@@ -3,7 +3,7 @@ import Vivienda from "../entities/vivienda.entity.js";
 import CuadrillaTrabajaEnVivienda from "../entities/cuadrillaTrabajaEnVivienda.entity.js";
 import VoluntarioParticipaEnCuadrilla from "../entities/voluntarioParticipaEnCuadrilla.entity.js";
 import JefeCuadrillaLideraCuadrilla from "../entities/jefeCuadrillaLideraCuadrilla.entity.js";
-import { IsNull } from "typeorm";
+import { In, IsNull } from "typeorm";
 
 // ALL
 export async function getViviendasService() {
@@ -254,4 +254,145 @@ export async function getViviendasPlanificablesService() {
   }
 
   return planificables;
+}
+
+export async function getDashboardCentralService() {
+  const viviendaRepository = AppDataSource.getRepository(Vivienda);
+  const cuadrillaTrabajaRepository = AppDataSource.getRepository(CuadrillaTrabajaEnVivienda);
+  const inventarioJornadaRepository = AppDataSource.getRepository("InventarioJornada");
+
+  const viviendasActivas = await viviendaRepository.find({
+    where: { estado: "Construyendo" },
+    relations: {
+      ciudad: {
+        region: true,
+      },
+    },
+    order: {
+      fechaInicioEstimada: "ASC",
+    },
+  });
+
+  if (viviendasActivas.length === 0) {
+    return {
+      filtroEstado: "Construyendo",
+      totalViviendasActivas: 0,
+      viviendasActivasPorCiudad: [],
+      viviendas: [],
+    };
+  }
+
+  const codigosVivienda = viviendasActivas.map((vivienda) => vivienda.codigo);
+  const asignacionesActivas = await cuadrillaTrabajaRepository.find({
+    where: {
+      codigoVivienda: In(codigosVivienda),
+      fechaFin: IsNull(),
+    },
+    relations: {
+      cuadrilla: true,
+    },
+    order: {
+      fechaInicio: "ASC",
+    },
+  });
+
+  const asignacionesPorVivienda = asignacionesActivas.reduce((acc, asignacion) => {
+    if (!acc.has(asignacion.codigoVivienda)) {
+      acc.set(asignacion.codigoVivienda, []);
+    }
+    acc.get(asignacion.codigoVivienda).push(asignacion);
+    return acc;
+  }, new Map());
+
+  const resumenCiudad = viviendasActivas.reduce((acc, vivienda) => {
+    const ciudad = vivienda?.ciudad?.nombre || "Sin ciudad";
+    acc.set(ciudad, (acc.get(ciudad) || 0) + 1);
+    return acc;
+  }, new Map());
+
+  const viviendasDetalle = [];
+
+  for (const vivienda of viviendasActivas) {
+    const asignacionesVivienda = asignacionesPorVivienda.get(vivienda.codigo) || [];
+    const cuadrillasDetalle = [];
+
+    for (const asignacion of asignacionesVivienda) {
+      const inventarios = await inventarioJornadaRepository.find({
+        where: {
+          codigo_vivienda: vivienda.codigo,
+          codigoCuadrilla: asignacion.codigoCuadrilla,
+        },
+        relations: {
+          herramienta: true,
+          jornada: true,
+        },
+        order: {
+          fecha: "DESC",
+          id: "DESC",
+        },
+      });
+
+      const ultimaJornadaId = inventarios[0]?.jornada?.id || null;
+      const registrosUltimaJornada = ultimaJornadaId
+        ? inventarios.filter((registro) => registro?.jornada?.id === ultimaJornadaId)
+        : [];
+
+      const herramientasMap = new Map();
+      for (const registro of registrosUltimaJornada) {
+        const herramientaId = registro?.herramienta?.id;
+        if (!herramientaId) continue;
+
+        const previa = herramientasMap.get(herramientaId) || {
+          idHerramienta: herramientaId,
+          nombre: registro.herramienta.nombre,
+          cantidadInicial: 0,
+          cantidadFisicaFinal: 0,
+          estadoCierre: registro.estado_cierre,
+        };
+
+        previa.cantidadInicial += Number(registro.cantidad_inicial || 0);
+        previa.cantidadFisicaFinal += Number(registro.cantidad_fisica_final || 0);
+        previa.estadoCierre = registro.estado_cierre;
+
+        herramientasMap.set(herramientaId, previa);
+      }
+
+      cuadrillasDetalle.push({
+        codigoCuadrilla: asignacion.codigoCuadrilla,
+        descripcion: asignacion?.cuadrilla?.descripcion || null,
+        fechaInicioAsignacion: asignacion.fechaInicio,
+        ultimaJornada: registrosUltimaJornada[0]?.jornada
+          ? {
+              id: registrosUltimaJornada[0].jornada.id,
+              fecha: registrosUltimaJornada[0].jornada.fecha,
+              estado: registrosUltimaJornada[0].jornada.estado,
+            }
+          : null,
+        herramientas: Array.from(herramientasMap.values()),
+      });
+    }
+
+    viviendasDetalle.push({
+      codigo: vivienda.codigo,
+      direccion: vivienda.direccion,
+      tipoObra: vivienda.tipoObra,
+      estado: vivienda.estado,
+      porcentajeAvance: vivienda.porcentajeAvance,
+      fechaInicioEstimada: vivienda.fechaInicioEstimada,
+      fechaFinEstimada: vivienda.fechaFinEstimada,
+      ciudad: vivienda?.ciudad?.nombre || null,
+      region: vivienda?.ciudad?.region?.nombre || null,
+      totalCuadrillasActivas: cuadrillasDetalle.length,
+      cuadrillas: cuadrillasDetalle,
+    });
+  }
+
+  return {
+    filtroEstado: "Construyendo",
+    totalViviendasActivas: viviendasDetalle.length,
+    viviendasActivasPorCiudad: Array.from(resumenCiudad.entries())
+      .map(([ciudad, total]) => ({ ciudad, total }))
+      .sort((a, b) => b.total - a.total),
+    viviendas: viviendasDetalle,
+  };
 }

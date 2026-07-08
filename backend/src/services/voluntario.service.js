@@ -19,6 +19,19 @@ const CAMPOS_OBLIGATORIOS_POSTULANTE = [
   ['voluntario.telefonoEmergencia', (voluntario) => voluntario.telefonoEmergencia],
 ];
 
+async function listarPorEstado(estado) {
+  if (!ESTADOS_VOLUNTARIO.includes(estado)) {
+    throw new Error(`Estado de voluntario inválido: ${estado}.`);
+  }
+
+  const voluntarioRepository = AppDataSource.getRepository(Voluntario);
+  return voluntarioRepository.find({
+    where: { estado },
+    relations: { usuario: true },
+    order: { rutUsuario: 'ASC' },
+  });
+}
+
 function validarCamposObligatoriosPostulante(voluntario) {
   const faltantes = CAMPOS_OBLIGATORIOS_POSTULANTE
     .filter(([, obtenerValor]) => {

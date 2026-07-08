@@ -7,10 +7,13 @@ function GestionarPersonal() {
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
 
+  const filtrarAdmin = (listaUsuarios) =>
+    (listaUsuarios || []).filter((user) => user.rut !== 'admin' && user.rol !== 'admin')
+
   useEffect(() => {
     const loadUsers = async () => {
       const result = await obtenerUsuarios()
-      if (result.success) setUsers(result.data)
+      if (result.success) setUsers(filtrarAdmin(result.data))
     }
 
     loadUsers()
@@ -22,7 +25,7 @@ function GestionarPersonal() {
     setMessage(result.success ? 'Rol actualizado' : result.message)
     if (result.success) {
       const refreshed = await obtenerUsuarios()
-      if (refreshed.success) setUsers(refreshed.data)
+      if (refreshed.success) setUsers(filtrarAdmin(refreshed.data))
     }
   }
 
@@ -53,7 +56,6 @@ function GestionarPersonal() {
                     <option>Jefe de Cuadrilla</option>
                     <option>Encargado de Voluntarios</option>
                     <option>Encargado de Central</option>
-                    <option>admin</option>
                   </select>
                 </td>
               </tr>

@@ -5,6 +5,7 @@ import {
   deleteViviendaService,
   getViviendasPlanificablesService,
   finalizarViviendaService,
+  getDashboardCentralService,
 } from "../services/vivienda.service.js";
 import { editViviendaBodyValidation } from "../validations/vivienda.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -117,5 +118,14 @@ export async function getViviendasPlanificables(req, res) {
     return handleSuccess(res, 200, "Viviendas planificables obtenidas exitosamente", viviendas);
   } catch (error) {
     return handleErrorServer(res, 500, "Error al obtener viviendas planificables", error.message);
+  }
+}
+
+export async function getDashboardCentral(req, res) {
+  try {
+    const dashboard = await getDashboardCentralService();
+    return handleSuccess(res, 200, "Dashboard central obtenido exitosamente", dashboard);
+  } catch (error) {
+    return handleErrorServer(res, 500, "Error al obtener dashboard central", error.message);
   }
 }

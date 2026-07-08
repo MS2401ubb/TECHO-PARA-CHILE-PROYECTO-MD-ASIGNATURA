@@ -4,6 +4,7 @@ import {
 	getCuadrillaByCodigo,
 	editCuadrilla,
 	deleteCuadrilla,
+	asignarCuadrillaAVivienda,
 	asignarVoluntarioACuadrilla,
 	asignarJefeCuadrillaACuadrilla,
 	getMiCuadrillaYVivienda,
@@ -40,6 +41,12 @@ router.post(
 	authenticateJwt,
 	verifyRoles(["Jefe de Cuadrilla"]),
 	getTokenCuadrilla
+);
+router.post(
+	"/:codigo/asignar-vivienda",
+	authenticateJwt,
+	verifyRoles(["Encargado de Voluntarios", "Encargado de Central"]),
+	asignarCuadrillaAVivienda
 );
 router.post(
 	"/:codigo/asignar-voluntario",

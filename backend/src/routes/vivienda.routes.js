@@ -6,6 +6,7 @@ import {
 	deleteVivienda,
 	getViviendasPlanificables,
 	finalizarVivienda,
+	getDashboardCentral,
 } from "../controllers/vivienda.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
@@ -17,6 +18,13 @@ router.get(
 	authenticateJwt,
 	verifyRoles(["Encargado de Voluntarios", "Encargado de Central", "admin"]),
 	getViviendasPlanificables
+);
+
+router.get(
+	"/dashboard/central",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	getDashboardCentral
 );
 
 router.get(

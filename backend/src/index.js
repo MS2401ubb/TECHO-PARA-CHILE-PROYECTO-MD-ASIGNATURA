@@ -10,6 +10,7 @@ import {  createInitialRegionesAndCiudades,
           createInitialCuadrillas,
           createInitialJornadas,
           createInitialMateriales,
+    createInitialReportes,
           createInitialRelations
         } from './config/initialSetup.js';
 import { PORT } from './config/configEnv.js';
@@ -38,6 +39,7 @@ try {
   await createInitialCuadrillas();
   await createInitialJornadas();
   await createInitialMateriales();
+  await createInitialReportes();
   await createInitialRelations();
   console.log('✅ Datos Cargados con éxito.');
 
