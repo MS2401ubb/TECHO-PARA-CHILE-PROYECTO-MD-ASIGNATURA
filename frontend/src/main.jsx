@@ -44,7 +44,7 @@ const router = createBrowserRouter([
           {
             path: '/mi-cuadrilla-vivienda',
             element: (
-              <ProtectedRoute allowedRoles={[ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla']}>
+              <ProtectedRoute allowedRoles={[...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla']}>
                 <MiCuadrillaVivienda />
               </ProtectedRoute>
             ),
