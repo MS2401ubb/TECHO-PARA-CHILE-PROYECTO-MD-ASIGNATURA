@@ -18,6 +18,18 @@ export async function getCuadrillasService() {
   return await cuadrillaRepository.find();
 }
 
+export async function createCuadrillaService(data) {
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+  const descripcion = String(data?.descripcion || '').trim();
+
+  if (!descripcion) {
+    throw new Error('La descripcion es obligatoria.');
+  }
+
+  const nuevaCuadrilla = cuadrillaRepository.create({ descripcion });
+  return await cuadrillaRepository.save(nuevaCuadrilla);
+}
+
 // ESPECIFICO
 export async function getCuadrillaByCodigoService(codigo) {
   const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
@@ -216,6 +228,100 @@ export async function asignarJefeCuadrillaACuadrillaService(rutJefeCuadrilla, co
     return {
       rutJefeCuadrilla,
       codigoCuadrilla: codigoCuadrillaNumero,
+      fechaInicio: nuevaAsignacion.fechaInicio,
+    };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+}
+
+export async function asignarCuadrillaAViviendaService(codigoCuadrilla, codigoVivienda, fechaInicio) {
+  const codigoCuadrillaNumero = Number(codigoCuadrilla);
+  const codigoViviendaTexto = String(codigoVivienda || '').trim();
+  const fechaInicioAsignacion = fechaInicio ? new Date(fechaInicio) : new Date();
+
+  if (!Number.isInteger(codigoCuadrillaNumero) || codigoCuadrillaNumero <= 0) {
+    throw new Error("El codigo de cuadrilla debe ser un número entero positivo.");
+  }
+
+  if (!codigoViviendaTexto) {
+    throw new Error("El codigoVivienda es obligatorio.");
+  }
+
+  if (Number.isNaN(fechaInicioAsignacion.getTime())) {
+    throw new Error("La fechaInicio es inválida.");
+  }
+
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const cuadrillaRepository = queryRunner.manager.getRepository(Cuadrilla);
+    const viviendaRepository = queryRunner.manager.getRepository('Vivienda');
+    const asignacionRepository = queryRunner.manager.getRepository(CuadrillaTrabajaEnVivienda);
+
+    const cuadrilla = await cuadrillaRepository.findOne({
+      where: { codigo: codigoCuadrillaNumero },
+    });
+
+    if (!cuadrilla) {
+      throw new Error('Cuadrilla no encontrada.');
+    }
+
+    const vivienda = await viviendaRepository.findOne({
+      where: { codigo: codigoViviendaTexto },
+    });
+
+    if (!vivienda) {
+      throw new Error('Vivienda no encontrada.');
+    }
+
+    if (vivienda.estado === 'Finalizada') {
+      throw new Error('No se puede asignar una cuadrilla a una vivienda finalizada.');
+    }
+
+    const asignacionActivaCuadrilla = await asignacionRepository.findOne({
+      where: {
+        codigoCuadrilla: codigoCuadrillaNumero,
+        fechaFin: IsNull(),
+      },
+    });
+
+    if (asignacionActivaCuadrilla) {
+      throw new Error('La cuadrilla ya tiene una vivienda activa asignada.');
+    }
+
+    const asignacionExistente = await asignacionRepository.findOne({
+      where: {
+        codigoCuadrilla: codigoCuadrillaNumero,
+        codigoVivienda: codigoViviendaTexto,
+        fechaFin: IsNull(),
+      },
+    });
+
+    if (asignacionExistente) {
+      throw new Error('La cuadrilla ya se encuentra asignada activamente a esta vivienda.');
+    }
+
+    const nuevaAsignacion = asignacionRepository.create({
+      codigoCuadrilla: codigoCuadrillaNumero,
+      codigoVivienda: codigoViviendaTexto,
+      fechaInicio: fechaInicioAsignacion,
+      fechaFin: null,
+      cuadrilla: { codigo: codigoCuadrillaNumero },
+      vivienda: { codigo: codigoViviendaTexto },
+    });
+
+    await asignacionRepository.save(nuevaAsignacion);
+    await queryRunner.commitTransaction();
+
+    return {
+      codigoCuadrilla: codigoCuadrillaNumero,
+      codigoVivienda: codigoViviendaTexto,
       fechaInicio: nuevaAsignacion.fechaInicio,
     };
   } catch (error) {

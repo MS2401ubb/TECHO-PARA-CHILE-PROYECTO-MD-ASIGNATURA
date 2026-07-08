@@ -1,9 +1,11 @@
 import { Router } from "express";
 import {
 	getCuadrillas,
+	createCuadrilla,
 	getCuadrillaByCodigo,
 	editCuadrilla,
 	deleteCuadrilla,
+	asignarCuadrillaAVivienda,
 	asignarVoluntarioACuadrilla,
 	asignarJefeCuadrillaACuadrilla,
 	getMiCuadrillaYVivienda,
@@ -31,6 +33,12 @@ router.get(
 	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
 	getCuadrillas
 );
+router.post(
+	"/",
+	authenticateJwt,
+	verifyRoles(["Encargado de Central", "admin"]),
+	createCuadrilla
+);
 router.post("/token/canjear",getTokenVoluntario);
 router.get("/token/validar/:token/:rut",validarTokenExpress);
 router.get(
@@ -39,7 +47,18 @@ router.get(
 	verifyRoles(["Voluntario", "Jefe de Cuadrilla", "Encargado de Voluntarios", "Encargado de Central", "admin"]),
 	getCuadrillaByCodigo
 );
-router.post("/:codigo/token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),getTokenCuadrilla);
+router.post(
+	"/:codigo/token",
+	authenticateJwt,
+	verifyRoles(["Jefe de Cuadrilla"]),
+	getTokenCuadrilla
+);
+router.post(
+	"/:codigo/asignar-vivienda",
+	authenticateJwt,
+	verifyRoles(["Encargado de Voluntarios", "Encargado de Central"]),
+	asignarCuadrillaAVivienda
+);
 router.get("/:codigo/existe-token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),isTokenExist);
 router.post(
 	"/:codigo/asignar-voluntario",

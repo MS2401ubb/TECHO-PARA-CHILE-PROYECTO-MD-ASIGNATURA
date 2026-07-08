@@ -1,16 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ROLES_VOLUNTARIOS } from '../constants/roles'
+import techoLogo from '../assets/LOGO-TECHO-COLOR.png'
 
 const menuItems = [
   { label: 'Home', to: '/home', roles: [...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla', 'Encargado de Voluntarios', 'Encargado de Central', 'admin'] },
-  { label: 'Mi cuadrilla y vivienda', to: '/mi-cuadrilla-vivienda', roles: [...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla'] },
-  { label: 'Enviar reporte', to: '/enviar-reporte', roles: ['Jefe de Cuadrilla', 'Encargado de Voluntarios'] },
-  { label: 'Postulantes', to: '/postulantes', roles: ['Encargado de Voluntarios'] },
-  { label: 'Gestionar Voluntarios', to: '/gestionar-voluntarios', roles: ['Encargado de Voluntarios', 'Encargado de Central', 'admin'] },
   { label: 'Dashboard', to: '/dashboard', roles: ['Encargado de Central', 'admin'] },
+  { label: 'Mi cuadrilla y vivienda', to: '/mi-cuadrilla-vivienda', roles: [...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla'] },
+  { label: 'Postulantes', to: '/postulantes', roles: ['Encargado de Voluntarios'] },
+  { label: 'Gestionar Distribucion Laboral', to: '/gestionar-voluntarios', roles: ['Encargado de Voluntarios', 'Encargado de Central', 'admin'] },
+  { label: 'Gestión', to: '/gestion', roles: ['admin'] },
   { label: 'Gestionar Personal', to: '/gestionar-personal', roles: ['Encargado de Central', 'admin'] },
   { label: 'Gestionar Viviendas', to: '/gestionar-viviendas', roles: ['Encargado de Central', 'admin'] },
+  { label: 'Enviar reporte', to: '/enviar-reporte', roles: ['Jefe de Cuadrilla', 'Encargado de Voluntarios'] },
   { label: 'Ver reportes', to: '/reportes', roles: ['Encargado de Central', 'admin'] },
   { label: 'Logística transporte', to: '/logistica-transporte', roles: ['Encargado de Central', 'admin'] },
   { label: 'Logística alimentación', to: '/logistica-alimentacion', roles: ['Encargado de Central', 'admin'] },
@@ -27,7 +29,7 @@ function Sidebar({ open, onClose }) {
   return (
     <aside className={`app-sidebar ${open ? 'open' : ''}`}>
       <div className="sidebar-head">
-        <h2>TECHO</h2>
+        <img src={techoLogo} alt="Logo TECHO" style={{ width: '10rem', height: 'auto' }}></img>
         <button type="button" className="close-sidebar" onClick={onClose}>X</button>
       </div>
       <nav className="sidebar-nav">

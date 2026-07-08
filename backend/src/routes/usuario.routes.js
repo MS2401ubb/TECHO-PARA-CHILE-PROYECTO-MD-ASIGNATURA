@@ -1,10 +1,16 @@
 import { Router } from "express";
-import { getUsers, getUserByRut, editUser, deleteUser, asignarRolUsuario } from "../controllers/usuario.controller.js";
+import { getUsers, getJefesCuadrilla, getUserByRut, editUser, deleteUser, asignarRolUsuario } from "../controllers/usuario.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
+router.get(
+	"/jefes-cuadrilla",
+	authenticateJwt,
+	verifyRoles(["admin", "Encargado de Central", "Encargado de Voluntarios"]),
+	getJefesCuadrilla
+);
 router.get(
 	"/",
 	authenticateJwt,
@@ -20,7 +26,6 @@ router.get(
 router.patch(
 	"/:rut",
 	authenticateJwt,
-	verifyRoles(["admin", "Encargado de Central"]),
 	editUser
 );
 router.patch(

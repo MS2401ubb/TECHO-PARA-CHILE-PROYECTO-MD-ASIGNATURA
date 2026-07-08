@@ -7,7 +7,7 @@ import {
   obtenerCatalogoHerramientas,
   validarSuficienciaHerramientas,
 } from '../services/logistica.service'
-import { obtenerViviendasPlanificables } from '../services/vivienda.service'
+import { editarVivienda, obtenerViviendasPlanificables } from '../services/vivienda.service'
 
 function GestionarViviendas() {
   const { user } = useAuth()
@@ -25,6 +25,7 @@ function GestionarViviendas() {
   const [herramientasCatalogo, setHerramientasCatalogo] = useState([])
   const [cuadrillaSeleccionada, setCuadrillaSeleccionada] = useState('')
   const [herramientasInput, setHerramientasInput] = useState([{ id_herramienta: '', cantidad_asignada: 1 }])
+  const [actualizandoVivienda, setActualizandoVivienda] = useState('')
 
   useEffect(() => {
     if (user?.rol !== 'Encargado de Central') return
@@ -153,7 +154,24 @@ function GestionarViviendas() {
     window.alert('Manifiesto de carga descargado correctamente.')
   }
 
-  if (user?.rol !== 'Encargado de Central') {
+  const pasarAConstruccion = async (codigoVivienda) => {
+    setActualizandoVivienda(codigoVivienda)
+    setMessage('')
+
+    const result = await editarVivienda(codigoVivienda, { estado: 'Construyendo' })
+    if (!result.success) {
+      setActualizandoVivienda('')
+      window.alert(result.message || 'No fue posible actualizar la vivienda.')
+      return
+    }
+
+    setViviendas((current) => current.filter((vivienda) => vivienda.codigoVivienda !== codigoVivienda))
+    setViviendaSeleccionada((current) => (current?.codigoVivienda === codigoVivienda ? null : current))
+    setMessage(`La vivienda ${codigoVivienda} se movió a estado Construyendo.`)
+    setActualizandoVivienda('')
+  }
+
+  if (user?.rol !== 'Encargado de Central' && user?.rol !== 'admin') {
     return (
       <section className="page-card">
         <h1>Gestionar Viviendas</h1>
@@ -261,6 +279,14 @@ function GestionarViviendas() {
                       onClick={() => abrirPanelHerramientas(item)}
                     >
                       Asignación de herramientas
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-success"
+                      onClick={() => pasarAConstruccion(item.codigoVivienda)}
+                      disabled={actualizandoVivienda === item.codigoVivienda}
+                    >
+                      {actualizandoVivienda === item.codigoVivienda ? 'Actualizando...' : 'Pasar a Construcción'}
                     </button>
                   </div>
                 </td>

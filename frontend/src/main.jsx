@@ -8,12 +8,14 @@ import EnrollVoluntario from './pages/EnrollVoluntario'
 import Logout from './pages/Logout'
 import Profile from './pages/Profile'
 import Dashboard from './pages/Dashboard'
+import Gestion from './pages/Gestion'
 import MiCuadrillaVivienda from './pages/MiCuadrillaVivienda'
 import EnviarReporte from './pages/EnviarReporte'
 import Postulantes from './pages/Postulantes'
 import GestionVoluntarios from './pages/GestionVoluntarios'
 import GestionarPersonal from './pages/GestionarPersonal'
 import GestionarViviendas from './pages/GestionarViviendas'
+import GestionarCuadrillas from './pages/GestionarCuadrillas'
 import Reportes from './pages/Reportes'
 import LogisticaTransporte from './pages/LogisticaTransporte'
 import LogisticaAlimentacion from './pages/LogisticaAlimentacion'
@@ -94,6 +96,22 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['Encargado de Central', 'admin']}>
                 <GestionarViviendas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/gestionar-cuadrillas',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <GestionarCuadrillas />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/gestion',
+            element: (
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Gestion />
               </ProtectedRoute>
             ),
           },
