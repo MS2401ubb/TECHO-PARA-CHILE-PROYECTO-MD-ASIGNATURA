@@ -8,7 +8,8 @@ import {
   getMiCuadrillaYViviendaService,
   obtenerToken,
   canjearTokenExpress,
-  preValidacionToken
+  preValidacionToken,
+  verificarTokenExistente
 } from "../services/cuadrilla.service.js";
 import {tokenCanjeoBodyValidation} from "../validations/token.validation.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
@@ -145,6 +146,26 @@ if (
       return handleErrorClient(res, 400, error.message);
     }
     handleErrorServer(res,500,"Error al generar Token de asignación a cuadrilla",error.message);
+  }
+}
+export async function isTokenExist(req,res){
+  try{
+    const {codigo} = req.params;
+    const codigoNum = parseInt(codigo,10);
+
+    const rutJefeCUadrilla = req.user.rut;
+
+    const data = await verificarTokenExistente(codigoNum);
+    handleSuccess(res,201,"Token activo existente",data);
+  }catch(error){
+    if(error.message.includes("no encontrado") || error.message.includes("no encontrada")){
+      return handleErrorClient(res,404,error.message);
+    }
+    if(error.message.includes("entero positivo")){
+      return handleErrorClient(res,400,error.message);
+    }
+
+    return handleErrorServer(res,500,"Error interno al verificar token",error.message);
   }
 }
 

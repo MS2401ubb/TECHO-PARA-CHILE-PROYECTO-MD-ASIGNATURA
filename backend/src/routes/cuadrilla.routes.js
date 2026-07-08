@@ -9,10 +9,12 @@ import {
 	getMiCuadrillaYVivienda,
 	getTokenCuadrilla,
 	getTokenVoluntario,
-	validarTokenExpress
+	validarTokenExpress,
+	isTokenExist
 } from "../controllers/cuadrilla.controller.js";
 import { authenticateJwt } from "../middleware/authentication.middleware.js";
 import { verifyRoles } from "../middleware/authorization.middleware.js";
+import { verificarTokenExistente } from "../services/cuadrilla.service.js";
 
 const router = Router();
 
@@ -38,6 +40,7 @@ router.get(
 	getCuadrillaByCodigo
 );
 router.post("/:codigo/token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),getTokenCuadrilla);
+router.get("/:codigo/existe-token",authenticateJwt,verifyRoles(["Jefe de Cuadrilla"]),isTokenExist);
 router.post(
 	"/:codigo/asignar-voluntario",
 	authenticateJwt,

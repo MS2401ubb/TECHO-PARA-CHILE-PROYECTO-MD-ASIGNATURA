@@ -306,6 +306,38 @@ export async function obtenerToken(rutJefe,codigoCuadrilla){
   }
 }
 
+export async function verificarTokenExistente(codigoCuadrilla){
+  const codigoCuadrillaNumero = Number(codigoCuadrilla);
+
+  if (!Number.isInteger(codigoCuadrillaNumero) || codigoCuadrillaNumero <= 0) {
+    throw new Error("El codigo de cuadrilla debe ser un número entero positivo.");
+  }
+
+  const tokenRepository = AppDataSource.getRepository(TokenAsignaCuadrilla);
+  const cuadrillaRepository = AppDataSource.getRepository(Cuadrilla);
+
+  const cuadrilla = await cuadrillaRepository.findOne({
+    where: { codigo: codigoCuadrillaNumero },
+  });
+  if(!cuadrilla) {
+    throw new Error("Cuadrilla no encontrada.");
+  }
+  const tokenExistente = await tokenRepository.findOne({
+    where: {
+      codigoCuadrilla: codigoCuadrillaNumero,
+      activo: true,
+    }
+  });
+  if(!tokenExistente){
+    throw new Error("Token no encontrado.");
+  }
+
+  return {
+    instanceToken: tokenExistente,
+    tokenEncontrado: true
+  };
+}
+
 /**
  * Auxiliar que garantiza string generado sea único, sin repetirse en generarTokenCuadrillaExpress 
  * 
