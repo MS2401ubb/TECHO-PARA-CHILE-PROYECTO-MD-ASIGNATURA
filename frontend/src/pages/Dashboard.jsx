@@ -32,15 +32,8 @@ function Dashboard() {
       }
 
       setDashboard(result.data)
-
-      const primeraVivienda = result.data?.viviendas?.[0]
-      if (primeraVivienda) {
-        setCodigoViviendaSeleccionada(primeraVivienda.codigo)
-        setCodigoCuadrillaSeleccionada(String(primeraVivienda.cuadrillas?.[0]?.codigoCuadrilla || ''))
-      } else {
-        setCodigoViviendaSeleccionada('')
-        setCodigoCuadrillaSeleccionada('')
-      }
+      setCodigoViviendaSeleccionada('')
+      setCodigoCuadrillaSeleccionada('')
 
       setLoading(false)
     }
@@ -91,6 +84,17 @@ function Dashboard() {
   }, [codigoCuadrillaSeleccionada, viviendaSeleccionada])
 
   const seleccionarVivienda = async (codigoVivienda) => {
+    const yaEstaSeleccionada = codigoViviendaSeleccionada === codigoVivienda
+
+    if (yaEstaSeleccionada) {
+      setCodigoViviendaSeleccionada('')
+      setCodigoCuadrillaSeleccionada('')
+      setProvisionAlimentos(null)
+      setProvisionAlimentosError('')
+      setDocumentoAlimentosMessage('')
+      return
+    }
+
     const siguienteVivienda = viviendasFiltradas.find((item) => item.codigo === codigoVivienda)
     setCodigoViviendaSeleccionada(codigoVivienda)
     setCodigoCuadrillaSeleccionada(String(siguienteVivienda?.cuadrillas?.[0]?.codigoCuadrilla || ''))
@@ -148,14 +152,8 @@ function Dashboard() {
     setProvisionAlimentos(null)
     setProvisionAlimentosError('')
     setDocumentoAlimentosMessage('')
-
-    const viviendasRegion = region
-      ? viviendas.filter((vivienda) => vivienda.region === region)
-      : viviendas
-
-    const primeraVivienda = viviendasRegion[0]
-    setCodigoViviendaSeleccionada(primeraVivienda?.codigo || '')
-    setCodigoCuadrillaSeleccionada(String(primeraVivienda?.cuadrillas?.[0]?.codigoCuadrilla || ''))
+    setCodigoViviendaSeleccionada('')
+    setCodigoCuadrillaSeleccionada('')
   }
 
   const handleCiudadChange = (ciudad) => {
@@ -163,14 +161,8 @@ function Dashboard() {
     setProvisionAlimentos(null)
     setProvisionAlimentosError('')
     setDocumentoAlimentosMessage('')
-
-    const viviendasCiudad = ciudad
-      ? viviendas.filter((vivienda) => vivienda.ciudad === ciudad)
-      : viviendas.filter((vivienda) => vivienda.region === regionSeleccionada)
-
-    const primeraVivienda = viviendasCiudad[0]
-    setCodigoViviendaSeleccionada(primeraVivienda?.codigo || '')
-    setCodigoCuadrillaSeleccionada(String(primeraVivienda?.cuadrillas?.[0]?.codigoCuadrilla || ''))
+    setCodigoViviendaSeleccionada('')
+    setCodigoCuadrillaSeleccionada('')
   }
 
   return (
