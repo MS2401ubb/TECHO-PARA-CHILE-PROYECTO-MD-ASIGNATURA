@@ -14,7 +14,7 @@ const menuItems = [
   { label: 'Gestionar Viviendas', to: '/gestionar-viviendas', roles: ['Encargado de Central', 'admin'] },
   { label: 'Viviendas Bloqueadas', to: '/viviendas-bloqueadas', roles: ['Encargado de Central', 'admin'] },
   { label: 'Enviar reporte', to: '/enviar-reporte', roles: ['Jefe de Cuadrilla', 'Encargado de Voluntarios'] },
-  { label: 'Logística alimentación', to: '/logistica-alimentacion', roles: ['Encargado de Central', 'admin'] },
+  { label: 'Logística Alimentación', to: '/logistica-alimentacion', roles: ['Encargado de Central', 'admin'] },
   { label: 'Ver reportes', to: '/reportes', roles: ['Encargado de Central', 'admin'] },
   { label: 'Mi perfil', to: '/mi-perfil', roles: [...ROLES_VOLUNTARIOS, 'Jefe de Cuadrilla', 'Encargado de Voluntarios', 'Encargado de Central', 'admin'] },
 ]
